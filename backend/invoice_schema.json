@@ -1,0 +1,15 @@
+[
+  "invoiceId",
+  "invoiceNumber",
+  "supplierId",
+  "invoiceDate",
+  "totalAmount",
+  "remarks",
+  "createdDate",
+  "updatedDate",
+  "deletedDate",
+  "createdBy",
+  "updatedBy",
+  "deletedBy",
+  "flag"
+]

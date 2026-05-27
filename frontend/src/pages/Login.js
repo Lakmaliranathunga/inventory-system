@@ -32,6 +32,8 @@ function Login() {
       });
 
       if (response.data?.success) {
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
         navigate("/dashboard");
       } else {
         setError(response.data?.message || "Invalid credentials.");

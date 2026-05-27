@@ -1,0 +1,13 @@
+{
+  "divisions": [
+    "division_id",
+    "locationid",
+    "description"
+  ],
+  "sections": [
+    "sectionid",
+    "sectionname",
+    "division_id",
+    "locationid"
+  ]
+}

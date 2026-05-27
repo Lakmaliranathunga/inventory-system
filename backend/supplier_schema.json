@@ -1,0 +1,16 @@
+[
+  "supplierId",
+  "supplierName",
+  "contactPerson",
+  "contactNo",
+  "email",
+  "address",
+  "remarks",
+  "createdDate",
+  "updatedDate",
+  "deletedDate",
+  "createdBy",
+  "updatedBy",
+  "deletedBy",
+  "flag"
+]

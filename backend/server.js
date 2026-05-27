@@ -1,9 +1,12 @@
  const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const db = require("./db");
 
 const app = express();
+
+const JWT_SECRET = "slpa_inventory_secret_key_2026";
 
 app.use(cors());
 app.use(express.json());
@@ -140,9 +143,22 @@ app.post("/login", (req, res) => {
 
     if(match){
 
+      const token = jwt.sign(
+        { id: user.uId, username: user.uUsername, roleId: user.roleId },
+        JWT_SECRET,
+        { expiresIn: "8h" }
+      );
+
       res.json({
         success: true,
-        message: "Login Success"
+        message: "Login Success",
+        token: token,
+        user: {
+          id: user.uId,
+          username: user.uUsername,
+          fullName: user.uFullName,
+          roleId: user.roleId
+        }
       });
 
     } else {
@@ -162,7 +178,7 @@ app.post("/login", (req, res) => {
 // GET DIVISIONS
 app.get("/divisions", (req, res) => {
 
-  const sql = "SELECT * FROM divisions";
+  const sql = "SELECT division_id AS divisionId, description AS divisionName FROM divisions";
 
   db.query(sql, (err, result) => {
 
@@ -184,7 +200,7 @@ app.get("/divisions", (req, res) => {
 // GET SECTIONS
 app.get("/sections", (req, res) => {
 
-  const sql = "SELECT * FROM sections";
+  const sql = "SELECT sectionid AS sectionId, sectionname AS sectionName, division_id AS divisionId FROM sections";
 
   db.query(sql, (err, result) => {
 
@@ -202,6 +218,341 @@ app.get("/sections", (req, res) => {
 
 });
 
+
+// MIDDLEWARE: VERIFY TOKEN
+const verifyToken = (req, res, next) => {
+  const token = req.headers["authorization"];
+  if (!token) return res.status(403).json({ success: false, message: "No token provided" });
+  
+  jwt.verify(token.split(" ")[1], JWT_SECRET, (err, decoded) => {
+    if (err) return res.status(401).json({ success: false, message: "Unauthorized!" });
+    req.userId = decoded.id;
+    req.userRole = decoded.roleId;
+    next();
+  });
+};
+
+// DASHBOARD STATS API
+app.get("/api/dashboard/stats", verifyToken, async (req, res) => {
+  try {
+    const usersCount = await new Promise((resolve, reject) => {
+      db.query("SELECT COUNT(*) as count FROM users", (err, result) => err ? reject(err) : resolve(result[0].count));
+    });
+    const itemsCount = await new Promise((resolve, reject) => {
+      db.query("SELECT COUNT(*) as count FROM inventory_items", (err, result) => err ? reject(err) : resolve(result[0].count));
+    });
+    const suppliersCount = await new Promise((resolve, reject) => {
+      db.query("SELECT COUNT(*) as count FROM suppliers", (err, result) => err ? reject(err) : resolve(result[0].count));
+    });
+    const invoicesCount = await new Promise((resolve, reject) => {
+      db.query("SELECT COUNT(*) as count FROM invoices", (err, result) => err ? reject(err) : resolve(result[0].count));
+    });
+
+    res.json({
+      success: true,
+      stats: {
+        users: usersCount,
+        items: itemsCount,
+        suppliers: suppliersCount,
+        invoices: invoicesCount
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server Error", error });
+  }
+});
+
+// =========================
+// CATEGORIES APIs
+// =========================
+app.get("/api/categories/item-types", verifyToken, (req, res) => {
+  db.query("SELECT * FROM item_types WHERE flag=1 ORDER BY createdDate DESC", (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, data: result });
+  });
+});
+
+app.post("/api/categories/item-types", verifyToken, (req, res) => {
+  const { name, remarks } = req.body;
+  const sql = `INSERT INTO item_types (itemTypeName, remarks, createdBy) VALUES (?, ?, ?)`;
+  db.query(sql, [name, remarks, req.userId], (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, message: "Item type added!" });
+  });
+});
+
+app.put("/api/categories/item-types/:id", verifyToken, (req, res) => {
+  const { id } = req.params;
+  const { name, remarks } = req.body;
+  const sql = `UPDATE item_types SET itemTypeName=?, remarks=?, updatedBy=?, updatedDate=NOW() WHERE itemTypeId=?`;
+  db.query(sql, [name, remarks, req.userId, id], (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, message: "Item type updated!" });
+  });
+});
+
+app.delete("/api/categories/item-types/:id", verifyToken, (req, res) => {
+  const { id } = req.params;
+  const sql = `UPDATE item_types SET flag=0, deletedBy=?, deletedDate=NOW() WHERE itemTypeId=?`;
+  db.query(sql, [req.userId, id], (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, message: "Item type deleted!" });
+  });
+});
+
+app.get("/api/categories/main-categories", verifyToken, (req, res) => {
+  const sql = `
+    SELECT m.*, i.itemTypeName 
+    FROM main_categories m
+    LEFT JOIN item_types i ON m.itemTypeId = i.itemTypeId
+    WHERE m.flag=1 ORDER BY m.createdDate DESC
+  `;
+  db.query(sql, (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, data: result });
+  });
+});
+
+app.post("/api/categories/main-categories", verifyToken, (req, res) => {
+  const { itemTypeId, name, remarks } = req.body;
+  const sql = `INSERT INTO main_categories (itemTypeId, mainCategoryName, remarks, createdBy) VALUES (?, ?, ?, ?)`;
+  db.query(sql, [itemTypeId, name, remarks, req.userId], (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, message: "Main category added!" });
+  });
+});
+
+app.put("/api/categories/main-categories/:id", verifyToken, (req, res) => {
+  const { id } = req.params;
+  const { itemTypeId, name, remarks } = req.body;
+  const sql = `UPDATE main_categories SET itemTypeId=?, mainCategoryName=?, remarks=?, updatedBy=?, updatedDate=NOW() WHERE mainCategoryId=?`;
+  db.query(sql, [itemTypeId, name, remarks, req.userId, id], (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, message: "Main category updated!" });
+  });
+});
+
+app.delete("/api/categories/main-categories/:id", verifyToken, (req, res) => {
+  const { id } = req.params;
+  const sql = `UPDATE main_categories SET flag=0, deletedBy=?, deletedDate=NOW() WHERE mainCategoryId=?`;
+  db.query(sql, [req.userId, id], (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, message: "Main category deleted!" });
+  });
+});
+
+app.get("/api/categories/sub-categories", verifyToken, (req, res) => {
+  const sql = `
+    SELECT s.*, m.mainCategoryName, i.itemTypeName 
+    FROM sub_categories s
+    LEFT JOIN main_categories m ON s.mainCategoryId = m.mainCategoryId
+    LEFT JOIN item_types i ON m.itemTypeId = i.itemTypeId
+    WHERE s.flag=1 ORDER BY s.createdDate DESC
+  `;
+  db.query(sql, (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, data: result });
+  });
+});
+
+app.post("/api/categories/sub-categories", verifyToken, (req, res) => {
+  const { mainCategoryId, name, remarks } = req.body;
+  const sql = `INSERT INTO sub_categories (mainCategoryId, subCategoryName, remarks, createdBy) VALUES (?, ?, ?, ?)`;
+  db.query(sql, [mainCategoryId, name, remarks, req.userId], (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, message: "Sub category added!" });
+  });
+});
+
+app.put("/api/categories/sub-categories/:id", verifyToken, (req, res) => {
+  const { id } = req.params;
+  const { mainCategoryId, name, remarks } = req.body;
+  const sql = `UPDATE sub_categories SET mainCategoryId=?, subCategoryName=?, remarks=?, updatedBy=?, updatedDate=NOW() WHERE subCategoryId=?`;
+  db.query(sql, [mainCategoryId, name, remarks, req.userId, id], (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, message: "Sub category updated!" });
+  });
+});
+
+app.delete("/api/categories/sub-categories/:id", verifyToken, (req, res) => {
+  const { id } = req.params;
+  const sql = `UPDATE sub_categories SET flag=0, deletedBy=?, deletedDate=NOW() WHERE subCategoryId=?`;
+  db.query(sql, [req.userId, id], (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, message: "Sub category deleted!" });
+  });
+});
+
+// =========================
+// SUPPLIERS APIs
+// =========================
+app.get("/api/suppliers", verifyToken, (req, res) => {
+  db.query("SELECT * FROM suppliers WHERE flag=1 ORDER BY createdDate DESC", (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, suppliers: result });
+  });
+});
+
+app.post("/api/suppliers", verifyToken, (req, res) => {
+  const { name, contactPerson, contactNo, email, address, remarks } = req.body;
+  const sql = `INSERT INTO suppliers (supplierName, contactPerson, contactNo, email, address, remarks, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+  db.query(sql, [name, contactPerson, contactNo, email, address, remarks, req.userId], (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, message: "Supplier added successfully!" });
+  });
+});
+
+app.put("/api/suppliers/:id", verifyToken, (req, res) => {
+  const { id } = req.params;
+  const { name, contactPerson, contactNo, email, address, remarks } = req.body;
+  const sql = `UPDATE suppliers SET supplierName=?, contactPerson=?, contactNo=?, email=?, address=?, remarks=?, updatedBy=?, updatedDate=NOW() WHERE supplierId=?`;
+  db.query(sql, [name, contactPerson, contactNo, email, address, remarks, req.userId, id], (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, message: "Supplier updated successfully!" });
+  });
+});
+
+app.delete("/api/suppliers/:id", verifyToken, (req, res) => {
+  const { id } = req.params;
+  const sql = `UPDATE suppliers SET flag=0, deletedBy=?, deletedDate=NOW() WHERE supplierId=?`;
+  db.query(sql, [req.userId, id], (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, message: "Supplier deleted successfully!" });
+  });
+});
+
+// =========================
+// INVENTORY APIs
+// =========================
+app.get("/api/inventory", verifyToken, (req, res) => {
+  const sql = `
+    SELECT i.*, 
+           t.itemTypeName, 
+           m.mainCategoryName, 
+           s.subCategoryName,
+           d.description as divisionName,
+           sec.sectionname as sectionName
+    FROM inventory_items i
+    LEFT JOIN item_types t ON i.itemTypeId = t.itemTypeId
+    LEFT JOIN main_categories m ON i.mainCategoryId = m.mainCategoryId
+    LEFT JOIN sub_categories s ON i.subCategoryId = s.subCategoryId
+    LEFT JOIN divisions d ON i.divisionId = d.division_id
+    LEFT JOIN sections sec ON i.sectionId = sec.sectionid
+    WHERE i.flag = 1 
+    ORDER BY i.createdDate DESC
+  `;
+  db.query(sql, (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, items: result });
+  });
+});
+
+app.post("/api/inventory", verifyToken, (req, res) => {
+  const { 
+    itemCode, itemName, serialNumber, itemTypeId, mainCategoryId, 
+    subCategoryId, divisionId, sectionId, quantity, itemCondition, 
+    purchaseDate, warrantyExpireDate, remarks 
+  } = req.body;
+  
+  const sql = `
+    INSERT INTO inventory_items (
+      itemCode, itemName, serialNumber, itemTypeId, mainCategoryId, 
+      subCategoryId, divisionId, sectionId, quantity, itemCondition, 
+      purchaseDate, warrantyExpireDate, remarks, createdBy
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+  const values = [
+    itemCode, itemName, serialNumber, itemTypeId, mainCategoryId, 
+    subCategoryId, divisionId, sectionId, quantity, itemCondition, 
+    purchaseDate, warrantyExpireDate, remarks, req.userId
+  ];
+  
+  db.query(sql, values, (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, message: "Item added successfully!" });
+  });
+});
+
+app.put("/api/inventory/:id", verifyToken, (req, res) => {
+  const { id } = req.params;
+  const { 
+    itemCode, itemName, serialNumber, itemTypeId, mainCategoryId, 
+    subCategoryId, divisionId, sectionId, quantity, itemCondition, 
+    purchaseDate, warrantyExpireDate, remarks 
+  } = req.body;
+  
+  const sql = `
+    UPDATE inventory_items SET 
+      itemCode=?, itemName=?, serialNumber=?, itemTypeId=?, mainCategoryId=?, 
+      subCategoryId=?, divisionId=?, sectionId=?, quantity=?, itemCondition=?, 
+      purchaseDate=?, warrantyExpireDate=?, remarks=?, updatedBy=?, updatedDate=NOW()
+    WHERE itemId=?
+  `;
+  const values = [
+    itemCode, itemName, serialNumber, itemTypeId, mainCategoryId, 
+    subCategoryId, divisionId, sectionId, quantity, itemCondition, 
+    purchaseDate, warrantyExpireDate, remarks, req.userId, id
+  ];
+  
+  db.query(sql, values, (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, message: "Item updated successfully!" });
+  });
+});
+
+app.delete("/api/inventory/:id", verifyToken, (req, res) => {
+  const { id } = req.params;
+  const sql = `UPDATE inventory_items SET flag=0, deletedBy=?, deletedDate=NOW() WHERE itemId=?`;
+  db.query(sql, [req.userId, id], (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, message: "Item deleted successfully!" });
+  });
+});
+
+// =========================
+// INVOICES APIs
+// =========================
+app.get("/api/invoices", verifyToken, (req, res) => {
+  const sql = `
+    SELECT i.*, s.supplierName 
+    FROM invoices i
+    LEFT JOIN suppliers s ON i.supplierId = s.supplierId
+    WHERE i.flag=1 
+    ORDER BY i.createdDate DESC
+  `;
+  db.query(sql, (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, invoices: result });
+  });
+});
+
+app.post("/api/invoices", verifyToken, (req, res) => {
+  const { invoiceNumber, supplierId, invoiceDate, totalAmount, remarks } = req.body;
+  const sql = `INSERT INTO invoices (invoiceNumber, supplierId, invoiceDate, totalAmount, remarks, createdBy) VALUES (?, ?, ?, ?, ?, ?)`;
+  db.query(sql, [invoiceNumber, supplierId, invoiceDate, totalAmount, remarks, req.userId], (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, message: "Invoice added successfully!" });
+  });
+});
+
+app.put("/api/invoices/:id", verifyToken, (req, res) => {
+  const { id } = req.params;
+  const { invoiceNumber, supplierId, invoiceDate, totalAmount, remarks } = req.body;
+  const sql = `UPDATE invoices SET invoiceNumber=?, supplierId=?, invoiceDate=?, totalAmount=?, remarks=?, updatedBy=?, updatedDate=NOW() WHERE invoiceId=?`;
+  db.query(sql, [invoiceNumber, supplierId, invoiceDate, totalAmount, remarks, req.userId, id], (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, message: "Invoice updated successfully!" });
+  });
+});
+
+app.delete("/api/invoices/:id", verifyToken, (req, res) => {
+  const { id } = req.params;
+  const sql = `UPDATE invoices SET flag=0, deletedBy=?, deletedDate=NOW() WHERE invoiceId=?`;
+  db.query(sql, [req.userId, id], (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, message: "Invoice deleted successfully!" });
+  });
+});
 
 // SERVER
 app.listen(5000, () => {
