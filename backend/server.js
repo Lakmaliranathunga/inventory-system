@@ -219,6 +219,20 @@ app.get("/sections", (req, res) => {
 });
 
 
+// GET ROLES
+app.get("/roles", (req, res) => {
+  const sql = "SELECT roleId, roleName FROM user_roles";
+  db.query(sql, (err, result) => {
+    if(err) {
+      res.status(500).send(err);
+    } else {
+      res.json(result);
+    }
+  });
+});
+
+
+
 // MIDDLEWARE: VERIFY TOKEN
 const verifyToken = (req, res, next) => {
   const token = req.headers["authorization"];

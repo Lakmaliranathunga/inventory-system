@@ -19,6 +19,7 @@ function Register() {
   });
   const [divisions, setDivisions] = useState([]);
   const [sections, setSections] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -26,6 +27,7 @@ function Register() {
   useEffect(() => {
     fetchDivisions();
     fetchSections();
+    fetchRoles();
   }, []);
 
   const fetchDivisions = async () => {
@@ -34,6 +36,15 @@ function Register() {
       setDivisions(response.data);
     } catch (err) {
       setError("Unable to load division list.");
+    }
+  };
+
+  const fetchRoles = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/roles");
+      setRoles(response.data);
+    } catch (err) {
+      setError("Unable to load roles list.");
     }
   };
 
@@ -185,15 +196,21 @@ function Register() {
                 </div>
 
                 <div className="login-input-group">
-                  <label htmlFor="roleId">Role ID</label>
-                  <input
+                  <label htmlFor="roleId">Role</label>
+                  <select
                     id="roleId"
                     name="roleId"
-                    type="text"
-                    placeholder="Enter role ID"
+                    className="register-select"
                     value={formData.roleId}
                     onChange={handleChange}
-                  />
+                  >
+                    <option value="">Select Role</option>
+                    {roles.map((role) => (
+                      <option key={role.roleId} value={role.roleId}>
+                        {role.roleName}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="login-input-group">
