@@ -1,4 +1,4 @@
- const express = require("express");
+const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -69,7 +69,7 @@ app.post("/register", async (req, res) => {
       ],
       (err, result) => {
 
-        if(err){
+        if (err) {
 
           console.log(err);
 
@@ -90,7 +90,7 @@ app.post("/register", async (req, res) => {
       }
     );
 
-  } catch(error) {
+  } catch (error) {
 
     console.log(error);
 
@@ -116,7 +116,7 @@ app.post("/login", (req, res) => {
 
   db.query(sql, [uUsername], async (err, result) => {
 
-    if(err){
+    if (err) {
 
       return res.status(500).json({
         success: false,
@@ -125,7 +125,7 @@ app.post("/login", (req, res) => {
 
     }
 
-    if(result.length === 0){
+    if (result.length === 0) {
 
       return res.status(401).json({
         success: false,
@@ -141,7 +141,7 @@ app.post("/login", (req, res) => {
       user.uPassword
     );
 
-    if(match){
+    if (match) {
 
       const token = jwt.sign(
         { id: user.uId, username: user.uUsername, roleId: user.roleId },
@@ -182,7 +182,7 @@ app.get("/divisions", (req, res) => {
 
   db.query(sql, (err, result) => {
 
-    if(err){
+    if (err) {
 
       res.status(500).send(err);
 
@@ -204,7 +204,7 @@ app.get("/sections", (req, res) => {
 
   db.query(sql, (err, result) => {
 
-    if(err){
+    if (err) {
 
       res.status(500).send(err);
 
@@ -223,7 +223,7 @@ app.get("/sections", (req, res) => {
 app.get("/roles", (req, res) => {
   const sql = "SELECT roleId, roleName FROM user_roles";
   db.query(sql, (err, result) => {
-    if(err) {
+    if (err) {
       res.status(500).send(err);
     } else {
       res.json(result);
@@ -237,7 +237,7 @@ app.get("/roles", (req, res) => {
 const verifyToken = (req, res, next) => {
   const token = req.headers["authorization"];
   if (!token) return res.status(403).json({ success: false, message: "No token provided" });
-  
+
   jwt.verify(token.split(" ")[1], JWT_SECRET, (err, decoded) => {
     if (err) return res.status(401).json({ success: false, message: "Unauthorized!" });
     req.userId = decoded.id;
@@ -462,12 +462,12 @@ app.get("/api/inventory", verifyToken, (req, res) => {
 });
 
 app.post("/api/inventory", verifyToken, (req, res) => {
-  const { 
-    itemCode, itemName, serialNumber, itemTypeId, mainCategoryId, 
-    subCategoryId, divisionId, sectionId, quantity, itemCondition, 
-    purchaseDate, warrantyExpireDate, remarks 
+  const {
+    itemCode, itemName, serialNumber, itemTypeId, mainCategoryId,
+    subCategoryId, divisionId, sectionId, quantity, itemCondition,
+    purchaseDate, warrantyExpireDate, remarks
   } = req.body;
-  
+
   const sql = `
     INSERT INTO inventory_items (
       itemCode, itemName, serialNumber, itemTypeId, mainCategoryId, 
@@ -476,11 +476,11 @@ app.post("/api/inventory", verifyToken, (req, res) => {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
   const values = [
-    itemCode, itemName, serialNumber, itemTypeId, mainCategoryId, 
-    subCategoryId, divisionId, sectionId, quantity, itemCondition, 
+    itemCode, itemName, serialNumber, itemTypeId, mainCategoryId,
+    subCategoryId, divisionId, sectionId, quantity, itemCondition,
     purchaseDate, warrantyExpireDate, remarks, req.userId
   ];
-  
+
   db.query(sql, values, (err, result) => {
     if (err) return res.status(500).json({ success: false, error: err });
     res.json({ success: true, message: "Item added successfully!" });
@@ -489,12 +489,12 @@ app.post("/api/inventory", verifyToken, (req, res) => {
 
 app.put("/api/inventory/:id", verifyToken, (req, res) => {
   const { id } = req.params;
-  const { 
-    itemCode, itemName, serialNumber, itemTypeId, mainCategoryId, 
-    subCategoryId, divisionId, sectionId, quantity, itemCondition, 
-    purchaseDate, warrantyExpireDate, remarks 
+  const {
+    itemCode, itemName, serialNumber, itemTypeId, mainCategoryId,
+    subCategoryId, divisionId, sectionId, quantity, itemCondition,
+    purchaseDate, warrantyExpireDate, remarks
   } = req.body;
-  
+
   const sql = `
     UPDATE inventory_items SET 
       itemCode=?, itemName=?, serialNumber=?, itemTypeId=?, mainCategoryId=?, 
@@ -503,11 +503,11 @@ app.put("/api/inventory/:id", verifyToken, (req, res) => {
     WHERE itemId=?
   `;
   const values = [
-    itemCode, itemName, serialNumber, itemTypeId, mainCategoryId, 
-    subCategoryId, divisionId, sectionId, quantity, itemCondition, 
+    itemCode, itemName, serialNumber, itemTypeId, mainCategoryId,
+    subCategoryId, divisionId, sectionId, quantity, itemCondition,
     purchaseDate, warrantyExpireDate, remarks, req.userId, id
   ];
-  
+
   db.query(sql, values, (err, result) => {
     if (err) return res.status(500).json({ success: false, error: err });
     res.json({ success: true, message: "Item updated successfully!" });
