@@ -7,7 +7,7 @@ const Invoices = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Modal Data
   const [showModal, setShowModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
@@ -19,7 +19,7 @@ const Invoices = () => {
     try {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
-      
+
       const [invRes, supRes] = await Promise.all([
         axios.get('http://localhost:5000/api/invoices', { headers }),
         axios.get('http://localhost:5000/api/suppliers', { headers })
@@ -27,7 +27,7 @@ const Invoices = () => {
 
       if (invRes.data.success) setInvoices(invRes.data.invoices);
       if (supRes.data.success) setSuppliers(supRes.data.suppliers);
-      
+
     } catch (error) {
       console.error(error);
       toast.error('Failed to fetch data');
@@ -70,7 +70,7 @@ const Invoices = () => {
     try {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
-      
+
       if (isEdit) {
         await axios.put(`http://localhost:5000/api/invoices/${formData.invoiceId}`, formData, { headers });
         toast.success('Invoice updated successfully');
@@ -78,7 +78,7 @@ const Invoices = () => {
         await axios.post('http://localhost:5000/api/invoices', formData, { headers });
         toast.success('Invoice added successfully');
       }
-      
+
       closeModal();
       fetchData();
     } catch (error) {
@@ -125,9 +125,9 @@ const Invoices = () => {
         <div className="card-header py-3 bg-white d-flex justify-content-between align-items-center">
           <h6 className="m-0 font-weight-bold text-primary">Invoices List</h6>
           <div className="input-group" style={{ maxWidth: '300px' }}>
-            <input 
-              type="text" 
-              className="form-control" 
+            <input
+              type="text"
+              className="form-control"
               placeholder="Search by invoice number, supplier..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
