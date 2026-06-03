@@ -199,11 +199,11 @@ const Invoices = () => {
                   <div className="modal-body p-4">
                     <div className="row g-3">
                       <div className="col-12">
-                        <label className="form-label fw-bold">Invoice Number <span className="text-danger">*</span></label>
+                        <label className="form-label fw-bold">Invoice Number</label>
                         <input type="text" className="form-control" name="invoiceNumber" value={formData.invoiceNumber} onChange={handleInputChange} required />
                       </div>
                       <div className="col-12">
-                        <label className="form-label fw-bold">Supplier <span className="text-danger">*</span></label>
+                        <label className="form-label fw-bold">Supplier</label>
                         <select className="form-select" name="supplierId" value={formData.supplierId} onChange={handleInputChange} required>
                           <option value="">Select Supplier</option>
                           {suppliers.map(sup => (
@@ -212,11 +212,11 @@ const Invoices = () => {
                         </select>
                       </div>
                       <div className="col-md-6">
-                        <label className="form-label fw-bold">Invoice Date <span className="text-danger">*</span></label>
+                        <label className="form-label fw-bold">Invoice Date</label>
                         <input type="date" className="form-control" name="invoiceDate" value={formData.invoiceDate} onChange={handleInputChange} required />
                       </div>
                       <div className="col-md-6">
-                        <label className="form-label fw-bold">Total Amount <span className="text-danger">*</span></label>
+                        <label className="form-label fw-bold">Total Amount</label>
                         <div className="input-group">
                           <span className="input-group-text">Rs.</span>
                           <input type="text" className="form-control" name="totalAmount" placeholder="0.00" value={formData.totalAmount} onChange={handleInputChange} required />
