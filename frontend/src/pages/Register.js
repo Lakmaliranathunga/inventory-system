@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import "./Login.css";
-import logo from "../assets/images/slpa-logo.png";
+import logo from "../assets/images/slpa-logo-original.png";
 import bg from "../assets/images/ship-bg.jpg";
 
 function Register() {

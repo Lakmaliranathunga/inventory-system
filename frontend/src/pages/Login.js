@@ -3,7 +3,7 @@ import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import "./Login.css";
 
-import logo from "../assets/images/slpa-logo.png";
+import logo from "../assets/images/slpa-logo-original.png";
 import bg from "../assets/images/ship-bg.jpg";
 
 function Login() {
