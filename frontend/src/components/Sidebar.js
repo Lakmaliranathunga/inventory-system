@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './Sidebar.css';
+import logo from '../assets/images/slpa-logo.png';
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -15,6 +16,9 @@ const Sidebar = () => {
   return (
     <div className="sidebar-container">
       <div className="sidebar-logo">
+        <div className="logo-wrapper">
+          <img src={logo} alt="SLPA Logo" className="sidebar-logo-img" />
+        </div>
         <h4>SLPA</h4>
         <span>Inventory Management</span>
       </div>
