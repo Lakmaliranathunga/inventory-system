@@ -53,6 +53,12 @@ const Sidebar = () => {
             Invoices
           </NavLink>
         </li>
+        <li>
+          <NavLink to="/stock-transactions" className={({isActive}) => isActive ? "sidebar-link active" : "sidebar-link"}>
+            <i className="bi bi-arrow-left-right"></i>
+            Stock Transactions
+          </NavLink>
+        </li>
       </ul>
       <div style={{ marginTop: 'auto', padding: '20px' }}>
         <button onClick={handleLogout} className="btn btn-outline-light w-100">

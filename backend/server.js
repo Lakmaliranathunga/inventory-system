@@ -3,6 +3,8 @@ const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const db = require("./db");
+const stockTransactionRoutes = require("./routes/stockTransactionRoutes");
+const StockTransactionModel = require("./models/stockTransactionModel");
 
 const app = express();
 
@@ -262,19 +264,34 @@ app.get("/api/dashboard/stats", verifyToken, async (req, res) => {
       db.query("SELECT COUNT(*) as count FROM invoices", (err, result) => err ? reject(err) : resolve(result[0].count));
     });
 
+    const stockStats = await new Promise((resolve, reject) => {
+      StockTransactionModel.getDashboardStats((err, result) => {
+        if (err) reject(err);
+        else resolve(result[0]);
+      });
+    });
+
     res.json({
       success: true,
       stats: {
         users: usersCount,
         items: itemsCount,
         suppliers: suppliersCount,
-        invoices: invoicesCount
+        invoices: invoicesCount,
+        stockIn: stockStats.totalIn || 0,
+        stockOut: stockStats.totalOut || 0,
+        stockTransfer: stockStats.totalTransfer || 0
       }
     });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server Error", error });
   }
 });
+
+// =========================
+// STOCK TRANSACTIONS (MVC)
+// =========================
+app.use("/api/stock-transactions", verifyToken, stockTransactionRoutes);
 
 // =========================
 // CATEGORIES APIs

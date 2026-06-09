@@ -3,7 +3,8 @@ import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const Dashboard = () => {
-  const [stats, setStats] = useState({ users: 0, items: 0, suppliers: 0, invoices: 0 });
+  const [stats, setStats] = useState({ users: 0, items: 0, suppliers: 0, invoices: 0, stockIn: 0, stockOut: 0, stockTransfer: 0 });
+  const [recentTransactions, setRecentTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,8 +17,15 @@ const Dashboard = () => {
       const response = await axios.get('http://localhost:5000/api/dashboard/stats', {
         headers: { Authorization: `Bearer ${token}` }
       });
+      const txRes = await axios.get('http://localhost:5000/api/stock-transactions', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
       if (response.data.success) {
         setStats(response.data.stats);
+      }
+      if (txRes.data.success) {
+        setRecentTransactions(txRes.data.data.slice(0, 5));
       }
     } catch (error) {
       console.error('Error fetching dashboard stats', error);
@@ -100,6 +108,60 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      <div className="row mb-4">
+        
+        <div className="col-xl-4 col-sm-6 mb-xl-0 mb-4">
+          <div className="card shadow-sm border-0 h-100 py-2">
+            <div className="card-body">
+              <div className="row">
+                <div className="col">
+                  <div className="text-xs font-weight-bold text-success text-uppercase mb-1">
+                    Total Stock In</div>
+                  <div className="h5 mb-0 font-weight-bold text-gray-800">{stats.stockIn}</div>
+                </div>
+                <div className="col-auto">
+                  <i className="bi bi-arrow-down-circle-fill fa-2x text-gray-300 fs-1 text-success"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-xl-4 col-sm-6 mb-xl-0 mb-4">
+          <div className="card shadow-sm border-0 h-100 py-2">
+            <div className="card-body">
+              <div className="row">
+                <div className="col">
+                  <div className="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                    Total Stock Out</div>
+                  <div className="h5 mb-0 font-weight-bold text-gray-800">{stats.stockOut}</div>
+                </div>
+                <div className="col-auto">
+                  <i className="bi bi-arrow-up-circle-fill fa-2x text-gray-300 fs-1 text-danger"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-xl-4 col-sm-6 mb-xl-0 mb-4">
+          <div className="card shadow-sm border-0 h-100 py-2">
+            <div className="card-body">
+              <div className="row">
+                <div className="col">
+                  <div className="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                    Total Transfers</div>
+                  <div className="h5 mb-0 font-weight-bold text-gray-800">{stats.stockTransfer}</div>
+                </div>
+                <div className="col-auto">
+                  <i className="bi bi-arrow-left-right fa-2x text-gray-300 fs-1 text-warning"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       
       <div className="row mt-2">
         <div className="col-12">
@@ -134,6 +196,54 @@ const Dashboard = () => {
                   <div className="position-absolute top-50 start-50 translate-middle" style={{ width: '180px', height: '180px', background: '#cbd5e1', borderRadius: '50%', filter: 'blur(50px)', opacity: 0.5, zIndex: 0 }}></div>
                   <i className="bi bi-box-seam text-primary position-relative" style={{ fontSize: '8rem', zIndex: 1, filter: 'drop-shadow(0 15px 25px rgba(13,110,253,0.2))' }}></i>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Transactions Section */}
+      <div className="row mt-4">
+        <div className="col-12">
+          <div className="card shadow-sm border-0 rounded-3">
+            <div className="card-header bg-white border-0 py-3">
+              <h5 className="mb-0 fw-bold text-secondary" style={{ color: '#0b2239' }}>Recent Stock Transactions</h5>
+            </div>
+            <div className="card-body p-0">
+              <div className="table-responsive">
+                <table className="table table-hover align-middle mb-0">
+                  <thead className="table-light">
+                    <tr>
+                      <th className="ps-4">Date</th>
+                      <th>Item</th>
+                      <th>Type</th>
+                      <th>Qty</th>
+                      <th>From</th>
+                      <th>To</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentTransactions.map(txn => (
+                      <tr key={txn.transactionId}>
+                        <td className="ps-4 text-muted"><small>{new Date(txn.transactionDate).toLocaleDateString()}</small></td>
+                        <td className="fw-bold">{txn.itemName} <br/><small className="fw-normal text-muted">{txn.itemCode}</small></td>
+                        <td>
+                          <span className={`badge rounded-pill px-3 py-1 bg-${txn.transactionType === 'IN' ? 'success' : txn.transactionType === 'OUT' ? 'danger' : 'warning text-dark'}`}>
+                            {txn.transactionType}
+                          </span>
+                        </td>
+                        <td className="fw-bold">{txn.quantity}</td>
+                        <td><small>{txn.fromDivisionName || '-'}</small></td>
+                        <td><small>{txn.toDivisionName || '-'}</small></td>
+                      </tr>
+                    ))}
+                    {recentTransactions.length === 0 && (
+                      <tr>
+                        <td colSpan="6" className="text-center py-4 text-muted">No recent transactions found</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
