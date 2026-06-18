@@ -1,0 +1,326 @@
+/* Invoices.css */
+
+.invoices-page {
+  padding: 24px;
+  width: 100%;
+}
+
+.invoices-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.invoices-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 0;
+  color: #1e293b;
+}
+
+.invoices-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #0d6efd;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.invoices-add-btn:hover {
+  background-color: #0b5ed7;
+}
+
+.invoices-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.invoices-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-bottom: 1px solid #e2e8f0;
+  border-radius: 10px 10px 0 0;
+}
+
+.invoices-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  color: #0d6efd;
+}
+
+.invoices-search-group {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  max-width: 300px;
+}
+
+.invoices-search-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.invoices-search-input:focus {
+  border-color: #86b7fe;
+}
+
+.invoices-search-icon {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: #e9ecef;
+  border: 1px solid #ced4da;
+  border-radius: 0 6px 6px 0;
+  color: #495057;
+}
+
+.invoices-card-body {
+  padding: 20px;
+}
+
+.invoices-table-wrapper {
+  overflow-x: auto;
+}
+
+.invoices-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.invoices-table th,
+.invoices-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+  text-align: left;
+}
+
+.invoices-table tbody tr:hover {
+  background-color: #f8faff;
+}
+
+.invoices-table-head tr {
+  background-color: #f1f5f9;
+  color: #374151;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.invoices-amount-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 6px;
+  background-color: #198754;
+  color: #fff;
+}
+
+.invoices-action-group {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.invoices-action-btn {
+  background: transparent;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.invoices-action-btn--edit {
+  color: #0d6efd;
+  border: 1px solid #0d6efd;
+}
+.invoices-action-btn--edit:hover { background: #0d6efd; color: #fff; }
+
+.invoices-action-btn--delete {
+  color: #dc3545;
+  border: 1px solid #dc3545;
+}
+.invoices-action-btn--delete:hover { background: #dc3545; color: #fff; }
+
+.invoices-empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6c757d;
+}
+
+/* Modal Styles */
+.invoices-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.invoices-modal-dialog {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+}
+
+.invoices-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e2e8f0;
+  border-radius: 12px 12px 0 0;
+}
+
+.invoices-modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0d6efd;
+  margin: 0;
+}
+
+.invoices-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #6c757d;
+  cursor: pointer;
+}
+
+.invoices-modal-body {
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.invoices-form-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+}
+
+.invoices-form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.col-span-12 { grid-column: span 12; }
+.col-span-6 { grid-column: span 6; }
+
+@media (max-width: 576px) {
+  .invoices-form-grid > div { grid-column: span 12; }
+}
+
+.invoices-form-label {
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #374151;
+}
+
+.invoices-form-input,
+.invoices-form-select,
+.invoices-form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  outline: none;
+}
+
+.invoices-form-input:focus,
+.invoices-form-select:focus,
+.invoices-form-textarea:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+.invoices-input-group {
+  display: flex;
+  align-items: stretch;
+}
+
+.invoices-input-group-text {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  background-color: #e9ecef;
+  border: 1px solid #ced4da;
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  color: #495057;
+  font-weight: 500;
+}
+
+.invoices-input-group .invoices-form-input {
+  border-radius: 0 6px 6px 0;
+}
+
+.invoices-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  background-color: #f8f9fa;
+  border-top: 1px solid #e2e8f0;
+  border-radius: 0 0 12px 12px;
+}
+
+.invoices-btn-secondary {
+  background-color: #6c757d;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.invoices-btn-primary {
+  background-color: #0d6efd;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

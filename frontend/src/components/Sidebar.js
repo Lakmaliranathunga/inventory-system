@@ -61,7 +61,7 @@ const Sidebar = () => {
         </li>
       </ul>
       <div style={{ marginTop: 'auto', padding: '20px' }}>
-        <button onClick={handleLogout} className="btn btn-outline-light w-100">
+        <button onClick={handleLogout} className="sidebar-logout-btn">
           <i className="bi bi-box-arrow-right me-2"></i> Logout
         </button>
       </div>

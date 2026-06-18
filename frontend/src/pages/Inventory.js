@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import './Inventory.css';
 
 const Inventory = () => {
   const [items, setItems] = useState([]);
@@ -152,37 +153,37 @@ const Inventory = () => {
   );
 
   return (
-    <div className="container-fluid py-4">
-      <div className="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 className="h3 mb-0 text-gray-800">Inventory Management</h1>
-        <button className="btn btn-primary shadow-sm" onClick={openAddModal}>
-          <i className="bi bi-plus-circle me-1"></i> Add Inventory Item
+    <div className="inventory-page">
+      <div className="inventory-header">
+        <h1 className="inventory-title">Inventory Management</h1>
+        <button className="inventory-add-btn" onClick={openAddModal}>
+          <i className="bi bi-plus-circle"></i> Add Inventory Item
         </button>
       </div>
 
-      <div className="card shadow mb-4 border-0">
-        <div className="card-header py-3 bg-white d-flex justify-content-between align-items-center">
-          <h6 className="m-0 font-weight-bold text-primary">Inventory Items</h6>
-          <div className="input-group" style={{ maxWidth: '350px' }}>
+      <div className="inventory-card">
+        <div className="inventory-card-header">
+          <h6 className="inventory-card-title">Inventory Items</h6>
+          <div className="inventory-search-group">
             <input 
               type="text" 
-              className="form-control" 
+              className="inventory-search-input" 
               placeholder="Search by name, code, serial..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <span className="input-group-text"><i className="bi bi-search"></i></span>
+            <span className="inventory-search-icon"><i className="bi bi-search"></i></span>
           </div>
         </div>
-        <div className="card-body">
+        <div className="inventory-card-body">
           {loading ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status"></div>
+            <div style={{ textAlign: 'center', padding: '40px' }}>
+              <div>Loading...</div>
             </div>
           ) : (
-            <div className="table-responsive">
-              <table className="table table-hover align-middle">
-                <thead className="table-light">
+            <div className="inventory-table-wrapper">
+              <table className="inventory-table">
+                <thead className="inventory-table-head">
                   <tr>
                     <th>Code</th>
                     <th>Name</th>
@@ -190,38 +191,43 @@ const Inventory = () => {
                     <th>Division/Section</th>
                     <th>Qty</th>
                     <th>Condition</th>
-                    <th className="text-center">Actions</th>
+                    <th style={{ textAlign: 'center' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredItems.length === 0 ? (
-                    <tr><td colSpan="7" className="text-center py-4">No inventory items found</td></tr>
+                    <tr><td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>No inventory items found</td></tr>
                   ) : (
                     filteredItems.map(item => (
                       <tr key={item.itemId}>
-                        <td><span className="badge bg-secondary">{item.itemCode}</span></td>
-                        <td className="fw-bold">{item.itemName} <br/><small className="text-muted fw-normal">SN: {item.serialNumber || 'N/A'}</small></td>
+                        <td><span className="inventory-badge inventory-badge--gray">{item.itemCode}</span></td>
+                        <td>
+                          <strong>{item.itemName}</strong> <br/>
+                          <small style={{ color: '#6c757d' }}>SN: {item.serialNumber || 'N/A'}</small>
+                        </td>
                         <td>
                            <small>Type: {item.itemTypeName || '-'}</small><br/>
                            <small>Main: {item.mainCategoryName || '-'}</small>
                         </td>
                         <td>
                           {item.divisionName || '-'}<br/>
-                          <small className="text-muted">{item.sectionName || '-'}</small>
+                          <small style={{ color: '#6c757d' }}>{item.sectionName || '-'}</small>
                         </td>
                         <td>{item.quantity}</td>
                         <td>
-                          <span className={`badge ${item.itemCondition === 'New' ? 'bg-success' : 'bg-warning'}`}>
+                          <span className={`inventory-badge ${item.itemCondition === 'New' ? 'inventory-badge--green' : 'inventory-badge--yellow'}`}>
                             {item.itemCondition}
                           </span>
                         </td>
-                        <td className="text-center">
-                          <button onClick={() => openEditModal(item)} className="btn btn-sm btn-outline-primary me-2">
-                            <i className="bi bi-pencil"></i>
-                          </button>
-                          <button onClick={() => handleDelete(item.itemId)} className="btn btn-sm btn-outline-danger">
-                            <i className="bi bi-trash"></i>
-                          </button>
+                        <td>
+                          <div className="inventory-action-group">
+                            <button onClick={() => openEditModal(item)} className="inventory-action-btn inventory-action-btn--edit">
+                              <i className="bi bi-pencil"></i>
+                            </button>
+                            <button onClick={() => handleDelete(item.itemId)} className="inventory-action-btn inventory-action-btn--delete">
+                              <i className="bi bi-trash"></i>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -235,115 +241,113 @@ const Inventory = () => {
 
       {showModal && (
         <React.Fragment>
-          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', overflowY: 'auto' }}>
-            <div className="modal-dialog modal-xl modal-dialog-centered">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">{isEdit ? 'Edit Inventory Item' : 'Add Inventory Item'}</h5>
-                  <button type="button" className="btn-close" onClick={closeModal}></button>
-                </div>
-                <form onSubmit={handleSubmit}>
-                  <div className="modal-body">
-                    <h6 className="mb-3 text-primary border-bottom pb-2">Basic Info</h6>
-                    <div className="row g-3 mb-4">
-                      <div className="col-md-3">
-                        <label className="form-label">Item Code / Asset No</label>
-                        <input type="text" className="form-control" name="itemCode" value={formData.itemCode} onChange={handleInputChange} required />
-                      </div>
-                      <div className="col-md-5">
-                        <label className="form-label">Item Name</label>
-                        <input type="text" className="form-control" name="itemName" value={formData.itemName} onChange={handleInputChange} required />
-                      </div>
-                      <div className="col-md-4">
-                        <label className="form-label">Serial Number</label>
-                        <input type="text" className="form-control" name="serialNumber" value={formData.serialNumber} onChange={handleInputChange} />
-                      </div>
-                    </div>
-
-                    <h6 className="mb-3 text-primary border-bottom pb-2">Categorization</h6>
-                    <div className="row g-3 mb-4">
-                      <div className="col-md-4">
-                        <label className="form-label">Item Type</label>
-                        <select className="form-select" name="itemTypeId" value={formData.itemTypeId} onChange={handleInputChange}>
-                          <option value="">Select Type</option>
-                          {itemTypes.map(t => <option key={t.itemTypeId} value={t.itemTypeId}>{t.itemTypeName}</option>)}
-                        </select>
-                      </div>
-                      <div className="col-md-4">
-                        <label className="form-label">Main Category</label>
-                        <select className="form-select" name="mainCategoryId" value={formData.mainCategoryId} onChange={handleInputChange}>
-                          <option value="">Select Main Category</option>
-                          {mainCategories.filter(m => !formData.itemTypeId || m.itemTypeId == formData.itemTypeId).map(m => (
-                            <option key={m.mainCategoryId} value={m.mainCategoryId}>{m.mainCategoryName}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="col-md-4">
-                        <label className="form-label">Sub Category</label>
-                        <select className="form-select" name="subCategoryId" value={formData.subCategoryId} onChange={handleInputChange}>
-                          <option value="">Select Sub Category</option>
-                          {subCategories.filter(s => !formData.mainCategoryId || s.mainCategoryId == formData.mainCategoryId).map(s => (
-                            <option key={s.subCategoryId} value={s.subCategoryId}>{s.subCategoryName}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <h6 className="mb-3 text-primary border-bottom pb-2">Location & Details</h6>
-                    <div className="row g-3 mb-4">
-                      <div className="col-md-4">
-                        <label className="form-label">Division</label>
-                        <select className="form-select" name="divisionId" value={formData.divisionId} onChange={handleInputChange}>
-                          <option value="">Select Division</option>
-                          {divisions.map(d => <option key={d.divisionId} value={d.divisionId}>{d.divisionName}</option>)}
-                        </select>
-                      </div>
-                      <div className="col-md-4">
-                        <label className="form-label">Section</label>
-                        <select className="form-select" name="sectionId" value={formData.sectionId} onChange={handleInputChange}>
-                          <option value="">Select Section</option>
-                          {sections.filter(s => !formData.divisionId || s.divisionId == formData.divisionId).map(s => (
-                            <option key={s.sectionId} value={s.sectionId}>{s.sectionName}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="col-md-2">
-                        <label className="form-label">Quantity</label>
-                        <input type="number" className="form-control" name="quantity" value={formData.quantity} onChange={handleInputChange} min="1" required />
-                      </div>
-                      <div className="col-md-2">
-                        <label className="form-label">Condition</label>
-                        <select className="form-select" name="itemCondition" value={formData.itemCondition} onChange={handleInputChange}>
-                          <option value="New">New</option>
-                          <option value="Good">Good</option>
-                          <option value="Fair">Fair</option>
-                          <option value="Damaged">Damaged</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <h6 className="mb-3 text-primary border-bottom pb-2">Purchase & Warranty</h6>
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <label className="form-label">Purchase Date</label>
-                        <input type="date" className="form-control" name="purchaseDate" value={formData.purchaseDate} onChange={handleInputChange} />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label">Warranty Expiration Date</label>
-                        <input type="date" className="form-control" name="warrantyExpireDate" value={formData.warrantyExpireDate} onChange={handleInputChange} />
-                      </div>
-                      <div className="col-12">
-                        <label className="form-label">Remarks</label>
-                        <textarea className="form-control" name="remarks" rows="2" value={formData.remarks} onChange={handleInputChange}></textarea>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="modal-footer">
-                    <button type="button" className="btn btn-secondary" onClick={closeModal}>Cancel</button>
-                    <button type="submit" className="btn btn-primary">{isEdit ? 'Update Changes' : 'Save Item'}</button>
-                  </div>
-                </form>
+          <div className="inventory-modal-backdrop">
+            <div className="inventory-modal-dialog">
+              <div className="inventory-modal-header">
+                <h5 className="inventory-modal-title">{isEdit ? 'Edit Inventory Item' : 'Add Inventory Item'}</h5>
+                <button type="button" className="inventory-modal-close" onClick={closeModal}>✕</button>
               </div>
+              <form onSubmit={handleSubmit}>
+                <div className="inventory-modal-body">
+                  <div className="inventory-form-section">Basic Info</div>
+                  <div className="inventory-form-grid">
+                    <div className="inventory-form-group col-span-3">
+                      <label className="inventory-form-label">Item Code / Asset No</label>
+                      <input type="text" className="inventory-form-input" name="itemCode" value={formData.itemCode} onChange={handleInputChange} required />
+                    </div>
+                    <div className="inventory-form-group col-span-5">
+                      <label className="inventory-form-label">Item Name</label>
+                      <input type="text" className="inventory-form-input" name="itemName" value={formData.itemName} onChange={handleInputChange} required />
+                    </div>
+                    <div className="inventory-form-group col-span-4">
+                      <label className="inventory-form-label">Serial Number</label>
+                      <input type="text" className="inventory-form-input" name="serialNumber" value={formData.serialNumber} onChange={handleInputChange} />
+                    </div>
+                  </div>
+
+                  <div className="inventory-form-section">Categorization</div>
+                  <div className="inventory-form-grid">
+                    <div className="inventory-form-group col-span-4">
+                      <label className="inventory-form-label">Item Type</label>
+                      <select className="inventory-form-select" name="itemTypeId" value={formData.itemTypeId} onChange={handleInputChange}>
+                        <option value="">Select Type</option>
+                        {itemTypes.map(t => <option key={t.itemTypeId} value={t.itemTypeId}>{t.itemTypeName}</option>)}
+                      </select>
+                    </div>
+                    <div className="inventory-form-group col-span-4">
+                      <label className="inventory-form-label">Main Category</label>
+                      <select className="inventory-form-select" name="mainCategoryId" value={formData.mainCategoryId} onChange={handleInputChange}>
+                        <option value="">Select Main Category</option>
+                        {mainCategories.filter(m => !formData.itemTypeId || m.itemTypeId == formData.itemTypeId).map(m => (
+                          <option key={m.mainCategoryId} value={m.mainCategoryId}>{m.mainCategoryName}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="inventory-form-group col-span-4">
+                      <label className="inventory-form-label">Sub Category</label>
+                      <select className="inventory-form-select" name="subCategoryId" value={formData.subCategoryId} onChange={handleInputChange}>
+                        <option value="">Select Sub Category</option>
+                        {subCategories.filter(s => !formData.mainCategoryId || s.mainCategoryId == formData.mainCategoryId).map(s => (
+                          <option key={s.subCategoryId} value={s.subCategoryId}>{s.subCategoryName}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="inventory-form-section">Location & Details</div>
+                  <div className="inventory-form-grid">
+                    <div className="inventory-form-group col-span-4">
+                      <label className="inventory-form-label">Division</label>
+                      <select className="inventory-form-select" name="divisionId" value={formData.divisionId} onChange={handleInputChange}>
+                        <option value="">Select Division</option>
+                        {divisions.map(d => <option key={d.divisionId} value={d.divisionId}>{d.divisionName}</option>)}
+                      </select>
+                    </div>
+                    <div className="inventory-form-group col-span-4">
+                      <label className="inventory-form-label">Section</label>
+                      <select className="inventory-form-select" name="sectionId" value={formData.sectionId} onChange={handleInputChange}>
+                        <option value="">Select Section</option>
+                        {sections.filter(s => !formData.divisionId || s.divisionId == formData.divisionId).map(s => (
+                          <option key={s.sectionId} value={s.sectionId}>{s.sectionName}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="inventory-form-group col-span-2">
+                      <label className="inventory-form-label">Quantity</label>
+                      <input type="number" className="inventory-form-input" name="quantity" value={formData.quantity} onChange={handleInputChange} min="1" required />
+                    </div>
+                    <div className="inventory-form-group col-span-2">
+                      <label className="inventory-form-label">Condition</label>
+                      <select className="inventory-form-select" name="itemCondition" value={formData.itemCondition} onChange={handleInputChange}>
+                        <option value="New">New</option>
+                        <option value="Good">Good</option>
+                        <option value="Fair">Fair</option>
+                        <option value="Damaged">Damaged</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="inventory-form-section">Purchase & Warranty</div>
+                  <div className="inventory-form-grid">
+                    <div className="inventory-form-group col-span-6">
+                      <label className="inventory-form-label">Purchase Date</label>
+                      <input type="date" className="inventory-form-input" name="purchaseDate" value={formData.purchaseDate} onChange={handleInputChange} />
+                    </div>
+                    <div className="inventory-form-group col-span-6">
+                      <label className="inventory-form-label">Warranty Expiration Date</label>
+                      <input type="date" className="inventory-form-input" name="warrantyExpireDate" value={formData.warrantyExpireDate} onChange={handleInputChange} />
+                    </div>
+                    <div className="inventory-form-group col-span-12">
+                      <label className="inventory-form-label">Remarks</label>
+                      <textarea className="inventory-form-textarea" name="remarks" rows="2" value={formData.remarks} onChange={handleInputChange}></textarea>
+                    </div>
+                  </div>
+                </div>
+                <div className="inventory-modal-footer">
+                  <button type="button" className="inventory-btn-secondary" onClick={closeModal}>Cancel</button>
+                  <button type="submit" className="inventory-btn-primary">{isEdit ? 'Update Changes' : 'Save Item'}</button>
+                </div>
+              </form>
             </div>
           </div>
         </React.Fragment>

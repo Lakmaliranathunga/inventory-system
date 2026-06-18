@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import './StockTransactions.css';
 
 const StockTransactions = () => {
   const [transactions, setTransactions] = useState([]);
@@ -163,48 +163,46 @@ const StockTransactions = () => {
 
   const getTransactionBadge = (type) => {
     switch(type) {
-      case 'IN': return 'bg-success';
-      case 'OUT': return 'bg-danger';
-      case 'TRANSFER': return 'bg-warning text-dark';
-      case 'RETURN': return 'bg-info';
-      case 'DAMAGED': return 'bg-secondary';
-      case 'DISPOSAL': return 'bg-dark';
-      default: return 'bg-primary';
+      case 'IN': return 'badge-in';
+      case 'OUT': return 'badge-out';
+      case 'TRANSFER': return 'badge-transfer';
+      case 'RETURN': return 'badge-return';
+      case 'DAMAGED': return 'badge-damaged';
+      case 'DISPOSAL': return 'badge-disposal';
+      default: return 'badge-primary';
     }
   };
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '60vh' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+        <div>Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: '#f4f6f9', minHeight: '100vh' }}>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="text-secondary fw-bold" style={{ color: '#0b2239' }}>Stock Transactions</h2>
+    <div className="transaction-page">
+      <div className="transaction-header">
+        <h2 className="transaction-title">Stock Transactions</h2>
       </div>
 
-      <div className="row">
+      <div className="transaction-layout">
         {/* Form Column */}
-        <div className="col-lg-4 mb-4">
-          <div className="card shadow-sm border-0" style={{ borderTop: '4px solid #0b2239', borderRadius: '10px' }}>
-            <div className="card-header bg-white text-dark py-3">
-              <h5 className="mb-0 fw-bold">
+        <div className="transaction-form-col">
+          <div className="transaction-card transaction-form-card">
+            <div className="transaction-card-header">
+              <h5 className="transaction-card-title">
                 <i className={`bi ${editId ? 'bi-pencil-square' : 'bi-plus-circle'} me-2`}></i>
                 {editId ? 'Edit Transaction' : 'Record Transaction'}
               </h5>
             </div>
-            <div className="card-body">
+            <div className="transaction-card-body">
               <form onSubmit={handleSubmit}>
-                <div className="mb-3">
-                  <label className="form-label fw-semibold">Item <span className="text-danger">*</span></label>
+                <div className="transaction-form-group">
+                  <label className="transaction-label">Item <span className="transaction-required">*</span></label>
                   <select 
-                    className="form-select" 
+                    className="transaction-select" 
                     name="itemId" 
                     value={formData.itemId} 
                     onChange={handleInputChange}
@@ -219,10 +217,10 @@ const StockTransactions = () => {
                   </select>
                 </div>
 
-                <div className="mb-3">
-                  <label className="form-label fw-semibold">Transaction Type <span className="text-danger">*</span></label>
+                <div className="transaction-form-group">
+                  <label className="transaction-label">Transaction Type <span className="transaction-required">*</span></label>
                   <select 
-                    className="form-select" 
+                    className="transaction-select" 
                     name="transactionType" 
                     value={formData.transactionType} 
                     onChange={handleInputChange}
@@ -237,11 +235,11 @@ const StockTransactions = () => {
                   </select>
                 </div>
 
-                <div className="mb-3">
-                  <label className="form-label fw-semibold">Quantity <span className="text-danger">*</span></label>
+                <div className="transaction-form-group">
+                  <label className="transaction-label">Quantity <span className="transaction-required">*</span></label>
                   <input 
                     type="number" 
-                    className="form-control" 
+                    className="transaction-input" 
                     name="quantity" 
                     value={formData.quantity} 
                     onChange={handleInputChange} 
@@ -250,10 +248,10 @@ const StockTransactions = () => {
                   />
                 </div>
 
-                <div className="mb-3">
-                  <label className="form-label fw-semibold">From Division</label>
+                <div className="transaction-form-group">
+                  <label className="transaction-label">From Division</label>
                   <select 
-                    className="form-select" 
+                    className="transaction-select" 
                     name="fromDivisionId" 
                     value={formData.fromDivisionId} 
                     onChange={handleInputChange}
@@ -267,10 +265,10 @@ const StockTransactions = () => {
                   </select>
                 </div>
 
-                <div className="mb-3">
-                  <label className="form-label fw-semibold">To Division</label>
+                <div className="transaction-form-group">
+                  <label className="transaction-label">To Division</label>
                   <select 
-                    className="form-select" 
+                    className="transaction-select" 
                     name="toDivisionId" 
                     value={formData.toDivisionId} 
                     onChange={handleInputChange}
@@ -284,21 +282,21 @@ const StockTransactions = () => {
                   </select>
                 </div>
 
-                <div className="mb-3">
-                  <label className="form-label fw-semibold">Date & Time</label>
+                <div className="transaction-form-group">
+                  <label className="transaction-label">Date & Time</label>
                   <input 
                     type="datetime-local" 
-                    className="form-control" 
+                    className="transaction-input" 
                     name="transactionDate" 
                     value={formData.transactionDate} 
                     onChange={handleInputChange} 
                   />
                 </div>
 
-                <div className="mb-4">
-                  <label className="form-label fw-semibold">Remarks</label>
+                <div className="transaction-form-group">
+                  <label className="transaction-label">Remarks</label>
                   <textarea 
-                    className="form-control" 
+                    className="transaction-textarea" 
                     name="remarks" 
                     rows="2" 
                     value={formData.remarks} 
@@ -306,61 +304,55 @@ const StockTransactions = () => {
                   ></textarea>
                 </div>
 
-                <div className="d-grid gap-2">
-                  <button type="submit" className="btn text-white fw-bold" style={{ backgroundColor: '#0b2239' }}>
-                    {editId ? 'UPDATE TRANSACTION' : 'SAVE TRANSACTION'}
+                <button type="submit" className="transaction-submit-btn">
+                  {editId ? 'UPDATE TRANSACTION' : 'SAVE TRANSACTION'}
+                </button>
+                {editId && (
+                  <button type="button" className="transaction-cancel-btn" onClick={resetForm}>
+                    CANCEL
                   </button>
-                  {editId && (
-                    <button type="button" className="btn btn-secondary fw-bold" onClick={resetForm}>
-                      CANCEL
-                    </button>
-                  )}
-                </div>
+                )}
               </form>
             </div>
           </div>
         </div>
 
         {/* List Column */}
-        <div className="col-lg-8">
-          <div className="card shadow-sm border-0" style={{ borderRadius: '10px' }}>
-            <div className="card-body">
+        <div className="transaction-list-col">
+          <div className="transaction-card">
+            <div className="transaction-card-body">
               
               {/* Filters */}
-              <div className="row mb-4 bg-light p-3 rounded mx-0">
-                <div className="col-md-4 mb-2 mb-md-0">
-                  <div className="input-group">
-                    <span className="input-group-text bg-white border-end-0"><i className="bi bi-search text-muted"></i></span>
-                    <input 
-                      type="text" 
-                      className="form-control border-start-0" 
-                      placeholder="Search Item or Code..." 
-                      value={searchTerm} 
-                      onChange={(e) => setSearchTerm(e.target.value)} 
-                    />
-                  </div>
+              <div className="transaction-filters">
+                <div className="transaction-search-group">
+                  <span className="transaction-search-icon"><i className="bi bi-search"></i></span>
+                  <input 
+                    type="text" 
+                    className="transaction-search-input" 
+                    placeholder="Search Item or Code..." 
+                    value={searchTerm} 
+                    onChange={(e) => setSearchTerm(e.target.value)} 
+                  />
                 </div>
-                <div className="col-md-3 mb-2 mb-md-0">
-                  <select 
-                    className="form-select" 
-                    value={filterType} 
-                    onChange={(e) => setFilterType(e.target.value)}
-                  >
-                    <option value="">All Types</option>
-                    <option value="IN">IN</option>
-                    <option value="OUT">OUT</option>
-                    <option value="TRANSFER">TRANSFER</option>
-                    <option value="RETURN">RETURN</option>
-                    <option value="DAMAGED">DAMAGED</option>
-                    <option value="DISPOSAL">DISPOSAL</option>
-                  </select>
-                </div>
+                <select 
+                  className="transaction-filter-select" 
+                  value={filterType} 
+                  onChange={(e) => setFilterType(e.target.value)}
+                >
+                  <option value="">All Types</option>
+                  <option value="IN">IN</option>
+                  <option value="OUT">OUT</option>
+                  <option value="TRANSFER">TRANSFER</option>
+                  <option value="RETURN">RETURN</option>
+                  <option value="DAMAGED">DAMAGED</option>
+                  <option value="DISPOSAL">DISPOSAL</option>
+                </select>
               </div>
 
               {/* Table */}
-              <div className="table-responsive">
-                <table className="table table-hover align-middle">
-                  <thead className="table-light">
+              <div className="transaction-table-wrapper">
+                <table className="transaction-table">
+                  <thead>
                     <tr>
                       <th>Date</th>
                       <th>Item</th>
@@ -377,23 +369,23 @@ const StockTransactions = () => {
                         <tr key={txn.transactionId}>
                           <td>{new Date(txn.transactionDate).toLocaleDateString()}</td>
                           <td>
-                            <div className="fw-bold text-dark">{txn.itemName}</div>
-                            <small className="text-muted">{txn.itemCode}</small>
+                            <div style={{ fontWeight: 'bold', color: '#1e293b' }}>{txn.itemName}</div>
+                            <small style={{ color: '#64748b' }}>{txn.itemCode}</small>
                           </td>
                           <td>
-                            <span className={`badge rounded-pill ${getTransactionBadge(txn.transactionType)} px-3 py-2 shadow-sm`}>
+                            <span className={`transaction-badge ${getTransactionBadge(txn.transactionType)}`}>
                               {txn.transactionType}
                             </span>
                           </td>
-                          <td className="fw-bold">{txn.quantity}</td>
+                          <td style={{ fontWeight: 'bold' }}>{txn.quantity}</td>
                           <td><small>{txn.fromDivisionName || '-'}</small></td>
                           <td><small>{txn.toDivisionName || '-'}</small></td>
                           <td>
-                            <div className="d-flex gap-2">
-                              <button className="btn btn-sm btn-outline-primary" onClick={() => handleEdit(txn)} title="Edit">
+                            <div className="transaction-actions">
+                              <button className="transaction-action-btn transaction-action-btn--edit" onClick={() => handleEdit(txn)} title="Edit">
                                 <i className="bi bi-pencil"></i>
                               </button>
-                              <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(txn.transactionId)} title="Delete">
+                              <button className="transaction-action-btn transaction-action-btn--delete" onClick={() => handleDelete(txn.transactionId)} title="Delete">
                                 <i className="bi bi-trash"></i>
                               </button>
                             </div>
@@ -402,9 +394,9 @@ const StockTransactions = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="7" className="text-center py-4 text-muted">
-                          <i className="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
-                          No transactions found
+                        <td colSpan="7" className="transaction-empty">
+                          <i className="bi bi-inbox transaction-empty-icon"></i>
+                          <div>No transactions found</div>
                         </td>
                       </tr>
                     )}
@@ -414,23 +406,36 @@ const StockTransactions = () => {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="d-flex justify-content-center mt-3">
-                  <nav>
-                    <ul className="pagination pagination-sm">
-                      <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                        <button className="page-link" onClick={() => setCurrentPage(p => p - 1)}>Previous</button>
-                      </li>
-                      {[...Array(totalPages)].map((_, i) => (
-                        <li key={i+1} className={`page-item ${currentPage === i+1 ? 'active' : ''}`}>
-                          <button className="page-link" onClick={() => setCurrentPage(i+1)}>{i+1}</button>
-                        </li>
-                      ))}
-                      <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                        <button className="page-link" onClick={() => setCurrentPage(p => p + 1)}>Next</button>
-                      </li>
-                    </ul>
-                  </nav>
-                </div>
+                <ul className="transaction-pagination">
+                  <li>
+                    <button 
+                      className="transaction-page-btn" 
+                      onClick={() => setCurrentPage(p => p - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </button>
+                  </li>
+                  {[...Array(totalPages)].map((_, i) => (
+                    <li key={i+1}>
+                      <button 
+                        className={`transaction-page-btn ${currentPage === i+1 ? 'transaction-page-btn--active' : ''}`} 
+                        onClick={() => setCurrentPage(i+1)}
+                      >
+                        {i+1}
+                      </button>
+                    </li>
+                  ))}
+                  <li>
+                    <button 
+                      className="transaction-page-btn" 
+                      onClick={() => setCurrentPage(p => p + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </button>
+                  </li>
+                </ul>
               )}
 
             </div>

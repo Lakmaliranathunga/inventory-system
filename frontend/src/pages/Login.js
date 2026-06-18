@@ -101,7 +101,7 @@ function Login() {
                 />
               </div>
 
-              <div className="login-forgot-row">
+              <div className="login-forgot-row ">
                 <Link to="/forgot">Forgot password</Link>
               </div>
 

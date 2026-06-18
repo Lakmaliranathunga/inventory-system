@@ -80,3 +80,25 @@
   color: #fff;
   border-left: 4px solid #3498db;
 }
+
+/* Logout button — full-width, outlined white style */
+.sidebar-logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #fff;
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.sidebar-logout-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: #fff;
+}

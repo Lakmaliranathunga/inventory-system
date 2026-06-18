@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import './Categories.css';
 
 const Categories = () => {
   const [itemTypes, setItemTypes] = useState([]);
@@ -8,27 +8,34 @@ const Categories = () => {
   const [subCategories, setSubCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Forms states
+  /* Toggle state for each add-form panel */
+  const [showItemTypeForm, setShowItemTypeForm] = useState(false);
+  const [showMainCategoryForm, setShowMainCategoryForm] = useState(false);
+  const [showSubCategoryForm, setShowSubCategoryForm] = useState(false);
+
+  /* Form state for each category type */
   const [itemTypeForm, setItemTypeForm] = useState({ name: '', remarks: '' });
   const [mainCategoryForm, setMainCategoryForm] = useState({ itemTypeId: '', name: '', remarks: '' });
   const [subCategoryForm, setSubCategoryForm] = useState({ mainCategoryId: '', name: '', remarks: '' });
 
+  /* Shared auth header builder */
+  const getHeaders = () => ({
+    Authorization: `Bearer ${localStorage.getItem('token')}`
+  });
+
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-
       const [itemRes, mainRes, subRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/categories/item-types', { headers }),
-        axios.get('http://localhost:5000/api/categories/main-categories', { headers }),
-        axios.get('http://localhost:5000/api/categories/sub-categories', { headers })
+        axios.get('http://localhost:5000/api/categories/item-types', { headers: getHeaders() }),
+        axios.get('http://localhost:5000/api/categories/main-categories', { headers: getHeaders() }),
+        axios.get('http://localhost:5000/api/categories/sub-categories', { headers: getHeaders() })
       ]);
 
       if (itemRes.data.success) setItemTypes(itemRes.data.data);
       if (mainRes.data.success) setMainCategories(mainRes.data.data);
       if (subRes.data.success) setSubCategories(subRes.data.data);
     } catch (error) {
-      console.error("Error fetching categories:", error);
+      console.error('Error fetching categories:', error);
     } finally {
       setLoading(false);
     }
@@ -40,175 +47,230 @@ const Categories = () => {
 
   const handleAddItemType = async (e) => {
     e.preventDefault();
-    if (!itemTypeForm.name) return alert("Name is required");
+    if (!itemTypeForm.name) return alert('Name is required');
     try {
-      const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/categories/item-types', itemTypeForm, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post('http://localhost:5000/api/categories/item-types', itemTypeForm, { headers: getHeaders() });
       setItemTypeForm({ name: '', remarks: '' });
+      setShowItemTypeForm(false);
       fetchCategories();
-      alert("Item Type Added!");
+      alert('Item Type Added!');
     } catch (error) {
       console.error(error);
-      alert("Failed to add Item Type");
+      alert('Failed to add Item Type');
     }
   };
 
   const handleAddMainCategory = async (e) => {
     e.preventDefault();
-    if (!mainCategoryForm.name || !mainCategoryForm.itemTypeId) return alert("Required fields missing");
+    if (!mainCategoryForm.name || !mainCategoryForm.itemTypeId) return alert('Required fields missing');
     try {
-      const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/categories/main-categories', mainCategoryForm, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post('http://localhost:5000/api/categories/main-categories', mainCategoryForm, { headers: getHeaders() });
       setMainCategoryForm({ itemTypeId: '', name: '', remarks: '' });
+      setShowMainCategoryForm(false);
       fetchCategories();
-      alert("Main Category Added!");
+      alert('Main Category Added!');
     } catch (error) {
       console.error(error);
-      alert("Failed to add Main Category");
+      alert('Failed to add Main Category');
     }
   };
 
   const handleAddSubCategory = async (e) => {
     e.preventDefault();
-    if (!subCategoryForm.name || !subCategoryForm.mainCategoryId) return alert("Required fields missing");
+    if (!subCategoryForm.name || !subCategoryForm.mainCategoryId) return alert('Required fields missing');
     try {
-      const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/categories/sub-categories', subCategoryForm, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post('http://localhost:5000/api/categories/sub-categories', subCategoryForm, { headers: getHeaders() });
       setSubCategoryForm({ mainCategoryId: '', name: '', remarks: '' });
+      setShowSubCategoryForm(false);
       fetchCategories();
-      alert("Sub Category Added!");
+      alert('Sub Category Added!');
     } catch (error) {
       console.error(error);
-      alert("Failed to add Sub Category");
+      alert('Failed to add Sub Category');
     }
   };
 
   if (loading) return <div>Loading Categories...</div>;
 
   return (
-    <div className="container-fluid">
-      <div className="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 className="h3 mb-0 text-gray-800">Categories Management</h1>
+    <div className="categories-page">
+      {/* Page heading */}
+      <div className="categories-header">
+        <h1 className="categories-title">Categories Management</h1>
       </div>
-      <div className="row">
-        
-        {/* ITEM TYPES */}
-        <div className="col-lg-4 mb-4">
-          <div className="card shadow h-100">
-            <div className="card-header py-3 d-flex justify-content-between align-items-center">
-              <h6 className="m-0 font-weight-bold text-primary">Item Types</h6>
-              <button 
-                className="btn btn-sm btn-outline-primary"
-                data-bs-toggle="collapse" 
-                data-bs-target="#collapseItemType"
-              ><i className="bi bi-plus"></i></button>
+
+      <div className="categories-grid">
+
+        {/* ─── ITEM TYPES ───────────────────────────── */}
+        <div className="category-card">
+          <div className="category-card-header">
+            <h6 className="category-card-title">Item Types</h6>
+            <button
+              className="category-action-btn"
+              onClick={() => setShowItemTypeForm(prev => !prev)}
+              title={showItemTypeForm ? 'Hide form' : 'Add Item Type'}
+            >
+              <i className="bi bi-plus"></i>
+            </button>
+          </div>
+
+          <div className="category-card-body">
+            <div className={`category-form-wrapper ${showItemTypeForm ? 'is-visible' : ''}`}>
+              <form onSubmit={handleAddItemType} className="category-form">
+                <input
+                  type="text"
+                  className="category-input"
+                  placeholder="Name"
+                  value={itemTypeForm.name}
+                  onChange={e => setItemTypeForm({ ...itemTypeForm, name: e.target.value })}
+                />
+                <input
+                  type="text"
+                  className="category-input"
+                  placeholder="Remarks"
+                  value={itemTypeForm.remarks}
+                  onChange={e => setItemTypeForm({ ...itemTypeForm, remarks: e.target.value })}
+                />
+                <button type="submit" className="category-submit-btn">Save</button>
+              </form>
             </div>
-            <div className="card-body">
-              <div className="collapse mb-3" id="collapseItemType">
-                <form onSubmit={handleAddItemType} className="border p-2 rounded bg-light">
-                  <input type="text" className="form-control mb-2 form-control-sm" placeholder="Name" value={itemTypeForm.name} onChange={e=>setItemTypeForm({...itemTypeForm, name: e.target.value})} />
-                  <input type="text" className="form-control mb-2 form-control-sm" placeholder="Remarks" value={itemTypeForm.remarks} onChange={e=>setItemTypeForm({...itemTypeForm, remarks: e.target.value})} />
-                  <button type="submit" className="btn btn-sm btn-primary w-100">Save</button>
-                </form>
-              </div>
-              
-              {itemTypes.length === 0 ? <p className="text-muted text-center mt-3">No Item Types Found</p> : (
-                <ul className="list-group list-group-flush" style={{maxHeight:'400px', overflowY:'auto'}}>
-                  {itemTypes.map(item => (
-                    <li key={item.itemTypeId} className="list-group-item d-flex justify-content-between align-items-center px-0">
-                      {item.itemTypeName}
-                      <span className="badge bg-primary rounded-pill">ID: {item.itemTypeId}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+
+            {itemTypes.length === 0 ? (
+              <p className="category-empty-state">No Item Types Found</p>
+            ) : (
+              <ul className="category-list">
+                {itemTypes.map(item => (
+                  <li key={item.itemTypeId} className="category-list-item">
+                    <div className="category-list-item-header">
+                      <span className="category-item-name">{item.itemTypeName}</span>
+                      <span className="category-item-id">ID: {item.itemTypeId}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
 
-        {/* MAIN CATEGORIES */}
-        <div className="col-lg-4 mb-4">
-          <div className="card shadow h-100">
-            <div className="card-header py-3 d-flex justify-content-between align-items-center">
-              <h6 className="m-0 font-weight-bold text-primary">Main Categories</h6>
-              <button 
-                className="btn btn-sm btn-outline-primary"
-                data-bs-toggle="collapse" 
-                data-bs-target="#collapseMainCategory"
-              ><i className="bi bi-plus"></i></button>
-            </div>
-            <div className="card-body">
-              <div className="collapse mb-3" id="collapseMainCategory">
-                <form onSubmit={handleAddMainCategory} className="border p-2 rounded bg-light">
-                  <select className="form-select mb-2 form-select-sm" value={mainCategoryForm.itemTypeId} onChange={e=>setMainCategoryForm({...mainCategoryForm, itemTypeId: e.target.value})}>
-                    <option value="">Select Item Type</option>
-                    {itemTypes.map(it=><option key={it.itemTypeId} value={it.itemTypeId}>{it.itemTypeName}</option>)}
-                  </select>
-                  <input type="text" className="form-control mb-2 form-control-sm" placeholder="Name" value={mainCategoryForm.name} onChange={e=>setMainCategoryForm({...mainCategoryForm, name: e.target.value})} />
-                  <input type="text" className="form-control mb-2 form-control-sm" placeholder="Remarks" value={mainCategoryForm.remarks} onChange={e=>setMainCategoryForm({...mainCategoryForm, remarks: e.target.value})} />
-                  <button type="submit" className="btn btn-sm btn-primary w-100">Save</button>
-                </form>
-              </div>
+        {/* ─── MAIN CATEGORIES ──────────────────────── */}
+        <div className="category-card">
+          <div className="category-card-header">
+            <h6 className="category-card-title">Main Categories</h6>
+            <button
+              className="category-action-btn"
+              onClick={() => setShowMainCategoryForm(prev => !prev)}
+              title={showMainCategoryForm ? 'Hide form' : 'Add Main Category'}
+            >
+              <i className="bi bi-plus"></i>
+            </button>
+          </div>
 
-              {mainCategories.length === 0 ? <p className="text-muted text-center mt-3">No Main Categories</p> : (
-                <ul className="list-group list-group-flush" style={{maxHeight:'400px', overflowY:'auto'}}>
-                  {mainCategories.map(main => (
-                    <li key={main.mainCategoryId} className="list-group-item px-0">
-                      <div className="d-flex justify-content-between align-items-center mb-1">
-                        <span className="font-weight-bold">{main.mainCategoryName}</span>
-                      </div>
-                      <small className="text-muted">Type: {main.itemTypeName}</small>
-                    </li>
+          <div className="category-card-body">
+            <div className={`category-form-wrapper ${showMainCategoryForm ? 'is-visible' : ''}`}>
+              <form onSubmit={handleAddMainCategory} className="category-form">
+                <select
+                  className="category-select"
+                  value={mainCategoryForm.itemTypeId}
+                  onChange={e => setMainCategoryForm({ ...mainCategoryForm, itemTypeId: e.target.value })}
+                >
+                  <option value="">Select Item Type</option>
+                  {itemTypes.map(it => (
+                    <option key={it.itemTypeId} value={it.itemTypeId}>{it.itemTypeName}</option>
                   ))}
-                </ul>
-              )}
+                </select>
+                <input
+                  type="text"
+                  className="category-input"
+                  placeholder="Name"
+                  value={mainCategoryForm.name}
+                  onChange={e => setMainCategoryForm({ ...mainCategoryForm, name: e.target.value })}
+                />
+                <input
+                  type="text"
+                  className="category-input"
+                  placeholder="Remarks"
+                  value={mainCategoryForm.remarks}
+                  onChange={e => setMainCategoryForm({ ...mainCategoryForm, remarks: e.target.value })}
+                />
+                <button type="submit" className="category-submit-btn">Save</button>
+              </form>
             </div>
+
+            {mainCategories.length === 0 ? (
+              <p className="category-empty-state">No Main Categories</p>
+            ) : (
+              <ul className="category-list">
+                {mainCategories.map(main => (
+                  <li key={main.mainCategoryId} className="category-list-item">
+                    <div className="category-list-item-header">
+                      <span className="category-item-name">{main.mainCategoryName}</span>
+                    </div>
+                    <span className="category-item-meta">Type: {main.itemTypeName}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
 
-        {/* SUB CATEGORIES */}
-        <div className="col-lg-4 mb-4">
-          <div className="card shadow h-100">
-            <div className="card-header py-3 d-flex justify-content-between align-items-center">
-              <h6 className="m-0 font-weight-bold text-primary">Sub Categories</h6>
-              <button 
-                className="btn btn-sm btn-outline-primary"
-                data-bs-toggle="collapse" 
-                data-bs-target="#collapseSubCategory"
-              ><i className="bi bi-plus"></i></button>
-            </div>
-            <div className="card-body">
-              <div className="collapse mb-3" id="collapseSubCategory">
-                <form onSubmit={handleAddSubCategory} className="border p-2 rounded bg-light">
-                  <select className="form-select mb-2 form-select-sm" value={subCategoryForm.mainCategoryId} onChange={e=>setSubCategoryForm({...subCategoryForm, mainCategoryId: e.target.value})}>
-                    <option value="">Select Main Category</option>
-                    {mainCategories.map(mc=><option key={mc.mainCategoryId} value={mc.mainCategoryId}>{mc.mainCategoryName}</option>)}
-                  </select>
-                  <input type="text" className="form-control mb-2 form-control-sm" placeholder="Name" value={subCategoryForm.name} onChange={e=>setSubCategoryForm({...subCategoryForm, name: e.target.value})} />
-                  <input type="text" className="form-control mb-2 form-control-sm" placeholder="Remarks" value={subCategoryForm.remarks} onChange={e=>setSubCategoryForm({...subCategoryForm, remarks: e.target.value})} />
-                  <button type="submit" className="btn btn-sm btn-primary w-100">Save</button>
-                </form>
-              </div>
+        {/* ─── SUB CATEGORIES ───────────────────────── */}
+        <div className="category-card">
+          <div className="category-card-header">
+            <h6 className="category-card-title">Sub Categories</h6>
+            <button
+              className="category-action-btn"
+              onClick={() => setShowSubCategoryForm(prev => !prev)}
+              title={showSubCategoryForm ? 'Hide form' : 'Add Sub Category'}
+            >
+              <i className="bi bi-plus"></i>
+            </button>
+          </div>
 
-              {subCategories.length === 0 ? <p className="text-muted text-center mt-3">No Sub Categories</p> : (
-                <ul className="list-group list-group-flush" style={{maxHeight:'400px', overflowY:'auto'}}>
-                  {subCategories.map(sub => (
-                    <li key={sub.subCategoryId} className="list-group-item px-0">
-                      <div className="d-flex justify-content-between align-items-center mb-1">
-                        <span className="font-weight-bold">{sub.subCategoryName}</span>
-                      </div>
-                      <small className="text-muted">{sub.itemTypeName} &rsaquo; {sub.mainCategoryName}</small>
-                    </li>
+          <div className="category-card-body">
+            <div className={`category-form-wrapper ${showSubCategoryForm ? 'is-visible' : ''}`}>
+              <form onSubmit={handleAddSubCategory} className="category-form">
+                <select
+                  className="category-select"
+                  value={subCategoryForm.mainCategoryId}
+                  onChange={e => setSubCategoryForm({ ...subCategoryForm, mainCategoryId: e.target.value })}
+                >
+                  <option value="">Select Main Category</option>
+                  {mainCategories.map(mc => (
+                    <option key={mc.mainCategoryId} value={mc.mainCategoryId}>{mc.mainCategoryName}</option>
                   ))}
-                </ul>
-              )}
+                </select>
+                <input
+                  type="text"
+                  className="category-input"
+                  placeholder="Name"
+                  value={subCategoryForm.name}
+                  onChange={e => setSubCategoryForm({ ...subCategoryForm, name: e.target.value })}
+                />
+                <input
+                  type="text"
+                  className="category-input"
+                  placeholder="Remarks"
+                  value={subCategoryForm.remarks}
+                  onChange={e => setSubCategoryForm({ ...subCategoryForm, remarks: e.target.value })}
+                />
+                <button type="submit" className="category-submit-btn">Save</button>
+              </form>
             </div>
+
+            {subCategories.length === 0 ? (
+              <p className="category-empty-state">No Sub Categories</p>
+            ) : (
+              <ul className="category-list">
+                {subCategories.map(sub => (
+                  <li key={sub.subCategoryId} className="category-list-item">
+                    <div className="category-list-item-header">
+                      <span className="category-item-name">{sub.subCategoryName}</span>
+                    </div>
+                    <span className="category-item-meta">{sub.itemTypeName} &rsaquo; {sub.mainCategoryName}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
 

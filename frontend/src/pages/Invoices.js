@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import './Invoices.css';
 
 const Invoices = () => {
   const [invoices, setInvoices] = useState([]);
@@ -113,68 +114,68 @@ const Invoices = () => {
   });
 
   return (
-    <div className="container-fluid py-4">
-      <div className="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 className="h3 mb-0 text-gray-800">Invoice Management</h1>
-        <button className="btn btn-primary shadow-sm" onClick={openAddModal}>
-          <i className="bi bi-plus-circle me-1"></i> Add Invoice
+    <div className="invoices-page">
+      <div className="invoices-header">
+        <h1 className="invoices-title">Invoice Management</h1>
+        <button className="invoices-add-btn" onClick={openAddModal}>
+          <i className="bi bi-plus-circle"></i> Add Invoice
         </button>
       </div>
 
-      <div className="card shadow mb-4 border-0">
-        <div className="card-header py-3 bg-white d-flex justify-content-between align-items-center">
-          <h6 className="m-0 font-weight-bold text-primary">Invoices List</h6>
-          <div className="input-group" style={{ maxWidth: '300px' }}>
+      <div className="invoices-card">
+        <div className="invoices-card-header">
+          <h6 className="invoices-card-title">Invoices List</h6>
+          <div className="invoices-search-group">
             <input
               type="text"
-              className="form-control"
+              className="invoices-search-input"
               placeholder="Search by invoice number, supplier..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <span className="input-group-text"><i className="bi bi-search"></i></span>
+            <span className="invoices-search-icon"><i className="bi bi-search"></i></span>
           </div>
         </div>
-        <div className="card-body">
+        <div className="invoices-card-body">
           {loading ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
+            <div style={{ textAlign: 'center', padding: '40px' }}>
+              <div>Loading...</div>
             </div>
           ) : (
-            <div className="table-responsive">
-              <table className="table table-hover align-middle">
-                <thead className="table-light">
+            <div className="invoices-table-wrapper">
+              <table className="invoices-table">
+                <thead className="invoices-table-head">
                   <tr>
                     <th>Invoice Number</th>
                     <th>Supplier</th>
                     <th>Date</th>
                     <th>Total Amount</th>
                     <th>Remarks</th>
-                    <th className="text-center">Actions</th>
+                    <th style={{ textAlign: 'center' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredInvoices.length === 0 ? (
-                    <tr><td colSpan="6" className="text-center py-4">No invoices found</td></tr>
+                    <tr><td colSpan="6" className="invoices-empty-state">No invoices found</td></tr>
                   ) : (
                     filteredInvoices.map(invoice => (
                       <tr key={invoice.invoiceId}>
-                        <td className="fw-bold text-primary">{invoice.invoiceNumber}</td>
-                        <td className="fw-bold">{invoice.supplierName || 'Unknown Supplier'}</td>
+                        <td style={{ fontWeight: 'bold', color: '#0d6efd' }}>{invoice.invoiceNumber}</td>
+                        <td style={{ fontWeight: 'bold' }}>{invoice.supplierName || 'Unknown Supplier'}</td>
                         <td>{invoice.invoiceDate ? invoice.invoiceDate.split('T')[0] : '-'}</td>
                         <td>
-                          <span className="badge bg-success fs-6">Rs. {invoice.totalAmount}</span>
+                          <span className="invoices-amount-badge">Rs. {invoice.totalAmount}</span>
                         </td>
-                        <td><span className="text-muted small">{invoice.remarks || '-'}</span></td>
-                        <td className="text-center">
-                          <button onClick={() => openEditModal(invoice)} className="btn btn-sm btn-outline-primary me-2">
-                            <i className="bi bi-pencil"></i>
-                          </button>
-                          <button onClick={() => handleDelete(invoice.invoiceId)} className="btn btn-sm btn-outline-danger">
-                            <i className="bi bi-trash"></i>
-                          </button>
+                        <td><span style={{ color: '#6c757d', fontSize: '0.875rem' }}>{invoice.remarks || '-'}</span></td>
+                        <td>
+                          <div className="invoices-action-group">
+                            <button onClick={() => openEditModal(invoice)} className="invoices-action-btn invoices-action-btn--edit">
+                              <i className="bi bi-pencil"></i>
+                            </button>
+                            <button onClick={() => handleDelete(invoice.invoiceId)} className="invoices-action-btn invoices-action-btn--delete">
+                              <i className="bi bi-trash"></i>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -188,55 +189,53 @@ const Invoices = () => {
 
       {showModal && (
         <React.Fragment>
-          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content border-0 shadow-lg">
-                <div className="modal-header bg-light">
-                  <h5 className="modal-title text-primary fw-bold">{isEdit ? 'Edit Invoice' : 'Add New Invoice'}</h5>
-                  <button type="button" className="btn-close" onClick={closeModal}></button>
-                </div>
-                <form onSubmit={handleSubmit}>
-                  <div className="modal-body p-4">
-                    <div className="row g-3">
-                      <div className="col-12">
-                        <label className="form-label fw-bold">Invoice Number</label>
-                        <input type="text" className="form-control" name="invoiceNumber" value={formData.invoiceNumber} onChange={handleInputChange} required />
-                      </div>
-                      <div className="col-12">
-                        <label className="form-label fw-bold">Supplier</label>
-                        <select className="form-select" name="supplierId" value={formData.supplierId} onChange={handleInputChange} required>
-                          <option value="">Select Supplier</option>
-                          {suppliers.map(sup => (
-                            <option key={sup.supplierId} value={sup.supplierId}>{sup.supplierName}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label fw-bold">Invoice Date</label>
-                        <input type="date" className="form-control" name="invoiceDate" value={formData.invoiceDate} onChange={handleInputChange} required />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label fw-bold">Total Amount</label>
-                        <div className="input-group">
-                          <span className="input-group-text">Rs.</span>
-                          <input type="text" className="form-control" name="totalAmount" placeholder="0.00" value={formData.totalAmount} onChange={handleInputChange} required />
-                        </div>
-                      </div>
-                      <div className="col-12">
-                        <label className="form-label fw-bold">Remarks</label>
-                        <textarea className="form-control" name="remarks" rows="3" value={formData.remarks} onChange={handleInputChange}></textarea>
+          <div className="invoices-modal-backdrop">
+            <div className="invoices-modal-dialog">
+              <div className="invoices-modal-header">
+                <h5 className="invoices-modal-title">{isEdit ? 'Edit Invoice' : 'Add New Invoice'}</h5>
+                <button type="button" className="invoices-modal-close" onClick={closeModal}>✕</button>
+              </div>
+              <form onSubmit={handleSubmit}>
+                <div className="invoices-modal-body">
+                  <div className="invoices-form-grid">
+                    <div className="invoices-form-group col-span-12">
+                      <label className="invoices-form-label">Invoice Number</label>
+                      <input type="text" className="invoices-form-input" name="invoiceNumber" value={formData.invoiceNumber} onChange={handleInputChange} required />
+                    </div>
+                    <div className="invoices-form-group col-span-12">
+                      <label className="invoices-form-label">Supplier</label>
+                      <select className="invoices-form-select" name="supplierId" value={formData.supplierId} onChange={handleInputChange} required>
+                        <option value="">Select Supplier</option>
+                        {suppliers.map(sup => (
+                          <option key={sup.supplierId} value={sup.supplierId}>{sup.supplierName}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="invoices-form-group col-span-6">
+                      <label className="invoices-form-label">Invoice Date</label>
+                      <input type="date" className="invoices-form-input" name="invoiceDate" value={formData.invoiceDate} onChange={handleInputChange} required />
+                    </div>
+                    <div className="invoices-form-group col-span-6">
+                      <label className="invoices-form-label">Total Amount</label>
+                      <div className="invoices-input-group">
+                        <span className="invoices-input-group-text">Rs.</span>
+                        <input type="text" className="invoices-form-input" name="totalAmount" placeholder="0.00" value={formData.totalAmount} onChange={handleInputChange} required />
                       </div>
                     </div>
+                    <div className="invoices-form-group col-span-12">
+                      <label className="invoices-form-label">Remarks</label>
+                      <textarea className="invoices-form-textarea" name="remarks" rows="3" value={formData.remarks} onChange={handleInputChange}></textarea>
+                    </div>
                   </div>
-                  <div className="modal-footer bg-light">
-                    <button type="button" className="btn btn-secondary px-4" onClick={closeModal}>Cancel</button>
-                    <button type="submit" className="btn btn-primary px-4 fw-bold shadow-sm">
-                      <i className={`bi ${isEdit ? 'bi-check-circle' : 'bi-plus-circle'} me-2`}></i>
-                      {isEdit ? 'Update Invoice' : 'Save Invoice'}
-                    </button>
-                  </div>
-                </form>
-              </div>
+                </div>
+                <div className="invoices-modal-footer">
+                  <button type="button" className="invoices-btn-secondary" onClick={closeModal}>Cancel</button>
+                  <button type="submit" className="invoices-btn-primary">
+                    <i className={`bi ${isEdit ? 'bi-check-circle' : 'bi-plus-circle'}`}></i>
+                    {isEdit ? 'Update Invoice' : 'Save Invoice'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </React.Fragment>

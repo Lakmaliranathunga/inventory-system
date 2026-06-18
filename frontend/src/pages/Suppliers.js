@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import './Suppliers.css';
 
 const Suppliers = () => {
   const [suppliers, setSuppliers] = useState([]);
@@ -110,39 +111,37 @@ const Suppliers = () => {
   });
 
   return (
-    <div className="container-fluid py-4">
-      <div className="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 className="h3 mb-0 text-gray-800">Supplier Management</h1>
-        <button className="btn btn-primary shadow-sm" onClick={openAddModal}>
-          <i className="bi bi-plus-circle me-1"></i> Add Supplier
+    <div className="suppliers-page">
+      <div className="suppliers-header">
+        <h1 className="suppliers-title">Supplier Management</h1>
+        <button className="suppliers-add-btn" onClick={openAddModal}>
+          <i className="bi bi-plus-circle"></i> Add Supplier
         </button>
       </div>
 
-      <div className="card shadow mb-4 border-0">
-        <div className="card-header py-3 bg-white d-flex justify-content-between align-items-center">
-          <h6 className="m-0 font-weight-bold text-primary">Suppliers List</h6>
-          <div className="input-group" style={{ maxWidth: '300px' }}>
+      <div className="suppliers-card">
+        <div className="suppliers-card-header">
+          <h6 className="suppliers-card-title">Suppliers List</h6>
+          <div className="suppliers-search-group">
             <input 
               type="text" 
-              className="form-control" 
+              className="suppliers-search-input" 
               placeholder="Search by name, contact..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <span className="input-group-text"><i className="bi bi-search"></i></span>
+            <span className="suppliers-search-icon"><i className="bi bi-search"></i></span>
           </div>
         </div>
-        <div className="card-body">
+        <div className="suppliers-card-body">
           {loading ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
+            <div style={{ textAlign: 'center', padding: '40px' }}>
+              <div>Loading...</div>
             </div>
           ) : (
-            <div className="table-responsive">
-              <table className="table table-hover align-middle">
-                <thead className="table-light">
+            <div className="suppliers-table-wrapper">
+              <table className="suppliers-table">
+                <thead className="suppliers-table-head">
                   <tr>
                     <th>Name</th>
                     <th>Contact Person</th>
@@ -150,28 +149,30 @@ const Suppliers = () => {
                     <th>Email</th>
                     <th>Address</th>
                     <th>Remarks</th>
-                    <th className="text-center">Actions</th>
+                    <th style={{ textAlign: 'center' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredSuppliers.length === 0 ? (
-                    <tr><td colSpan="7" className="text-center py-4">No suppliers found</td></tr>
+                    <tr><td colSpan="7" className="suppliers-empty-state">No suppliers found</td></tr>
                   ) : (
                     filteredSuppliers.map(supplier => (
                       <tr key={supplier.supplierId}>
-                        <td className="fw-bold">{supplier.supplierName}</td>
+                        <td style={{ fontWeight: 'bold' }}>{supplier.supplierName}</td>
                         <td>{supplier.contactPerson}</td>
                         <td>{supplier.contactNo}</td>
                         <td>{supplier.email}</td>
                         <td>{supplier.address}</td>
-                        <td><span className="text-muted small">{supplier.remarks || '-'}</span></td>
-                        <td className="text-center">
-                          <button onClick={() => openEditModal(supplier)} className="btn btn-sm btn-outline-primary me-2">
-                            <i className="bi bi-pencil"></i>
-                          </button>
-                          <button onClick={() => handleDelete(supplier.supplierId)} className="btn btn-sm btn-outline-danger">
-                            <i className="bi bi-trash"></i>
-                          </button>
+                        <td><span style={{ color: '#6c757d', fontSize: '0.875rem' }}>{supplier.remarks || '-'}</span></td>
+                        <td>
+                          <div className="suppliers-action-group">
+                            <button onClick={() => openEditModal(supplier)} className="suppliers-action-btn suppliers-action-btn--edit">
+                              <i className="bi bi-pencil"></i>
+                            </button>
+                            <button onClick={() => handleDelete(supplier.supplierId)} className="suppliers-action-btn suppliers-action-btn--delete">
+                              <i className="bi bi-trash"></i>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -185,48 +186,46 @@ const Suppliers = () => {
 
       {showModal && (
         <React.Fragment>
-          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-lg modal-dialog-centered">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">{isEdit ? 'Edit Supplier' : 'Add Supplier'}</h5>
-                  <button type="button" className="btn-close" onClick={closeModal}></button>
-                </div>
-                <form onSubmit={handleSubmit}>
-                  <div className="modal-body">
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <label className="form-label">Supplier Name</label>
-                        <input type="text" className="form-control" name="name" value={formData.name} onChange={handleInputChange} required />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label">Contact Person</label>
-                        <input type="text" className="form-control" name="contactPerson" value={formData.contactPerson || ''} onChange={handleInputChange} />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label">Contact Number</label>
-                        <input type="text" className="form-control" name="contactNo" value={formData.contactNo} onChange={handleInputChange} />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label">Email</label>
-                        <input type="email" className="form-control" name="email" value={formData.email} onChange={handleInputChange} />
-                      </div>
-                      <div className="col-12">
-                        <label className="form-label">Address</label>
-                        <textarea className="form-control" name="address" rows="2" value={formData.address} onChange={handleInputChange}></textarea>
-                      </div>
-                      <div className="col-12">
-                        <label className="form-label">Remarks</label>
-                        <textarea className="form-control" name="remarks" rows="2" value={formData.remarks} onChange={handleInputChange}></textarea>
-                      </div>
+          <div className="suppliers-modal-backdrop">
+            <div className="suppliers-modal-dialog">
+              <div className="suppliers-modal-header">
+                <h5 className="suppliers-modal-title">{isEdit ? 'Edit Supplier' : 'Add Supplier'}</h5>
+                <button type="button" className="suppliers-modal-close" onClick={closeModal}>✕</button>
+              </div>
+              <form onSubmit={handleSubmit}>
+                <div className="suppliers-modal-body">
+                  <div className="suppliers-form-grid">
+                    <div className="suppliers-form-group col-span-6">
+                      <label className="suppliers-form-label">Supplier Name</label>
+                      <input type="text" className="suppliers-form-input" name="name" value={formData.name} onChange={handleInputChange} required />
+                    </div>
+                    <div className="suppliers-form-group col-span-6">
+                      <label className="suppliers-form-label">Contact Person</label>
+                      <input type="text" className="suppliers-form-input" name="contactPerson" value={formData.contactPerson || ''} onChange={handleInputChange} />
+                    </div>
+                    <div className="suppliers-form-group col-span-6">
+                      <label className="suppliers-form-label">Contact Number</label>
+                      <input type="text" className="suppliers-form-input" name="contactNo" value={formData.contactNo} onChange={handleInputChange} />
+                    </div>
+                    <div className="suppliers-form-group col-span-6">
+                      <label className="suppliers-form-label">Email</label>
+                      <input type="email" className="suppliers-form-input" name="email" value={formData.email} onChange={handleInputChange} />
+                    </div>
+                    <div className="suppliers-form-group col-span-12">
+                      <label className="suppliers-form-label">Address</label>
+                      <textarea className="suppliers-form-textarea" name="address" rows="2" value={formData.address} onChange={handleInputChange}></textarea>
+                    </div>
+                    <div className="suppliers-form-group col-span-12">
+                      <label className="suppliers-form-label">Remarks</label>
+                      <textarea className="suppliers-form-textarea" name="remarks" rows="2" value={formData.remarks} onChange={handleInputChange}></textarea>
                     </div>
                   </div>
-                  <div className="modal-footer">
-                    <button type="button" className="btn btn-secondary" onClick={closeModal}>Cancel</button>
-                    <button type="submit" className="btn btn-primary">{isEdit ? 'Update Changes' : 'Save Supplier'}</button>
-                  </div>
-                </form>
-              </div>
+                </div>
+                <div className="suppliers-modal-footer">
+                  <button type="button" className="suppliers-btn-secondary" onClick={closeModal}>Cancel</button>
+                  <button type="submit" className="suppliers-btn-primary">{isEdit ? 'Update Changes' : 'Save Supplier'}</button>
+                </div>
+              </form>
             </div>
           </div>
         </React.Fragment>
