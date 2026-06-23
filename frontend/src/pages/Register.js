@@ -58,10 +58,19 @@ function Register() {
   };
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    if (name === "divisionId") {
+      setFormData({
+        ...formData,
+        divisionId: value,
+        sectionId: ""
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -245,7 +254,13 @@ function Register() {
                     onChange={handleChange}
                   >
                     <option value="">Select section</option>
-                    {sections.map((section) => {
+                    {sections
+                      .filter((section) => {
+                        if (!formData.divisionId) return false;
+                        const divId = section.division_id ?? section.divisionId;
+                        return String(divId) === String(formData.divisionId);
+                      })
+                      .map((section) => {
                       const id = section.sectionid ?? section.sectionId ?? section.section_id ?? section.id;
                       const label = section.sectionname ?? section.sectionName ?? section.name ?? section.selectname ?? "Unnamed section";
                       return (
