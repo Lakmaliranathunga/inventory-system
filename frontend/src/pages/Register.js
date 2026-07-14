@@ -3,13 +3,13 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import "./Login.css";
 import logo from "../assets/images/slpa-logo-original.png";
-import bg from "../assets/images/ship-bg.jpg";
 
 function Register() {
   const [formData, setFormData] = useState({
     uUsername: "",
     uFullName: "",
     uPassword: "",
+    uConfirmPassword: "",
     uStatus: "",
     uEmpNo: "",
     roleId: "",
@@ -83,6 +83,11 @@ function Register() {
       return;
     }
 
+    if (formData.uPassword !== formData.uConfirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -92,6 +97,7 @@ function Register() {
         uUsername: "",
         uFullName: "",
         uPassword: "",
+        uConfirmPassword: "",
         uStatus: "",
         uEmpNo: "",
         roleId: "",
@@ -125,8 +131,7 @@ function Register() {
 
       {/* Main split screen */}
       <div 
-        className="login-main-content" 
-        style={{ backgroundImage: `url(${bg})` }}
+        className="login-main-content register-main-bg" 
       >
         {/* Left column: Login Box styled for Register */}
         <div className="login-left-pane register-full-pane">
@@ -141,148 +146,170 @@ function Register() {
             <form onSubmit={handleSubmit} className="login-form">
               <div className="register-grid">
                 
-                <div className="login-input-group">
-                  <label htmlFor="uUsername">Username</label>
-                  <input
-                    id="uUsername"
-                    name="uUsername"
-                    type="text"
-                    placeholder="Enter username"
-                    value={formData.uUsername}
-                    onChange={handleChange}
-                  />
-                </div>
+                {/* User Details Fieldset */}
+                <fieldset className="register-fieldset">
+                  <legend className="register-legend">User Details</legend>
+                  
+                  <div className="login-input-group">
+                    <label htmlFor="uFullName">Full Name</label>
+                    <input
+                      id="uFullName"
+                      name="uFullName"
+                      type="text"
+                      placeholder="Enter full name"
+                      value={formData.uFullName}
+                      onChange={handleChange}
+                    />
+                  </div>
 
-                <div className="login-input-group">
-                  <label htmlFor="uFullName">Full Name</label>
-                  <input
-                    id="uFullName"
-                    name="uFullName"
-                    type="text"
-                    placeholder="Enter full name"
-                    value={formData.uFullName}
-                    onChange={handleChange}
-                  />
-                </div>
+                  <div className="login-input-group">
+                    <label htmlFor="uEmpNo">Employee Number</label>
+                    <input
+                      id="uEmpNo"
+                      name="uEmpNo"
+                      type="text"
+                      placeholder="Enter employee no"
+                      value={formData.uEmpNo}
+                      onChange={handleChange}
+                    />
+                  </div>
 
-                <div className="login-input-group">
-                  <label htmlFor="uPassword">Password</label>
-                  <input
-                    id="uPassword"
-                    name="uPassword"
-                    type="password"
-                    placeholder="Enter password"
-                    value={formData.uPassword}
-                    onChange={handleChange}
-                  />
-                </div>
+                  <div className="login-input-group">
+                    <label htmlFor="contactNo">Contact Number</label>
+                    <input
+                      id="contactNo"
+                      name="contactNo"
+                      type="text"
+                      placeholder="Enter contact no"
+                      value={formData.contactNo}
+                      onChange={handleChange}
+                    />
+                  </div>
 
-                <div className="login-input-group">
-                  <label htmlFor="uStatus">Status</label>
-                  <select
-                    id="uStatus"
-                    name="uStatus"
-                    className="register-select"
-                    value={formData.uStatus}
-                    onChange={handleChange}
-                  >
-                    <option value="">Select Status</option>
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
-                </div>
+                  <div className="login-input-group">
+                    <label htmlFor="divisionId">Division</label>
+                    <select
+                      id="divisionId"
+                      name="divisionId"
+                      className="register-select"
+                      value={formData.divisionId}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select division</option>
+                      {divisions.map((division) => {
+                        const id = division.division_id ?? division.divisionId ?? division.id;
+                        const label = division.description ?? division.divisionName ?? division.name ?? "Unnamed division";
+                        return (
+                          <option key={id ?? label} value={id ?? label}>
+                            {label}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
 
-                <div className="login-input-group">
-                  <label htmlFor="uEmpNo">Employee Number</label>
-                  <input
-                    id="uEmpNo"
-                    name="uEmpNo"
-                    type="text"
-                    placeholder="Enter employee no"
-                    value={formData.uEmpNo}
-                    onChange={handleChange}
-                  />
-                </div>
+                  <div className="login-input-group">
+                    <label htmlFor="sectionId">Section</label>
+                    <select
+                      id="sectionId"
+                      name="sectionId"
+                      className="register-select"
+                      value={formData.sectionId}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select section</option>
+                      {sections
+                        .filter((section) => {
+                          if (!formData.divisionId) return false;
+                          const divId = section.division_id ?? section.divisionId;
+                          return String(divId) === String(formData.divisionId);
+                        })
+                        .map((section) => {
+                        const id = section.sectionid ?? section.sectionId ?? section.section_id ?? section.id;
+                        const label = section.sectionname ?? section.sectionName ?? section.name ?? section.selectname ?? "Unnamed section";
+                        return (
+                          <option key={id ?? label} value={id ?? label}>
+                            {label}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                </fieldset>
 
-                <div className="login-input-group">
-                  <label htmlFor="roleId">Role</label>
-                  <select
-                    id="roleId"
-                    name="roleId"
-                    className="register-select"
-                    value={formData.roleId}
-                    onChange={handleChange}
-                  >
-                    <option value="">Select Role</option>
-                    {roles.map((role) => (
-                      <option key={role.roleId} value={role.roleId}>
-                        {role.roleName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {/* Account Details Fieldset */}
+                <fieldset className="register-fieldset">
+                  <legend className="register-legend">Account Details</legend>
 
-                <div className="login-input-group">
-                  <label htmlFor="divisionId">Division</label>
-                  <select
-                    id="divisionId"
-                    name="divisionId"
-                    className="register-select"
-                    value={formData.divisionId}
-                    onChange={handleChange}
-                  >
-                    <option value="">Select division</option>
-                    {divisions.map((division) => {
-                      const id = division.division_id ?? division.divisionId ?? division.id;
-                      const label = division.description ?? division.divisionName ?? division.name ?? "Unnamed division";
-                      return (
-                        <option key={id ?? label} value={id ?? label}>
-                          {label}
+                  <div className="login-input-group">
+                    <label htmlFor="uUsername">Username</label>
+                    <input
+                      id="uUsername"
+                      name="uUsername"
+                      type="text"
+                      placeholder="Enter username"
+                      value={formData.uUsername}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <div className="login-input-group">
+                    <label htmlFor="uPassword">Password</label>
+                    <input
+                      id="uPassword"
+                      name="uPassword"
+                      type="password"
+                      placeholder="Enter password"
+                      value={formData.uPassword}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <div className="login-input-group">
+                    <label htmlFor="uConfirmPassword">Confirm Password</label>
+                    <input
+                      id="uConfirmPassword"
+                      name="uConfirmPassword"
+                      type="password"
+                      placeholder="Confirm password"
+                      value={formData.uConfirmPassword}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <div className="login-input-group">
+                    <label htmlFor="uStatus">Status</label>
+                    <select
+                      id="uStatus"
+                      name="uStatus"
+                      className="register-select"
+                      value={formData.uStatus}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select Status</option>
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                  </div>
+
+                  <div className="login-input-group">
+                    <label htmlFor="roleId">Role</label>
+                    <select
+                      id="roleId"
+                      name="roleId"
+                      className="register-select"
+                      value={formData.roleId}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select Role</option>
+                      {roles.map((role) => (
+                        <option key={role.roleId} value={role.roleId}>
+                          {role.roleName}
                         </option>
-                      );
-                    })}
-                  </select>
-                </div>
-
-                <div className="login-input-group">
-                  <label htmlFor="sectionId">Section</label>
-                  <select
-                    id="sectionId"
-                    name="sectionId"
-                    className="register-select"
-                    value={formData.sectionId}
-                    onChange={handleChange}
-                  >
-                    <option value="">Select section</option>
-                    {sections
-                      .filter((section) => {
-                        if (!formData.divisionId) return false;
-                        const divId = section.division_id ?? section.divisionId;
-                        return String(divId) === String(formData.divisionId);
-                      })
-                      .map((section) => {
-                      const id = section.sectionid ?? section.sectionId ?? section.section_id ?? section.id;
-                      const label = section.sectionname ?? section.sectionName ?? section.name ?? section.selectname ?? "Unnamed section";
-                      return (
-                        <option key={id ?? label} value={id ?? label}>
-                          {label}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-
-                <div className="login-input-group">
-                  <label htmlFor="contactNo">Contact Number</label>
-                  <input
-                    id="contactNo"
-                    name="contactNo"
-                    type="text"
-                    placeholder="Enter contact no"
-                    value={formData.contactNo}
-                    onChange={handleChange}
-                  />
-                </div>
+                      ))}
+                    </select>
+                  </div>
+                </fieldset>
 
                 {/* Empty cell to keep submit and footer aligned or push submit full width */}
                 <div className="login-input-group register-submit-btn" style={{ marginTop: "12px" }}>

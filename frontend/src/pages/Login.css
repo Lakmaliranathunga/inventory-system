@@ -221,48 +221,170 @@
 /* REGISTER SPECIFIC STYLES */
 /* REGISTER SPECIFIC STYLES */
 .register-form-wrapper {
-  max-width: 450px;
+  max-width: 900px;
   width: 100%;
   margin: auto; /* horizontally and vertically centered */
 }
 
-.register-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0;
+.register-form-wrapper .welcome-title {
+  font-size: 42px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ffffff 0%, #93c5fd 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 30px;
+  text-align: center;
+  text-shadow: 0px 4px 20px rgba(147, 197, 253, 0.2);
 }
 
-.register-grid > .login-input-group {
-  margin-bottom: 20px;
+.register-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+.register-fieldset {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 32px 28px;
+  border-radius: 16px;
+  margin: 0;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.register-fieldset:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.25);
+  border-color: rgba(147, 197, 253, 0.3);
+}
+
+.register-legend {
+  color: #93C5FD;
+  padding: 0 16px;
+  font-weight: 700;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  background-color: rgba(0, 33, 71, 0.8);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(4px);
+}
+
+.register-grid > .login-input-group,
+.register-fieldset .login-input-group {
+  margin-bottom: 22px;
+}
+
+.register-fieldset .login-input-group label {
+  color: #f1f5f9;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.register-fieldset .login-input-group input,
+.register-fieldset .register-select {
+  background-color: rgba(255, 255, 255, 0.92);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 15px 16px;
+  font-size: 15px;
+  color: #0f172a;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.register-fieldset .login-input-group input:focus,
+.register-fieldset .register-select:focus {
+  background-color: #ffffff;
+  border-color: #60A5FA;
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.25), inset 0 2px 4px rgba(0,0,0,0.02);
+  transform: scale(1.01);
 }
 
 /* Make submit button span full width in grid if needed */
 .register-submit-btn {
   grid-column: 1 / -1;
-  margin-top: 10px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.register-submit-btn .login-submit-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 4px 14px 0 rgba(220, 38, 38, 0.39);
+  border-radius: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 18px 40px;
+  width: 100%;
+  max-width: 400px;
+  transition: all 0.3s ease;
+  margin-bottom: 16px;
+}
+
+.register-submit-btn .login-submit-btn:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 0 6px 20px 0 rgba(220, 38, 38, 0.6);
+  transform: translateY(-2px);
 }
 
 .register-select {
-  padding: 16px;
-  border: none;
-  border-radius: 8px;
-  font-size: 15px;
-  background-color: #ffffff;
-  outline: none;
-  transition: box-shadow 0.2s ease;
   appearance: none;
   cursor: pointer;
-  color: #1e293b;
-}
-
-.register-select:focus {
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
 }
 
 .register-full-pane {
   flex: 1;
   max-width: 100%;
   border-right: none;
+  background: transparent !important; 
+  padding-top: 40px;
+  padding-bottom: 60px;
+}
+
+.register-main-bg {
+  background: linear-gradient(145deg, #020617 0%, #0f172a 45%, #1e293b 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Elegant abstract glowing orbs in the background */
+.register-main-bg::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: -10%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.register-main-bg::after {
+  content: '';
+  position: absolute;
+  bottom: -20%;
+  right: -10%;
+  width: 70%;
+  height: 70%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.register-grid {
+  position: relative;
+  z-index: 10;
 }
 
 @media (max-width: 900px) {
