@@ -169,6 +169,7 @@ const StockTransactions = () => {
       case 'RETURN': return 'badge-return';
       case 'DAMAGED': return 'badge-damaged';
       case 'DISPOSAL': return 'badge-disposal';
+      case 'SELL': return 'badge-sell';
       default: return 'badge-primary';
     }
   };
@@ -200,7 +201,7 @@ const StockTransactions = () => {
             <div className="transaction-card-body">
               <form onSubmit={handleSubmit}>
                 <div className="transaction-form-group">
-                  <label className="transaction-label">Item <span className="transaction-required">*</span></label>
+                  <label className="transaction-label">Item</label>
                   <select 
                     className="transaction-select" 
                     name="itemId" 
@@ -218,7 +219,7 @@ const StockTransactions = () => {
                 </div>
 
                 <div className="transaction-form-group">
-                  <label className="transaction-label">Transaction Type <span className="transaction-required">*</span></label>
+                  <label className="transaction-label">Transaction Type</label>
                   <select 
                     className="transaction-select" 
                     name="transactionType" 
@@ -232,11 +233,12 @@ const StockTransactions = () => {
                     <option value="RETURN">RETURN</option>
                     <option value="DAMAGED">DAMAGED</option>
                     <option value="DISPOSAL">DISPOSAL</option>
+                    <option value="SELL">SELL</option>
                   </select>
                 </div>
 
                 <div className="transaction-form-group">
-                  <label className="transaction-label">Quantity <span className="transaction-required">*</span></label>
+                  <label className="transaction-label">Quantity</label>
                   <input 
                     type="number" 
                     className="transaction-input" 
@@ -346,6 +348,7 @@ const StockTransactions = () => {
                   <option value="RETURN">RETURN</option>
                   <option value="DAMAGED">DAMAGED</option>
                   <option value="DISPOSAL">DISPOSAL</option>
+                  <option value="SELL">SELL</option>
                 </select>
               </div>
 
