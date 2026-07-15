@@ -4,7 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import "./Login.css";
 
 import logo from "../assets/images/slpa-logo-original.png";
-import bg from "../assets/images/ship-bg.jpg";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -63,10 +62,7 @@ function Login() {
       </header>
 
       {/* Main split screen */}
-      <div
-        className="login-main-content"
-        style={{ backgroundImage: `url(${bg})` }}
-      >
+      <div className="login-main-content">
         {/* Left column: Login Box */}
         <div className="login-left-pane">
           <div className="login-form-wrapper">

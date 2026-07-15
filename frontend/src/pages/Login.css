@@ -64,24 +64,53 @@
 .login-main-content {
   display: flex;
   flex: 1;
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
+  background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e3a8a 100%);
   position: relative;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
-/* LEFT PANE */
+.login-main-content::before {
+  content: '';
+  position: absolute;
+  top: -15%;
+  left: -5%;
+  width: 50vw;
+  height: 50vw;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, transparent 60%);
+  border-radius: 50%;
+  z-index: 0;
+}
+
+.login-main-content::after {
+  content: '';
+  position: absolute;
+  bottom: -20%;
+  right: -10%;
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 60%);
+  border-radius: 50%;
+  z-index: 0;
+}
+
+/* LOGIN CARD */
 .login-left-pane {
-  flex: 0 0 50%;
-  background-color: rgba(0, 33, 71, 0.90);
-  /* Dark navy semi-transparent */
+  background: rgba(0, 33, 71, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  border-radius: 20px;
   display: flex;
-  align-items: flex-start; /* Ensure top isn't clipped */
   justify-content: center;
-  padding: 40px;
+  padding: 40px 50px;
   box-sizing: border-box;
   z-index: 2;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+  max-width: 480px;
+  margin: 40px;
 }
 
 .login-form-wrapper {
@@ -198,10 +227,9 @@
   text-decoration: underline;
 }
 
-/* RIGHT PANE (Empty for transparency) */
+/* RIGHT PANE (Removed for centered layout) */
 .login-right-pane {
-  flex: 0 0 50%;
-  z-index: 1;
+  display: none;
 }
 
 /* FOOTER */
@@ -389,14 +417,15 @@
 
 @media (max-width: 900px) {
   .login-main-content {
-    flex-direction: column;
+    align-items: center;
+    padding: 20px;
   }
 
   .login-left-pane {
-    flex: 1;
-    padding: 40px 20px;
-    border-right: none;
-    background-color: rgba(0, 33, 71, 0.95);
+    max-width: 100%;
+    margin: 20px 0;
+    padding: 30px 20px;
+    border-radius: 12px;
   }
 
   .login-right-pane {
