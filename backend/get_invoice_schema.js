@@ -9,3 +9,4 @@ db.query("SHOW COLUMNS FROM invoices", (err, result) => {
   }
   process.exit();
 });
+
