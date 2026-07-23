@@ -478,57 +478,102 @@ app.get("/api/inventory", verifyToken, (req, res) => {
   });
 });
 
-app.post("/api/inventory", verifyToken, (req, res) => {
-  const {
-    itemCode, itemName, serialNumber, itemTypeId, mainCategoryId,
+app.post("/api/inventory", verifyToken, async (req, res) => {
+  let {
+    itemTypeId, mainCategoryId,
     subCategoryId, divisionId, sectionId, quantity, itemCondition,
     purchaseDate, warrantyExpireDate, remarks
   } = req.body;
 
-  const sql = `
-    INSERT INTO inventory_items (
-      itemCode, itemName, serialNumber, itemTypeId, mainCategoryId, 
-      subCategoryId, divisionId, sectionId, quantity, itemCondition, 
-      purchaseDate, warrantyExpireDate, remarks, createdBy
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-  const values = [
-    itemCode, itemName, serialNumber, itemTypeId, mainCategoryId,
-    subCategoryId, divisionId, sectionId, quantity, itemCondition,
-    purchaseDate, warrantyExpireDate, remarks, req.userId
-  ];
+  try {
+    const itemTypeRes = await new Promise((resolve, reject) => {
+      db.query("SELECT itemTypeName FROM item_types WHERE itemTypeId=?", [itemTypeId || 0], (err, r) => err ? reject(err) : resolve(r));
+    });
+    const mainCatRes = await new Promise((resolve, reject) => {
+      db.query("SELECT mainCategoryName FROM main_categories WHERE mainCategoryId=?", [mainCategoryId || 0], (err, r) => err ? reject(err) : resolve(r));
+    });
+    const subCatRes = await new Promise((resolve, reject) => {
+      db.query("SELECT subCategoryName FROM sub_categories WHERE subCategoryId=?", [subCategoryId || 0], (err, r) => err ? reject(err) : resolve(r));
+    });
 
-  db.query(sql, values, (err, result) => {
-    if (err) return res.status(500).json({ success: false, error: err });
-    res.json({ success: true, message: "Item added successfully!" });
-  });
+    const itemTypeCode = (itemTypeRes[0]?.itemTypeName || 'GEN').substring(0,3).toUpperCase();
+    const mainCatCode = (mainCatRes[0]?.mainCategoryName || 'GEN').substring(0,3).toUpperCase();
+    const subCategoryName = subCatRes[0]?.subCategoryName || 'Unknown';
+    const subCatCode = subCategoryName.substring(0,3).toUpperCase();
+    const year = new Date().getFullYear();
+    const itemName = subCategoryName;
+
+    const countRes = await new Promise((resolve, reject) => {
+      db.query("SELECT COUNT(*) as cnt FROM inventory_items WHERE itemName=? AND subCategoryId=?", [itemName, subCategoryId || 0], (err, r) => err ? reject(err) : resolve(r));
+    });
+
+    let currentCount = countRes[0].cnt;
+    let qtyNum = parseInt(quantity) || 1;
+    let totalQty = currentCount + qtyNum;
+
+    for (let i = 1; i <= qtyNum; i++) {
+        const itemNumber = currentCount + i;
+        const isdNo = `ISD/${itemTypeCode}/${mainCatCode}/${subCatCode}/${year}/${itemNumber}/${totalQty}`;
+
+        const sql = `
+          INSERT INTO inventory_items (
+            itemCode, itemName, serialNumber, itemTypeId, mainCategoryId, 
+            subCategoryId, divisionId, sectionId, quantity, itemCondition, 
+            purchaseDate, warrantyExpireDate, remarks, createdBy
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+        const values = [
+          isdNo, itemName, null, itemTypeId, mainCategoryId,
+          subCategoryId, divisionId, sectionId, 1, itemCondition,
+          purchaseDate, warrantyExpireDate, remarks, req.userId
+        ];
+        
+        await new Promise((resolve, reject) => {
+          db.query(sql, values, (err, r) => err ? reject(err) : resolve(r));
+        });
+    }
+
+    res.json({ success: true, message: "Item(s) added successfully!" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: err });
+  }
 });
 
-app.put("/api/inventory/:id", verifyToken, (req, res) => {
+app.put("/api/inventory/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
   const {
-    itemCode, itemName, serialNumber, itemTypeId, mainCategoryId,
-    subCategoryId, divisionId, sectionId, quantity, itemCondition,
+    itemTypeId, mainCategoryId,
+    subCategoryId, divisionId, sectionId, itemCondition,
     purchaseDate, warrantyExpireDate, remarks
   } = req.body;
 
-  const sql = `
-    UPDATE inventory_items SET 
-      itemCode=?, itemName=?, serialNumber=?, itemTypeId=?, mainCategoryId=?, 
-      subCategoryId=?, divisionId=?, sectionId=?, quantity=?, itemCondition=?, 
-      purchaseDate=?, warrantyExpireDate=?, remarks=?, updatedBy=?, updatedDate=NOW()
-    WHERE itemId=?
-  `;
-  const values = [
-    itemCode, itemName, serialNumber, itemTypeId, mainCategoryId,
-    subCategoryId, divisionId, sectionId, quantity, itemCondition,
-    purchaseDate, warrantyExpireDate, remarks, req.userId, id
-  ];
+  try {
+    const subCatRes = await new Promise((resolve, reject) => {
+      db.query("SELECT subCategoryName FROM sub_categories WHERE subCategoryId=?", [subCategoryId || 0], (err, r) => err ? reject(err) : resolve(r));
+    });
+    const itemName = subCatRes[0]?.subCategoryName || 'Unknown';
 
-  db.query(sql, values, (err, result) => {
-    if (err) return res.status(500).json({ success: false, error: err });
-    res.json({ success: true, message: "Item updated successfully!" });
-  });
+    const sql = `
+      UPDATE inventory_items SET 
+        itemName=?, itemTypeId=?, mainCategoryId=?, 
+        subCategoryId=?, divisionId=?, sectionId=?, itemCondition=?, 
+        purchaseDate=?, warrantyExpireDate=?, remarks=?, updatedBy=?, updatedDate=NOW()
+      WHERE itemId=?
+    `;
+    const values = [
+      itemName, itemTypeId, mainCategoryId,
+      subCategoryId, divisionId, sectionId, itemCondition,
+      purchaseDate, warrantyExpireDate, remarks, req.userId, id
+    ];
+
+    db.query(sql, values, (err, result) => {
+      if (err) return res.status(500).json({ success: false, error: err });
+      res.json({ success: true, message: "Item updated successfully!" });
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err });
+  }
 });
 
 app.delete("/api/inventory/:id", verifyToken, (req, res) => {

@@ -148,8 +148,7 @@ const Inventory = () => {
 
   const filteredItems = items.filter(item => 
     (item.itemName && item.itemName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (item.itemCode && item.itemCode.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (item.serialNumber && item.serialNumber.toLowerCase().includes(searchTerm.toLowerCase()))
+    (item.itemCode && item.itemCode.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -168,7 +167,7 @@ const Inventory = () => {
             <input 
               type="text" 
               className="inventory-search-input" 
-              placeholder="Search by name, code, serial..."
+              placeholder="Search by name or ISD No..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -185,7 +184,7 @@ const Inventory = () => {
               <table className="inventory-table">
                 <thead className="inventory-table-head">
                   <tr>
-                    <th>Code</th>
+                    <th>ISD No.</th>
                     <th>Name</th>
                     <th>Category</th>
                     <th>Division/Section</th>
@@ -202,8 +201,7 @@ const Inventory = () => {
                       <tr key={item.itemId}>
                         <td><span className="inventory-badge inventory-badge--gray">{item.itemCode}</span></td>
                         <td>
-                          <strong>{item.itemName}</strong> <br/>
-                          <small style={{ color: '#6c757d' }}>SN: {item.serialNumber || 'N/A'}</small>
+                          <strong>{item.itemName}</strong>
                         </td>
                         <td>
                            <small>Type: {item.itemTypeName || '-'}</small><br/>
@@ -249,21 +247,19 @@ const Inventory = () => {
               </div>
               <form onSubmit={handleSubmit}>
                 <div className="inventory-modal-body">
-                  <div className="inventory-form-section">Basic Info</div>
-                  <div className="inventory-form-grid">
-                    <div className="inventory-form-group col-span-3">
-                      <label className="inventory-form-label">Item Code / Asset No</label>
-                      <input type="text" className="inventory-form-input" name="itemCode" value={formData.itemCode} onChange={handleInputChange} required />
+
+                  {!isEdit && (
+                    <div style={{ marginTop: '10px', fontSize: '13px', color: '#007bff' }}>
+                      <i className="bi bi-info-circle"></i> ISD No. will be auto-generated sequentially upon save based on the Quantity entered.
                     </div>
-                    <div className="inventory-form-group col-span-5">
-                      <label className="inventory-form-label">Item Name</label>
-                      <input type="text" className="inventory-form-input" name="itemName" value={formData.itemName} onChange={handleInputChange} required />
+                  )}
+                  {isEdit && formData.itemCode && (
+                    <div style={{ marginTop: '10px', fontSize: '13px', color: '#6c757d' }}>
+                      <strong>ISD No:</strong> {formData.itemCode}
+                      <br/>
+                      <small>(Quantity modification is disabled for individual tracked items)</small>
                     </div>
-                    <div className="inventory-form-group col-span-4">
-                      <label className="inventory-form-label">Serial Number</label>
-                      <input type="text" className="inventory-form-input" name="serialNumber" value={formData.serialNumber} onChange={handleInputChange} />
-                    </div>
-                  </div>
+                  )}
 
                   <div className="inventory-form-section">Categorization</div>
                   <div className="inventory-form-grid">
@@ -314,7 +310,7 @@ const Inventory = () => {
                     </div>
                     <div className="inventory-form-group col-span-2">
                       <label className="inventory-form-label">Quantity</label>
-                      <input type="number" className="inventory-form-input" name="quantity" value={formData.quantity} onChange={handleInputChange} min="1" required />
+                      <input type="number" className="inventory-form-input" name="quantity" value={formData.quantity} onChange={handleInputChange} min="1" required disabled={isEdit} />
                     </div>
                     <div className="inventory-form-group col-span-2">
                       <label className="inventory-form-label">Condition</label>
