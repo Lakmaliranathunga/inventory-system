@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import './Dashboard.css';
 
@@ -82,115 +83,37 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Second Stats Row (3 items) */}
-      <div className="stat-cards-grid stat-cards-grid--3">
-        
-        <div className="stat-card">
-          <div className="stat-card-body">
-            <div>
-              <div className="stat-label stat-label--green">Total Stock In</div>
-              <div className="stat-value">{stats.stockIn}</div>
-            </div>
-            <i className="bi bi-arrow-down-circle-fill stat-icon stat-icon--green"></i>
-          </div>
-        </div>
 
-        <div className="stat-card">
-          <div className="stat-card-body">
-            <div>
-              <div className="stat-label stat-label--red">Total Stock Out</div>
-              <div className="stat-value">{stats.stockOut}</div>
-            </div>
-            <i className="bi bi-arrow-up-circle-fill stat-icon stat-icon--red"></i>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-card-body">
-            <div>
-              <div className="stat-label stat-label--yellow">Total Transfers</div>
-              <div className="stat-value">{stats.stockTransfer}</div>
-            </div>
-            <i className="bi bi-arrow-left-right stat-icon stat-icon--yellow"></i>
-          </div>
-        </div>
-      </div>
       
-      {/* Welcome Banner */}
-      <div className="welcome-section">
-        <div className="welcome-card">
-          <div className="welcome-layout">
-            <div className="welcome-content">
-              <div className="welcome-brand">
-                <i className="bi bi-grid-fill welcome-brand-icon"></i>
-                <h2 className="welcome-heading">SLPA Inventory Manager</h2>
-              </div>
-              <h4 className="welcome-description">
-                Welcome back! Streamline your workflow with real-time tracking of assets, robust supplier management, and comprehensive invoicing tools.
-              </h4>
-              <div className="welcome-features">
-                <span className="welcome-feature welcome-feature--blue">
-                  <i className="bi bi-speedometer2"></i> Real-time Analytics
-                </span>
-                <span className="welcome-feature welcome-feature--green">
-                  <i className="bi bi-shield-check"></i> Secure Platform
-                </span>
-                <span className="welcome-feature welcome-feature--cyan">
-                  <i className="bi bi-cloud-arrow-up"></i> Cloud Sync
-                </span>
-              </div>
-            </div>
-            <div className="welcome-illustration">
-              <div className="welcome-glow"></div>
-              <i className="bi bi-box-seam welcome-main-icon"></i>
-            </div>
-          </div>
+      {/* Quick Links Section */}
+      <div className="quick-links-section">
+        <div className="quick-links-header">
+          <h5 className="recent-card-title">Quick Access</h5>
+        </div>
+        <div className="quick-links-grid">
+          <Link to="/inventory" className="quick-link-card quick-link-card--blue">
+            <i className="bi bi-box-seam-fill quick-link-icon"></i>
+            <span className="quick-link-text">Inventory</span>
+          </Link>
+          <Link to="/categories" className="quick-link-card quick-link-card--purple">
+            <i className="bi bi-tags-fill quick-link-icon"></i>
+            <span className="quick-link-text">Categories</span>
+          </Link>
+          <Link to="/suppliers" className="quick-link-card quick-link-card--cyan">
+            <i className="bi bi-truck quick-link-icon"></i>
+            <span className="quick-link-text">Suppliers</span>
+          </Link>
+          <Link to="/invoices" className="quick-link-card quick-link-card--yellow">
+            <i className="bi bi-receipt quick-link-icon"></i>
+            <span className="quick-link-text">Invoices</span>
+          </Link>
+          <Link to="/stock-transactions" className="quick-link-card quick-link-card--green">
+            <i className="bi bi-arrow-left-right quick-link-icon"></i>
+            <span className="quick-link-text">Stock Transactions</span>
+          </Link>
         </div>
       </div>
 
-      {/* Recent Transactions Section */}
-      <div className="recent-section">
-        <div className="recent-card">
-          <div className="recent-card-header">
-            <h5 className="recent-card-title">Recent Stock Transactions</h5>
-          </div>
-          <div className="recent-table-wrapper">
-            <table className="table table-hover">
-              <thead className="table-light">
-                <tr>
-                  <th className="recent-date-cell">Date</th>
-                  <th>Item</th>
-                  <th>Type</th>
-                  <th>Qty</th>
-                  <th>From</th>
-                  <th>To</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentTransactions.map(txn => (
-                  <tr key={txn.transactionId}>
-                    <td className="recent-date-cell text-muted"><small>{new Date(txn.transactionDate).toLocaleDateString()}</small></td>
-                    <td><div className="fw-bold">{txn.itemName}</div><small className="text-muted">{txn.itemCode}</small></td>
-                    <td>
-                      <span className={`txn-badge ${txn.transactionType === 'IN' ? 'txn-badge--in' : txn.transactionType === 'OUT' ? 'txn-badge--out' : 'txn-badge--transfer'}`}>
-                        {txn.transactionType}
-                      </span>
-                    </td>
-                    <td className="fw-bold">{txn.quantity}</td>
-                    <td><small>{txn.fromDivisionName || '-'}</small></td>
-                    <td><small>{txn.toDivisionName || '-'}</small></td>
-                  </tr>
-                ))}
-                {recentTransactions.length === 0 && (
-                  <tr>
-                    <td colSpan="6" className="text-center py-4 text-muted">No recent transactions found</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
