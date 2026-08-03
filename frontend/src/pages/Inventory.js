@@ -202,6 +202,11 @@ const Inventory = () => {
                         <td><span className="inventory-badge inventory-badge--gray">{item.itemCode}</span></td>
                         <td>
                           <strong>{item.itemName}</strong>
+                          {item.serialNumber && (
+                            <div style={{ marginTop: '4px', fontSize: '12px', color: '#6c757d' }}>
+                              <i className="bi bi-upc-scan" style={{marginRight:'3px'}}></i> SN: {item.serialNumber}
+                            </div>
+                          )}
                         </td>
                         <td>
                            <small>Type: {item.itemTypeName || '-'}</small><br/>
@@ -323,15 +328,27 @@ const Inventory = () => {
                     </div>
                   </div>
 
-                  <div className="inventory-form-section">Purchase & Warranty</div>
+                  <div className="inventory-form-section">Purchase, Warranty & Identifiers</div>
                   <div className="inventory-form-grid">
-                    <div className="inventory-form-group col-span-6">
+                    <div className="inventory-form-group col-span-4">
                       <label className="inventory-form-label">Purchase Date</label>
                       <input type="date" className="inventory-form-input" name="purchaseDate" value={formData.purchaseDate} onChange={handleInputChange} />
                     </div>
-                    <div className="inventory-form-group col-span-6">
+                    <div className="inventory-form-group col-span-4">
                       <label className="inventory-form-label">Warranty Expiration Date</label>
                       <input type="date" className="inventory-form-input" name="warrantyExpireDate" value={formData.warrantyExpireDate} onChange={handleInputChange} />
+                    </div>
+                    <div className="inventory-form-group col-span-4">
+                      <label className="inventory-form-label">Asset / Serial No.</label>
+                      <input 
+                        type="text" 
+                        className="inventory-form-input" 
+                        name="serialNumber" 
+                        value={formData.serialNumber} 
+                        onChange={handleInputChange} 
+                        placeholder={(!isEdit && parseInt(formData.quantity || 1) > 1) ? 'Disabled for Qty > 1' : 'Optional'}
+                        disabled={!isEdit && parseInt(formData.quantity || 1) > 1}
+                      />
                     </div>
                     <div className="inventory-form-group col-span-12">
                       <label className="inventory-form-label">Remarks</label>

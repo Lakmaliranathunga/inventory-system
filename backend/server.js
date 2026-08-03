@@ -452,6 +452,15 @@ app.delete("/api/suppliers/:id", verifyToken, (req, res) => {
   });
 });
 
+app.get("/api/suppliers/:id", verifyToken, (req, res) => {
+  const { id } = req.params;
+  db.query("SELECT * FROM suppliers WHERE supplierId=? AND flag=1", [id], (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    if (result.length === 0) return res.status(404).json({ success: false, message: "Supplier not found" });
+    res.json(result[0]);
+  });
+});
+
 // =========================
 // INVENTORY APIs
 // =========================
@@ -482,7 +491,7 @@ app.post("/api/inventory", verifyToken, async (req, res) => {
   let {
     itemTypeId, mainCategoryId,
     subCategoryId, divisionId, sectionId, quantity, itemCondition,
-    purchaseDate, warrantyExpireDate, remarks
+    purchaseDate, warrantyExpireDate, remarks, serialNumber
   } = req.body;
 
   try {
@@ -523,7 +532,7 @@ app.post("/api/inventory", verifyToken, async (req, res) => {
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const values = [
-          isdNo, itemName, null, itemTypeId, mainCategoryId,
+          isdNo, itemName, (qtyNum === 1 ? serialNumber || null : null), itemTypeId, mainCategoryId,
           subCategoryId, divisionId, sectionId, 1, itemCondition,
           purchaseDate, warrantyExpireDate, remarks, req.userId
         ];
@@ -545,7 +554,7 @@ app.put("/api/inventory/:id", verifyToken, async (req, res) => {
   const {
     itemTypeId, mainCategoryId,
     subCategoryId, divisionId, sectionId, itemCondition,
-    purchaseDate, warrantyExpireDate, remarks
+    purchaseDate, warrantyExpireDate, remarks, serialNumber
   } = req.body;
 
   try {
@@ -556,13 +565,13 @@ app.put("/api/inventory/:id", verifyToken, async (req, res) => {
 
     const sql = `
       UPDATE inventory_items SET 
-        itemName=?, itemTypeId=?, mainCategoryId=?, 
+        itemName=?, serialNumber=?, itemTypeId=?, mainCategoryId=?, 
         subCategoryId=?, divisionId=?, sectionId=?, itemCondition=?, 
         purchaseDate=?, warrantyExpireDate=?, remarks=?, updatedBy=?, updatedDate=NOW()
       WHERE itemId=?
     `;
     const values = [
-      itemName, itemTypeId, mainCategoryId,
+      itemName, serialNumber || null, itemTypeId, mainCategoryId,
       subCategoryId, divisionId, sectionId, itemCondition,
       purchaseDate, warrantyExpireDate, remarks, req.userId, id
     ];
@@ -590,7 +599,7 @@ app.delete("/api/inventory/:id", verifyToken, (req, res) => {
 // =========================
 app.get("/api/invoices", verifyToken, (req, res) => {
   const sql = `
-    SELECT i.*, s.supplierName 
+    SELECT i.*, s.supplierName, s.address, s.contactNo 
     FROM invoices i
     LEFT JOIN suppliers s ON i.supplierId = s.supplierId
     WHERE i.flag=1 
@@ -603,9 +612,9 @@ app.get("/api/invoices", verifyToken, (req, res) => {
 });
 
 app.post("/api/invoices", verifyToken, (req, res) => {
-  const { invoiceNumber, supplierId, invoiceDate, totalAmount, remarks } = req.body;
-  const sql = `INSERT INTO invoices (invoiceNumber, supplierId, invoiceDate, totalAmount, remarks, createdBy) VALUES (?, ?, ?, ?, ?, ?)`;
-  db.query(sql, [invoiceNumber, supplierId, invoiceDate, totalAmount, remarks, req.userId], (err, result) => {
+  const { invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks } = req.body;
+  const sql = `INSERT INTO invoices (invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+  db.query(sql, [invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks, req.userId], (err, result) => {
     if (err) return res.status(500).json({ success: false, error: err });
     res.json({ success: true, message: "Invoice added successfully!" });
   });
@@ -613,9 +622,9 @@ app.post("/api/invoices", verifyToken, (req, res) => {
 
 app.put("/api/invoices/:id", verifyToken, (req, res) => {
   const { id } = req.params;
-  const { invoiceNumber, supplierId, invoiceDate, totalAmount, remarks } = req.body;
-  const sql = `UPDATE invoices SET invoiceNumber=?, supplierId=?, invoiceDate=?, totalAmount=?, remarks=?, updatedBy=?, updatedDate=NOW() WHERE invoiceId=?`;
-  db.query(sql, [invoiceNumber, supplierId, invoiceDate, totalAmount, remarks, req.userId, id], (err, result) => {
+  const { invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks } = req.body;
+  const sql = `UPDATE invoices SET invoiceNumber=?, supplierId=?, poNo=?, poDate=?, invoiceDate=?, totalAmount=?, remarks=?, updatedBy=?, updatedDate=NOW() WHERE invoiceId=?`;
+  db.query(sql, [invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks, req.userId, id], (err, result) => {
     if (err) return res.status(500).json({ success: false, error: err });
     res.json({ success: true, message: "Invoice updated successfully!" });
   });
