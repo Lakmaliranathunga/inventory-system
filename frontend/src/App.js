@@ -19,6 +19,7 @@ import Categories from "./pages/Categories";
 import Suppliers from "./pages/Suppliers";
 import Invoices from "./pages/Invoices";
 import StockTransactions from "./pages/StockTransactions";
+import Reports from "./pages/Reports";
 
 function App() {
 
@@ -51,6 +52,7 @@ function App() {
           <Route path="/suppliers" element={<Suppliers />} />
           <Route path="/invoices" element={<Invoices />} />
           <Route path="/stock-transactions" element={<StockTransactions />} />
+          <Route path="/reports" element={<Reports />} />
         </Route>
 
       </Routes>

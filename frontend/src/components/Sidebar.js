@@ -59,6 +59,12 @@ const Sidebar = () => {
             Stock Transactions
           </NavLink>
         </li>
+        <li>
+          <NavLink to="/reports" className={({isActive}) => isActive ? "sidebar-link active" : "sidebar-link"}>
+            <i className="bi bi-file-earmark-bar-graph-fill"></i>
+            Reports
+          </NavLink>
+        </li>
       </ul>
       <div style={{ marginTop: 'auto', padding: '20px' }}>
         <button onClick={handleLogout} className="sidebar-logout-btn">

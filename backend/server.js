@@ -294,6 +294,12 @@ app.get("/api/dashboard/stats", verifyToken, async (req, res) => {
 app.use("/api/stock-transactions", verifyToken, stockTransactionRoutes);
 
 // =========================
+// REPORTS APIs
+// =========================
+const reportRoutes = require("./routes/reportRoutes");
+app.use("/api/reports", verifyToken, reportRoutes);
+
+// =========================
 // CATEGORIES APIs
 // =========================
 app.get("/api/categories/item-types", verifyToken, (req, res) => {
