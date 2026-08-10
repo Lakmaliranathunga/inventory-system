@@ -167,7 +167,7 @@ const Inventory = () => {
             <input 
               type="text" 
               className="inventory-search-input" 
-              placeholder="Search by name or ISD No..."
+              placeholder="Search by name or Item No..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -184,22 +184,20 @@ const Inventory = () => {
               <table className="inventory-table">
                 <thead className="inventory-table-head">
                   <tr>
-                    <th>ISD No.</th>
+                    <th>Item No.</th>
                     <th>Name</th>
                     <th>Category</th>
                     <th>Division/Section</th>
-                    <th>Qty</th>
-                    <th>Condition</th>
                     <th style={{ textAlign: 'center' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredItems.length === 0 ? (
-                    <tr><td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>No inventory items found</td></tr>
+                    <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>No inventory items found</td></tr>
                   ) : (
                     filteredItems.map(item => (
                       <tr key={item.itemId}>
-                        <td><span className="inventory-badge inventory-badge--gray">{item.itemCode}</span></td>
+                        <td><span className="inventory-badge inventory-badge--green">{item.itemCode}</span></td>
                         <td>
                           <strong>{item.itemName}</strong>
                           {item.serialNumber && (
@@ -215,12 +213,6 @@ const Inventory = () => {
                         <td>
                           {item.divisionName || '-'}<br/>
                           <small style={{ color: '#6c757d' }}>{item.sectionName || '-'}</small>
-                        </td>
-                        <td>{item.quantity}</td>
-                        <td>
-                          <span className={`inventory-badge ${item.itemCondition === 'New' ? 'inventory-badge--green' : 'inventory-badge--yellow'}`}>
-                            {item.itemCondition}
-                          </span>
                         </td>
                         <td>
                           <div className="inventory-action-group">
@@ -255,12 +247,12 @@ const Inventory = () => {
 
                   {!isEdit && (
                     <div style={{ marginTop: '10px', fontSize: '13px', color: '#007bff' }}>
-                      <i className="bi bi-info-circle"></i> ISD No. will be auto-generated sequentially upon save based on the Quantity entered.
+                      <i className="bi bi-info-circle"></i> Item No. will be auto-generated sequentially upon save (Format: [Division]/[Type]/[MainCat]/[SubCat]/[Year]/[Seq]/[Qty]).
                     </div>
                   )}
                   {isEdit && formData.itemCode && (
                     <div style={{ marginTop: '10px', fontSize: '13px', color: '#6c757d' }}>
-                      <strong>ISD No:</strong> {formData.itemCode}
+                      <strong>Item No:</strong> {formData.itemCode}
                       <br/>
                       <small>(Quantity modification is disabled for individual tracked items)</small>
                     </div>
@@ -313,20 +305,11 @@ const Inventory = () => {
                         ))}
                       </select>
                     </div>
-                    <div className="inventory-form-group col-span-2">
-                      <label className="inventory-form-label">Quantity</label>
-                      <input type="number" className="inventory-form-input" name="quantity" value={formData.quantity} onChange={handleInputChange} min="1" required disabled={isEdit} />
-                    </div>
-                    <div className="inventory-form-group col-span-2">
-                      <label className="inventory-form-label">Condition</label>
-                      <select className="inventory-form-select" name="itemCondition" value={formData.itemCondition} onChange={handleInputChange}>
-                        <option value="New">New</option>
-                        <option value="Good">Good</option>
-                        <option value="Fair">Fair</option>
-                        <option value="Damaged">Damaged</option>
-                      </select>
-                    </div>
-                  </div>
+                     <div className="inventory-form-group col-span-4">
+                       <label className="inventory-form-label">Quantity</label>
+                       <input type="number" className="inventory-form-input" name="quantity" value={formData.quantity} onChange={handleInputChange} min="1" required disabled={isEdit} />
+                     </div>
+                   </div>
 
                   <div className="inventory-form-section">Purchase, Warranty & Identifiers</div>
                   <div className="inventory-form-grid">

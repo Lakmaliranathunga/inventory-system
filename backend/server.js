@@ -510,11 +510,38 @@ app.post("/api/inventory", verifyToken, async (req, res) => {
     const subCatRes = await new Promise((resolve, reject) => {
       db.query("SELECT subCategoryName FROM sub_categories WHERE subCategoryId=?", [subCategoryId || 0], (err, r) => err ? reject(err) : resolve(r));
     });
+    const divRes = await new Promise((resolve, reject) => {
+      db.query("SELECT description FROM divisions WHERE division_id=?", [divisionId || 0], (err, r) => err ? reject(err) : resolve(r));
+    });
 
-    const itemTypeCode = (itemTypeRes[0]?.itemTypeName || 'GEN').substring(0,3).toUpperCase();
-    const mainCatCode = (mainCatRes[0]?.mainCategoryName || 'GEN').substring(0,3).toUpperCase();
+    const getDivShortForm = (text, defaultVal = 'DIV') => {
+      if (!text) return defaultVal;
+      const words = text.trim().toUpperCase().replace(/[^A-Z0-9\s]/g, '').split(/\s+/).filter(Boolean);
+      if (words.length === 0) return defaultVal;
+      return words.map(w => w[0]).join('');
+    };
+
+    const getShortForm = (text, defaultVal = 'GEN') => {
+      if (!text) return defaultVal;
+      const clean = text.trim().toUpperCase();
+      const words = clean.replace(/[^A-Z0-9\s]/g, '').split(/\s+/).filter(Boolean);
+      if (words.length >= 3) {
+        return words.map(w => w[0]).join('').substring(0, 4);
+      } else if (words.length === 2) {
+        if (words[1] === 'DIVISION' || words[1] === 'DEPARTMENT') {
+          return words[0].substring(0, 3);
+        }
+        return (words[0][0] + words[1].substring(0, 2)).substring(0, 3);
+      }
+      return clean.substring(0, 3);
+    };
+
+    const divName = divRes[0]?.description || '';
+    const divCode = getDivShortForm(divName, 'DIV');
+    const itemTypeCode = getShortForm(itemTypeRes[0]?.itemTypeName || '', 'GEN');
+    const mainCatCode = getShortForm(mainCatRes[0]?.mainCategoryName || '', 'GEN');
     const subCategoryName = subCatRes[0]?.subCategoryName || 'Unknown';
-    const subCatCode = subCategoryName.substring(0,3).toUpperCase();
+    const subCatCode = getShortForm(subCategoryName, 'GEN');
     const year = new Date().getFullYear();
     const itemName = subCategoryName;
 
@@ -528,7 +555,7 @@ app.post("/api/inventory", verifyToken, async (req, res) => {
 
     for (let i = 1; i <= qtyNum; i++) {
         const itemNumber = currentCount + i;
-        const isdNo = `ISD/${itemTypeCode}/${mainCatCode}/${subCatCode}/${year}/${itemNumber}/${totalQty}`;
+        const generatedItemCode = `${divCode}/${itemTypeCode}/${mainCatCode}/${subCatCode}/${year}/${itemNumber}/${totalQty}`;
 
         const sql = `
           INSERT INTO inventory_items (
@@ -538,7 +565,7 @@ app.post("/api/inventory", verifyToken, async (req, res) => {
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const values = [
-          isdNo, itemName, (qtyNum === 1 ? serialNumber || null : null), itemTypeId, mainCategoryId,
+          generatedItemCode, itemName, (qtyNum === 1 ? serialNumber || null : null), itemTypeId, mainCategoryId,
           subCategoryId, divisionId, sectionId, 1, itemCondition,
           purchaseDate, warrantyExpireDate, remarks, req.userId
         ];
