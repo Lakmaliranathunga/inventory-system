@@ -356,6 +356,7 @@ const StockAdjustments = () => {
                               <div style={{ fontWeight: 'bold', color: '#1e293b' }}>{adj.itemName}</div>
                               <small style={{ color: '#64748b' }}>Code: {adj.itemCode}</small>
                               {adj.serialNumber && <div><small style={{color: '#10b981'}}>SN: {adj.serialNumber}</small></div>}
+                              {adj.supplierName && <div><small style={{color: '#8b5cf6'}}><i className="bi bi-truck me-1"></i>{adj.supplierName}</small></div>}
                             </td>
                             <td>
                               <div className={`adj-badge ${badge.class}`}>

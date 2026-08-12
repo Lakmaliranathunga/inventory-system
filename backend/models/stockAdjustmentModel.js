@@ -4,10 +4,12 @@ const StockAdjustmentModel = {
   getAll: (callback) => {
     const sql = `
       SELECT st.transactionId as adjustmentId, st.itemId, st.transactionType as adjustmentType, 
-             st.quantity, st.transactionDate as adjustmentDate, st.remarks, st.createdBy, st.createdDate,
-             i.itemName, i.itemCode, i.serialNumber
+             st.quantity, st.transactionDate as adjustmentDate, st.remarks, st.createdBy,
+             i.itemName, i.itemCode, i.serialNumber, sup.supplierName
       FROM stock_transactions st
       LEFT JOIN inventory_items i ON st.itemId = i.itemId
+      LEFT JOIN invoices inv ON i.invoiceId = inv.invoiceId
+      LEFT JOIN suppliers sup ON inv.supplierId = sup.supplierId
       WHERE st.flag = 1 AND st.transactionType IN ('DAMAGED', 'DISPOSAL', 'CORRECTION')
       ORDER BY st.transactionDate DESC
     `;
@@ -18,9 +20,11 @@ const StockAdjustmentModel = {
     const sql = `
       SELECT st.transactionId as adjustmentId, st.itemId, st.transactionType as adjustmentType, 
              st.quantity, st.transactionDate as adjustmentDate, st.remarks, st.createdBy,
-             i.itemName, i.itemCode, i.serialNumber
+             i.itemName, i.itemCode, i.serialNumber, sup.supplierName
       FROM stock_transactions st
       LEFT JOIN inventory_items i ON st.itemId = i.itemId
+      LEFT JOIN invoices inv ON i.invoiceId = inv.invoiceId
+      LEFT JOIN suppliers sup ON inv.supplierId = sup.supplierId
       WHERE st.transactionId = ? AND st.flag = 1
     `;
     db.query(sql, [id], callback);
