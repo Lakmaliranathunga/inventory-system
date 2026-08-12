@@ -18,7 +18,7 @@ const Dashboard = () => {
       const response = await axios.get('http://localhost:5000/api/dashboard/stats', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const txRes = await axios.get('http://localhost:5000/api/stock-transactions', {
+      const txRes = await axios.get('http://localhost:5000/api/stock-adjustments', {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -107,9 +107,9 @@ const Dashboard = () => {
             <i className="bi bi-receipt quick-link-icon"></i>
             <span className="quick-link-text">Invoices</span>
           </Link>
-          <Link to="/stock-transactions" className="quick-link-card quick-link-card--green">
-            <i className="bi bi-arrow-left-right quick-link-icon"></i>
-            <span className="quick-link-text">Stock Transactions</span>
+          <Link to="/stock-adjustments" className="quick-link-card quick-link-card--green">
+            <i className="bi bi-tools quick-link-icon"></i>
+            <span className="quick-link-text">Stock Adjustments</span>
           </Link>
         </div>
       </div>

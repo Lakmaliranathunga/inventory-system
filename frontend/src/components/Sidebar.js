@@ -54,9 +54,9 @@ const Sidebar = () => {
           </NavLink>
         </li>
         <li>
-          <NavLink to="/stock-transactions" className={({isActive}) => isActive ? "sidebar-link active" : "sidebar-link"}>
-            <i className="bi bi-arrow-left-right"></i>
-            Stock Transactions
+          <NavLink to="/stock-adjustments" className={({isActive}) => isActive ? "sidebar-link active" : "sidebar-link"}>
+            <i className="bi bi-tools"></i>
+            Stock Adjustments
           </NavLink>
         </li>
         <li>

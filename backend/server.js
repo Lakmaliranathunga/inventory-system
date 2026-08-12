@@ -3,8 +3,7 @@ const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const db = require("./db");
-const stockTransactionRoutes = require("./routes/stockTransactionRoutes");
-const StockTransactionModel = require("./models/stockTransactionModel");
+const StockAdjustmentModel = require("./models/stockAdjustmentModel");
 
 const app = express();
 
@@ -265,7 +264,7 @@ app.get("/api/dashboard/stats", verifyToken, async (req, res) => {
     });
 
     const stockStats = await new Promise((resolve, reject) => {
-      StockTransactionModel.getDashboardStats((err, result) => {
+      StockAdjustmentModel.getDashboardStats((err, result) => {
         if (err) reject(err);
         else resolve(result[0]);
       });
@@ -289,9 +288,10 @@ app.get("/api/dashboard/stats", verifyToken, async (req, res) => {
 });
 
 // =========================
-// STOCK TRANSACTIONS (MVC)
+// STOCK ADJUSTMENTS (MVC)
 // =========================
-app.use("/api/stock-transactions", verifyToken, stockTransactionRoutes);
+const stockAdjustmentRoutes = require("./routes/stockAdjustmentRoutes");
+app.use("/api/stock-adjustments", verifyToken, stockAdjustmentRoutes);
 
 // =========================
 // REPORTS APIs
@@ -477,13 +477,17 @@ app.get("/api/inventory", verifyToken, (req, res) => {
            m.mainCategoryName, 
            s.subCategoryName,
            d.description as divisionName,
-           sec.sectionname as sectionName
+           sec.sectionname as sectionName,
+           inv.invoiceNumber,
+           sup.supplierName
     FROM inventory_items i
     LEFT JOIN item_types t ON i.itemTypeId = t.itemTypeId
     LEFT JOIN main_categories m ON i.mainCategoryId = m.mainCategoryId
     LEFT JOIN sub_categories s ON i.subCategoryId = s.subCategoryId
     LEFT JOIN divisions d ON i.divisionId = d.division_id
     LEFT JOIN sections sec ON i.sectionId = sec.sectionid
+    LEFT JOIN invoices inv ON i.invoiceId = inv.invoiceId
+    LEFT JOIN suppliers sup ON inv.supplierId = sup.supplierId
     WHERE i.flag = 1 
     ORDER BY i.createdDate DESC
   `;
@@ -497,7 +501,7 @@ app.post("/api/inventory", verifyToken, async (req, res) => {
   let {
     itemTypeId, mainCategoryId,
     subCategoryId, divisionId, sectionId, quantity, itemCondition,
-    purchaseDate, warrantyExpireDate, remarks, serialNumber
+    purchaseDate, warrantyExpireDate, remarks, serialNumber, invoiceId
   } = req.body;
 
   try {
@@ -561,13 +565,13 @@ app.post("/api/inventory", verifyToken, async (req, res) => {
           INSERT INTO inventory_items (
             itemCode, itemName, serialNumber, itemTypeId, mainCategoryId, 
             subCategoryId, divisionId, sectionId, quantity, itemCondition, 
-            purchaseDate, warrantyExpireDate, remarks, createdBy
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            purchaseDate, warrantyExpireDate, remarks, invoiceId, createdBy
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const values = [
           generatedItemCode, itemName, (qtyNum === 1 ? serialNumber || null : null), itemTypeId, mainCategoryId,
           subCategoryId, divisionId, sectionId, 1, itemCondition,
-          purchaseDate, warrantyExpireDate, remarks, req.userId
+          purchaseDate, warrantyExpireDate, remarks, invoiceId || null, req.userId
         ];
         
         await new Promise((resolve, reject) => {
@@ -587,7 +591,7 @@ app.put("/api/inventory/:id", verifyToken, async (req, res) => {
   const {
     itemTypeId, mainCategoryId,
     subCategoryId, divisionId, sectionId, itemCondition,
-    purchaseDate, warrantyExpireDate, remarks, serialNumber
+    purchaseDate, warrantyExpireDate, remarks, serialNumber, invoiceId
   } = req.body;
 
   try {
@@ -600,13 +604,13 @@ app.put("/api/inventory/:id", verifyToken, async (req, res) => {
       UPDATE inventory_items SET 
         itemName=?, serialNumber=?, itemTypeId=?, mainCategoryId=?, 
         subCategoryId=?, divisionId=?, sectionId=?, itemCondition=?, 
-        purchaseDate=?, warrantyExpireDate=?, remarks=?, updatedBy=?, updatedDate=NOW()
+        purchaseDate=?, warrantyExpireDate=?, remarks=?, invoiceId=?, updatedBy=?, updatedDate=NOW()
       WHERE itemId=?
     `;
     const values = [
       itemName, serialNumber || null, itemTypeId, mainCategoryId,
       subCategoryId, divisionId, sectionId, itemCondition,
-      purchaseDate, warrantyExpireDate, remarks, req.userId, id
+      purchaseDate, warrantyExpireDate, remarks, invoiceId || null, req.userId, id
     ];
 
     db.query(sql, values, (err, result) => {
@@ -632,7 +636,7 @@ app.delete("/api/inventory/:id", verifyToken, (req, res) => {
 // =========================
 app.get("/api/invoices", verifyToken, (req, res) => {
   const sql = `
-    SELECT i.*, s.supplierName, s.address, s.contactNo 
+    SELECT i.*, s.supplierName, s.address, s.contactNo, s.contactPerson, s.email
     FROM invoices i
     LEFT JOIN suppliers s ON i.supplierId = s.supplierId
     WHERE i.flag=1 
