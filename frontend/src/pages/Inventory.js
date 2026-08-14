@@ -206,6 +206,7 @@ const Inventory = () => {
                     <th>Name</th>
                     <th>Category</th>
                     <th>Division/Section</th>
+                    <th>Supplier</th>
                     <th style={{ textAlign: 'center' }}>Actions</th>
                   </tr>
                 </thead>
@@ -231,6 +232,13 @@ const Inventory = () => {
                         <td>
                           {item.divisionName || '-'}<br/>
                           <small style={{ color: '#6c757d' }}>{item.sectionName || '-'}</small>
+                        </td>
+                        <td>
+                          {item.supplierName ? (
+                            <span style={{ color: '#1e293b', fontWeight: '500' }}>{item.supplierName}</span>
+                          ) : (
+                            <span style={{ color: '#94a3b8' }}>-</span>
+                          )}
                         </td>
                         <td>
                           <div className="inventory-action-group">

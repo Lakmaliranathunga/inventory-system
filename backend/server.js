@@ -12,6 +12,22 @@ const JWT_SECRET = "slpa_inventory_secret_key_2026";
 app.use(cors());
 app.use(express.json());
 
+const multer = require("multer");
+const path = require("path");
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage: storage });
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
 
 // TEST API
 app.get("/", (req, res) => {
@@ -648,20 +664,30 @@ app.get("/api/invoices", verifyToken, (req, res) => {
   });
 });
 
-app.post("/api/invoices", verifyToken, (req, res) => {
+app.post("/api/invoices", verifyToken, upload.single('invoiceImage'), (req, res) => {
   const { invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks } = req.body;
-  const sql = `INSERT INTO invoices (invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-  db.query(sql, [invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks, req.userId], (err, result) => {
+  const invoiceImage = req.file ? req.file.filename : null;
+  const sql = `INSERT INTO invoices (invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks, invoiceImage, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  db.query(sql, [invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks, invoiceImage, req.userId], (err, result) => {
     if (err) return res.status(500).json({ success: false, error: err });
     res.json({ success: true, message: "Invoice added successfully!" });
   });
 });
 
-app.put("/api/invoices/:id", verifyToken, (req, res) => {
+app.put("/api/invoices/:id", verifyToken, upload.single('invoiceImage'), (req, res) => {
   const { id } = req.params;
   const { invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks } = req.body;
-  const sql = `UPDATE invoices SET invoiceNumber=?, supplierId=?, poNo=?, poDate=?, invoiceDate=?, totalAmount=?, remarks=?, updatedBy=?, updatedDate=NOW() WHERE invoiceId=?`;
-  db.query(sql, [invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks, req.userId, id], (err, result) => {
+  const invoiceImage = req.file ? req.file.filename : null;
+  
+  let sql = `UPDATE invoices SET invoiceNumber=?, supplierId=?, poNo=?, poDate=?, invoiceDate=?, totalAmount=?, remarks=?, updatedBy=?, updatedDate=NOW() WHERE invoiceId=?`;
+  let params = [invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks, req.userId, id];
+
+  if (invoiceImage) {
+    sql = `UPDATE invoices SET invoiceNumber=?, supplierId=?, poNo=?, poDate=?, invoiceDate=?, totalAmount=?, remarks=?, invoiceImage=?, updatedBy=?, updatedDate=NOW() WHERE invoiceId=?`;
+    params = [invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks, invoiceImage, req.userId, id];
+  }
+
+  db.query(sql, params, (err, result) => {
     if (err) return res.status(500).json({ success: false, error: err });
     res.json({ success: true, message: "Invoice updated successfully!" });
   });

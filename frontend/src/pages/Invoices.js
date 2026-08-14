@@ -13,8 +13,9 @@ const Invoices = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [formData, setFormData] = useState({
-    invoiceId: '', invoiceNumber: '', supplierId: '', invoiceDate: '', totalAmount: '', remarks: ''
+    invoiceId: '', invoiceNumber: '', supplierId: '', poNo: '', poDate: '', invoiceDate: '', totalAmount: '', remarks: '', invoiceImage: ''
   });
+  const [imageFile, setImageFile] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -47,19 +48,24 @@ const Invoices = () => {
 
   const openAddModal = () => {
     setIsEdit(false);
-    setFormData({ invoiceId: '', invoiceNumber: '', supplierId: '', invoiceDate: '', totalAmount: '', remarks: '' });
+    setImageFile(null);
+    setFormData({ invoiceId: '', invoiceNumber: '', supplierId: '', poNo: '', poDate: '', invoiceDate: '', totalAmount: '', remarks: '', invoiceImage: '' });
     setShowModal(true);
   };
 
   const openEditModal = (invoice) => {
     setIsEdit(true);
+    setImageFile(null);
     setFormData({
       invoiceId: invoice.invoiceId,
       invoiceNumber: invoice.invoiceNumber || '',
       supplierId: invoice.supplierId || '',
+      poNo: invoice.poNo || '',
+      poDate: invoice.poDate ? invoice.poDate.split('T')[0] : '',
       invoiceDate: invoice.invoiceDate ? invoice.invoiceDate.split('T')[0] : '',
       totalAmount: invoice.totalAmount || '',
-      remarks: invoice.remarks || ''
+      remarks: invoice.remarks || '',
+      invoiceImage: invoice.invoiceImage || ''
     });
     setShowModal(true);
   };
@@ -72,11 +78,19 @@ const Invoices = () => {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
 
+      const submitData = new FormData();
+      for (const key in formData) {
+        submitData.append(key, formData[key] || '');
+      }
+      if (imageFile) {
+        submitData.append('invoiceImage', imageFile);
+      }
+
       if (isEdit) {
-        await axios.put(`http://localhost:5000/api/invoices/${formData.invoiceId}`, formData, { headers });
+        await axios.put(`http://localhost:5000/api/invoices/${formData.invoiceId}`, submitData, { headers });
         toast.success('Invoice updated successfully');
       } else {
-        await axios.post('http://localhost:5000/api/invoices', formData, { headers });
+        await axios.post('http://localhost:5000/api/invoices', submitData, { headers });
         toast.success('Invoice added successfully');
       }
 
@@ -147,9 +161,12 @@ const Invoices = () => {
                 <thead className="invoices-table-head">
                   <tr>
                     <th>Invoice Number</th>
+                    <th>PO No</th>
                     <th>Supplier</th>
-                    <th>Date</th>
+                    <th>Invoice Date</th>
+                    <th>PO Date</th>
                     <th>Total Amount</th>
+                    <th>Attachment</th>
                     <th>Remarks</th>
                     <th style={{ textAlign: 'center' }}>Actions</th>
                   </tr>
@@ -161,10 +178,19 @@ const Invoices = () => {
                     filteredInvoices.map(invoice => (
                       <tr key={invoice.invoiceId}>
                         <td style={{ fontWeight: 'bold', color: '#0d6efd' }}>{invoice.invoiceNumber}</td>
+                        <td style={{ fontWeight: 'bold', color: '#64748b' }}>{invoice.poNo || '-'}</td>
                         <td style={{ fontWeight: 'bold' }}>{invoice.supplierName || 'Unknown Supplier'}</td>
                         <td>{invoice.invoiceDate ? invoice.invoiceDate.split('T')[0] : '-'}</td>
+                        <td>{invoice.poDate ? invoice.poDate.split('T')[0] : '-'}</td>
                         <td>
                           <span className="invoices-amount-badge">Rs. {invoice.totalAmount}</span>
+                        </td>
+                        <td>
+                          {invoice.invoiceImage ? (
+                            <a href={`http://localhost:5000/uploads/${invoice.invoiceImage}`} target="_blank" rel="noopener noreferrer" style={{color: '#0d6efd', textDecoration: 'none'}}>
+                              <i className="bi bi-file-earmark-image"></i> View
+                            </a>
+                          ) : <span style={{ color: '#94a3b8' }}>-</span>}
                         </td>
                         <td><span style={{ color: '#6c757d', fontSize: '0.875rem' }}>{invoice.remarks || '-'}</span></td>
                         <td>
@@ -212,6 +238,14 @@ const Invoices = () => {
                       </select>
                     </div>
                     <div className="invoices-form-group col-span-6">
+                      <label className="invoices-form-label">PO No (Optional)</label>
+                      <input type="text" className="invoices-form-input" name="poNo" value={formData.poNo} onChange={handleInputChange} />
+                    </div>
+                    <div className="invoices-form-group col-span-6">
+                      <label className="invoices-form-label">PO Date (Optional)</label>
+                      <input type="date" className="invoices-form-input" name="poDate" value={formData.poDate} onChange={handleInputChange} />
+                    </div>
+                    <div className="invoices-form-group col-span-6">
                       <label className="invoices-form-label">Invoice Date</label>
                       <input type="date" className="invoices-form-input" name="invoiceDate" value={formData.invoiceDate} onChange={handleInputChange} required />
                     </div>
@@ -221,6 +255,15 @@ const Invoices = () => {
                         <span className="invoices-input-group-text">Rs.</span>
                         <input type="text" className="invoices-form-input" name="totalAmount" placeholder="0.00" value={formData.totalAmount} onChange={handleInputChange} required />
                       </div>
+                    </div>
+                    <div className="invoices-form-group col-span-12">
+                      <label className="invoices-form-label">Upload Invoice Image/Document</label>
+                      <input type="file" className="invoices-form-input" onChange={(e) => setImageFile(e.target.files[0])} accept="image/*,.pdf" style={{padding: '5px 10px'}} />
+                      {isEdit && formData.invoiceImage && (
+                        <div style={{marginTop: '5px', fontSize: '13px', color: '#6c757d'}}>
+                          <i className="bi bi-paperclip"></i> Currently uploaded: <a href={`http://localhost:5000/uploads/${formData.invoiceImage}`} target="_blank" rel="noopener noreferrer">{formData.invoiceImage}</a>
+                        </div>
+                      )}
                     </div>
                     <div className="invoices-form-group col-span-12">
                       <label className="invoices-form-label">Remarks</label>
