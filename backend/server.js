@@ -587,7 +587,7 @@ app.post("/api/inventory", verifyToken, async (req, res) => {
         const values = [
           generatedItemCode, itemName, (qtyNum === 1 ? serialNumber || null : null), itemTypeId, mainCategoryId,
           subCategoryId, divisionId, sectionId, 1, itemCondition,
-          purchaseDate, warrantyExpireDate, remarks, invoiceId || null, req.userId
+          purchaseDate || null, warrantyExpireDate || null, remarks || null, invoiceId || null, req.userId
         ];
         
         await new Promise((resolve, reject) => {
@@ -626,7 +626,7 @@ app.put("/api/inventory/:id", verifyToken, async (req, res) => {
     const values = [
       itemName, serialNumber || null, itemTypeId, mainCategoryId,
       subCategoryId, divisionId, sectionId, itemCondition,
-      purchaseDate, warrantyExpireDate, remarks, invoiceId || null, req.userId, id
+      purchaseDate || null, warrantyExpireDate || null, remarks || null, invoiceId || null, req.userId, id
     ];
 
     db.query(sql, values, (err, result) => {

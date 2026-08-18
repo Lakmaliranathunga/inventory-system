@@ -126,8 +126,42 @@ const Inventory = () => {
 
   const closeModal = () => setShowModal(false);
 
+  // Validate Tab 1 fields — returns true if all required fields are filled
+  const validateTab1 = () => {
+    if (!formData.itemTypeId) {
+      toast.warning('Please select an Item Type before proceeding.');
+      return false;
+    }
+    if (!formData.mainCategoryId) {
+      toast.warning('Please select a Main Category before proceeding.');
+      return false;
+    }
+    if (!formData.subCategoryId) {
+      toast.warning('Please select a Sub Category before proceeding.');
+      return false;
+    }
+    if (!formData.divisionId) {
+      toast.warning('Please select a Division before proceeding.');
+      return false;
+    }
+    return true;
+  };
+
+  const handleNextTab = () => {
+    if (validateTab1()) {
+      setActiveTab('purchase');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate Tab 1 fields first
+    if (!validateTab1()) {
+      setActiveTab('general'); // Switch back to Tab 1 to show the issue
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
@@ -272,10 +306,7 @@ const Inventory = () => {
                 <div className="inventory-modal-body">
                   <div className="inventory-tabs">
                     <button type="button" className={`inventory-tab-btn ${activeTab === 'general' ? 'active' : ''}`} onClick={() => setActiveTab('general')}>
-                      <i className="bi bi-box-seam"></i> Item Details
-                    </button>
-                    <button type="button" className={`inventory-tab-btn ${activeTab === 'location' ? 'active' : ''}`} onClick={() => setActiveTab('location')}>
-                      <i className="bi bi-geo-alt"></i> Location & Assignment
+                      <i className="bi bi-box-seam"></i> Item Details & Location
                     </button>
                     <button type="button" className={`inventory-tab-btn ${activeTab === 'purchase' ? 'active' : ''}`} onClick={() => setActiveTab('purchase')}>
                       <i className="bi bi-receipt"></i> Purchase & Invoice
@@ -323,17 +354,6 @@ const Inventory = () => {
                             ))}
                           </select>
                         </div>
-                        <div className="inventory-form-group col-span-12">
-                          <label className="inventory-form-label">Remarks</label>
-                          <textarea className="inventory-form-textarea" name="remarks" rows="2" value={formData.remarks} onChange={handleInputChange}></textarea>
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  {activeTab === 'location' && (
-                    <>
-                      <div className="inventory-form-grid">
                         <div className="inventory-form-group col-span-4">
                           <label className="inventory-form-label">Division</label>
                           <select className="inventory-form-select" name="divisionId" value={formData.divisionId} onChange={handleInputChange}>
@@ -353,6 +373,10 @@ const Inventory = () => {
                         <div className="inventory-form-group col-span-4">
                           <label className="inventory-form-label">Quantity</label>
                           <input type="number" className="inventory-form-input" name="quantity" value={formData.quantity} onChange={handleInputChange} min="1" required disabled={isEdit} />
+                        </div>
+                        <div className="inventory-form-group col-span-12">
+                          <label className="inventory-form-label">Remarks</label>
+                          <textarea className="inventory-form-textarea" name="remarks" rows="2" value={formData.remarks} onChange={handleInputChange}></textarea>
                         </div>
                       </div>
                     </>
@@ -456,9 +480,18 @@ const Inventory = () => {
                     </>
                   )}
                 </div>
-                <div className="inventory-modal-footer">
-                  <button type="button" className="inventory-btn-secondary" onClick={closeModal}>Cancel</button>
-                  <button type="submit" className="inventory-btn-primary">{isEdit ? 'Update Changes' : 'Save Item'}</button>
+                <div className="inventory-modal-footer" style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                  {activeTab === 'general' ? (
+                    <>
+                      <button type="button" className="inventory-btn-secondary" onClick={closeModal}>Cancel</button>
+                      <button type="button" className="inventory-btn-primary" onClick={handleNextTab}>Next <i className="bi bi-arrow-right ml-1"></i></button>
+                    </>
+                  ) : (
+                    <>
+                      <button type="button" className="inventory-btn-secondary" onClick={() => setActiveTab('general')}><i className="bi bi-arrow-left mr-1"></i> Back</button>
+                      <button type="submit" className="inventory-btn-primary"><i className="bi bi-check-circle mr-1"></i> {isEdit ? 'Update Changes' : 'Save Item'}</button>
+                    </>
+                  )}
                 </div>
               </form>
             </div>
