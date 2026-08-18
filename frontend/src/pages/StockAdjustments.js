@@ -12,7 +12,7 @@ const StockAdjustments = () => {
   const [formData, setFormData] = useState({
     itemId: '',
     adjustmentType: 'DAMAGED',
-    quantity: '',
+    quantity: '1',
     remarks: '',
     adjustmentDate: new Date().toISOString().slice(0, 16)
   });
@@ -68,7 +68,7 @@ const StockAdjustments = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.itemId || !formData.adjustmentType || !formData.quantity || !formData.remarks) {
+    if (!formData.itemId || !formData.adjustmentType || !formData.remarks) {
       return toast.warning('Please fill all required fields, including Reason.');
     }
 
@@ -97,7 +97,7 @@ const StockAdjustments = () => {
     setFormData({
       itemId: '',
       adjustmentType: 'DAMAGED',
-      quantity: '',
+      quantity: '1',
       remarks: '',
       adjustmentDate: new Date().toISOString().slice(0, 16)
     });
@@ -116,7 +116,7 @@ const StockAdjustments = () => {
     setFormData({
       itemId: adj.itemId || '',
       adjustmentType: adj.adjustmentType || 'DAMAGED',
-      quantity: adj.quantity || '',
+      quantity: '1',
       remarks: adj.remarks || '',
       adjustmentDate: tDate
     });
@@ -250,19 +250,7 @@ const StockAdjustments = () => {
                   </select>
                 </div>
 
-                <div className="adj-form-group">
-                  <label className="adj-label">Affected Quantity *</label>
-                  <input 
-                    type="number" 
-                    className="adj-input" 
-                    name="quantity" 
-                    value={formData.quantity} 
-                    onChange={handleInputChange} 
-                    required 
-                    min="1"
-                    placeholder="E.g., 1"
-                  />
-                </div>
+
 
                 <div className="adj-form-group">
                   <label className="adj-label">Date & Time *</label>
@@ -337,7 +325,7 @@ const StockAdjustments = () => {
                     <tr>
                       <th>Date</th>
                       <th>Item Details</th>
-                      <th>Type & Qty</th>
+                      <th>Type</th>
                       <th>Reason</th>
                       <th>Actions</th>
                     </tr>
@@ -361,9 +349,6 @@ const StockAdjustments = () => {
                             <td>
                               <div className={`adj-badge ${badge.class}`}>
                                 <i className={`bi ${badge.icon}`}></i> {badge.text}
-                              </div>
-                              <div style={{marginTop: '4px', fontWeight: 'bold', color: '#334155'}}>
-                                Qty: {adj.quantity}
                               </div>
                             </td>
                             <td>

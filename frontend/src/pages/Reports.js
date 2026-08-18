@@ -14,8 +14,6 @@ const MONTHS = [
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
-
-
 const REPORT_TYPES = [
   { id: 'monthly',           label: 'Monthly Inventory',    icon: 'bi-calendar-month' },
   { id: 'yearly',            label: 'Yearly Inventory',     icon: 'bi-calendar3' },
@@ -36,10 +34,11 @@ function printTable(title, html) {
         .print-header { text-align:center; margin-bottom: 16px; }
         .print-header h2 { color: #1a3a5c; margin:0; font-size:16px; }
         .print-header p { color: #555; font-size: 11px; margin: 4px 0 0; }
-        table { width:100%; border-collapse:collapse; }
+        table { width:100%; border-collapse:collapse; margin-bottom: 20px; }
         th { background:#1a3a5c; color:#fff; padding:8px; text-align:left; font-size:11px; }
         td { padding:7px 8px; border-bottom:1px solid #eee; font-size:11px; }
         tfoot td { font-weight:bold; border-top:2px solid #2563a8; background:#f1f5f9; }
+        .section-title { color: #1a3a5c; margin-top:20px; margin-bottom:10px; font-size:14px; border-bottom:2px solid #1a3a5c; padding-bottom:4px; }
         @media print { .no-print { display:none; } }
       </style>
     </head>
@@ -115,6 +114,12 @@ const Reports = () => {
     } catch (e) { console.error(e); }
   };
 
+  const getAdjustmentStatus = (d) => {
+    if (d.adjustmentType === 'DAMAGED' || d.itemCondition === 'Damaged' || d.itemCondition === 'Poor') return 'Damaged';
+    if (d.adjustmentType === 'DISPOSAL' || d.itemCondition === 'Disposal') return 'Disposal';
+    return 'Good';
+  };
+
   const generateReport = useCallback(async () => {
     setReportLoading(true);
     setGenerated(false);
@@ -184,6 +189,16 @@ const Reports = () => {
     }
   }, [activeReport, year, month, divisionId, sectionId, supplierId, itemSearch, startDate, endDate, invoiceNumber, transactionType]);
 
+  // Derived datasets & counts
+  const totalQty = reportData.reduce((acc, r) => acc + (Number(r.quantity) || 0), 0);
+  const totalAmount = reportData.reduce((acc, r) => acc + (Number(r.totalAmount) || Number(r.totalValue) || 0), 0);
+  
+  const adjustedItems = reportData.filter(d => getAdjustmentStatus(d) === 'Damaged' || getAdjustmentStatus(d) === 'Disposal');
+  const damagedCount = reportData.filter(d => getAdjustmentStatus(d) === 'Damaged').length;
+  const disposalCount = reportData.filter(d => getAdjustmentStatus(d) === 'Disposal').length;
+  const goodCount = reportData.filter(d => getAdjustmentStatus(d) === 'Good').length;
+  const totalAdjustments = adjustedItems.length;
+
   // ====== EXPORT PDF ======
   const exportPDF = () => {
     const reportLabel = REPORT_TYPES.find(r => r.id === activeReport)?.label || 'Report';
@@ -196,7 +211,7 @@ const Reports = () => {
     doc.setFontSize(9);
     doc.setTextColor(100);
     doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
-    doc.text(`Total Records: ${reportData.length}`, 14, 34);
+    doc.text(`Total Items: ${reportData.length} | Good: ${goodCount} | Total Stock Adjustments: ${totalAdjustments} (Damaged: ${damagedCount}, Disposal: ${disposalCount})`, 14, 34);
 
     const { head, body } = getTableHeadBody();
     autoTable(doc, {
@@ -208,6 +223,30 @@ const Reports = () => {
       alternateRowStyles: { fillColor: [245, 247, 250] },
     });
 
+    if (['monthly', 'yearly', 'item-wise', 'division-wise', 'section-wise'].includes(activeReport) && adjustedItems.length > 0) {
+      const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 150;
+      doc.setFontSize(11);
+      doc.setTextColor(26, 58, 92);
+      doc.text(`Stock Adjustment Details (${adjustedItems.length} items)`, 14, finalY);
+
+      const adjHead = ['#', 'Item Code', 'Item Name', 'Adjustment Type', 'Division / Section', 'Date & Time', 'Remarks / Reason'];
+      const adjBody = adjustedItems.map((d, i) => [
+        i + 1, d.itemCode, d.itemName, getAdjustmentStatus(d),
+        `${d.divisionName || '–'} / ${d.sectionName || '–'}`,
+        d.adjustmentDate ? new Date(d.adjustmentDate).toLocaleString() : '–',
+        d.adjustmentRemarks || '–'
+      ]);
+
+      autoTable(doc, {
+        head: [adjHead],
+        body: adjBody,
+        startY: finalY + 5,
+        headStyles: { fillColor: [217, 119, 6], fontSize: 8, fontStyle: 'bold' },
+        bodyStyles: { fontSize: 7 },
+        alternateRowStyles: { fillColor: [254, 243, 199] },
+      });
+    }
+
     doc.save(`${reportLabel.replace(/\s/g, '_')}_${new Date().toISOString().slice(0,10)}.pdf`);
   };
 
@@ -216,7 +255,13 @@ const Reports = () => {
     const reportLabel = REPORT_TYPES.find(r => r.id === activeReport)?.label || 'Report';
     const ws = XLSX.utils.json_to_sheet(reportData);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, reportLabel.substring(0, 31));
+    XLSX.utils.book_append_sheet(wb, ws, 'All_Items');
+
+    if (adjustedItems.length > 0) {
+      const adjWs = XLSX.utils.json_to_sheet(adjustedItems);
+      XLSX.utils.book_append_sheet(wb, adjWs, 'Stock_Adjustments');
+    }
+
     XLSX.writeFile(wb, `${reportLabel.replace(/\s/g, '_')}_${new Date().toISOString().slice(0,10)}.xlsx`);
   };
 
@@ -226,7 +271,30 @@ const Reports = () => {
     const { head, body } = getTableHeadBody();
     const tHead = `<tr>${head.map(h => `<th>${h}</th>`).join('')}</tr>`;
     const tBody = body.map(row => `<tr>${row.map(cell => `<td>${cell ?? ''}</td>`).join('')}</tr>`).join('');
-    const html = `<table><thead>${tHead}</thead><tbody>${tBody}</tbody></table>`;
+    
+    let html = `<h3 class="section-title">All Inventory Items (${reportData.length})</h3><table><thead>${tHead}</thead><tbody>${tBody}</tbody></table>`;
+
+    if (['monthly', 'yearly', 'item-wise', 'division-wise', 'section-wise'].includes(activeReport)) {
+      html += `<h3 class="section-title">Stock Adjustment Items (${adjustedItems.length})</h3>`;
+      if (adjustedItems.length === 0) {
+        html += `<p>No stock adjustments recorded for this period.</p>`;
+      } else {
+        const adjHead = `<tr><th>#</th><th>Item Code</th><th>Item Name</th><th>Type</th><th>Division / Section</th><th>Date</th><th>Reason / Remarks</th></tr>`;
+        const adjBody = adjustedItems.map((d, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${d.itemCode}</td>
+            <td>${d.itemName}</td>
+            <td>${getAdjustmentStatus(d)}</td>
+            <td>${d.divisionName || '–'} / ${d.sectionName || '–'}</td>
+            <td>${d.adjustmentDate ? new Date(d.adjustmentDate).toLocaleDateString() : '–'}</td>
+            <td>${d.adjustmentRemarks || '–'}</td>
+          </tr>
+        `).join('');
+        html += `<table><thead>${adjHead}</thead><tbody>${adjBody}</tbody></table>`;
+      }
+    }
+
     printTable(reportLabel, html);
   };
 
@@ -242,7 +310,7 @@ const Reports = () => {
         head = ['#', 'Item Code', 'Item Name', 'Type', 'Main Category', 'Sub Category', 'Division', 'Section', 'Qty', 'Condition', 'Purchase Date', 'Warranty Date'];
         body = reportData.map((d, i) => [
           i + 1, d.itemCode, d.itemName, d.itemTypeName, d.mainCategoryName, d.subCategoryName,
-          d.divisionName, d.sectionName, d.quantity, d.itemCondition,
+          d.divisionName, d.sectionName, d.quantity, getAdjustmentStatus(d),
           d.purchaseDate ? new Date(d.purchaseDate).toLocaleDateString() : '–',
           d.warrantyExpireDate ? new Date(d.warrantyExpireDate).toLocaleDateString() : '–'
         ]);
@@ -251,7 +319,7 @@ const Reports = () => {
         head = ['#', 'Item Code', 'Item Name', 'Type', 'Category', 'Sub Category', 'Division', 'Section', 'Qty', 'Condition', 'Purchase Date'];
         body = reportData.map((d, i) => [
           i + 1, d.itemCode, d.itemName, d.itemTypeName, d.mainCategoryName, d.subCategoryName,
-          d.divisionName, d.sectionName, d.quantity, d.itemCondition,
+          d.divisionName, d.sectionName, d.quantity, getAdjustmentStatus(d),
           d.purchaseDate ? new Date(d.purchaseDate).toLocaleDateString() : '–'
         ]);
         break;
@@ -259,13 +327,13 @@ const Reports = () => {
         head = ['#', 'Item Code', 'Item Name', 'Division', 'Section', 'Qty', 'Condition', 'Purchase Date'];
         body = reportData.map((d, i) => [
           i + 1, d.itemCode, d.itemName, d.divisionName, d.sectionName, d.quantity,
-          d.itemCondition, d.purchaseDate ? new Date(d.purchaseDate).toLocaleDateString() : '–'
+          getAdjustmentStatus(d), d.purchaseDate ? new Date(d.purchaseDate).toLocaleDateString() : '–'
         ]);
         break;
       case 'section-wise':
         head = ['#', 'Item Code', 'Item Name', 'Division', 'Section', 'Qty', 'Condition'];
         body = reportData.map((d, i) => [
-          i + 1, d.itemCode, d.itemName, d.divisionName, d.sectionName, d.quantity, d.itemCondition
+          i + 1, d.itemCode, d.itemName, d.divisionName, d.sectionName, d.quantity, getAdjustmentStatus(d)
         ]);
         break;
       case 'supplier':
@@ -296,7 +364,7 @@ const Reports = () => {
       case 'low-stock':
         head = ['#', 'Item Code', 'Item Name', 'Type', 'Division', 'Section', 'Current Qty', 'Condition'];
         body = reportData.map((d, i) => [
-          i + 1, d.itemCode, d.itemName, d.itemTypeName, d.divisionName, d.sectionName, d.quantity, d.itemCondition
+          i + 1, d.itemCode, d.itemName, d.itemTypeName, d.divisionName, d.sectionName, d.quantity, getAdjustmentStatus(d)
         ]);
         break;
       default:
@@ -307,13 +375,28 @@ const Reports = () => {
     return { head, body };
   };
 
-  const totalQty = reportData.reduce((acc, r) => acc + (Number(r.quantity) || 0), 0);
-  const totalAmount = reportData.reduce((acc, r) => acc + (Number(r.totalAmount) || Number(r.totalValue) || 0), 0);
-
-  // ====== CONDITION BADGE ======
-  const condBadge = (c) => {
-    const map = { Good: 'good', New: 'new', Fair: 'fair', Poor: 'poor' };
-    return <span className={`badge-condition badge-${map[c] || 'new'}`}>{c || '–'}</span>;
+  // ====== STATUS BADGE RENDERER ======
+  const renderAdjustmentStatusBadge = (d) => {
+    const status = getAdjustmentStatus(d);
+    if (status === 'Damaged') {
+      return (
+        <span className="badge-condition badge-damaged">
+          <i className="bi bi-exclamation-triangle-fill me-1"></i> Damaged
+        </span>
+      );
+    }
+    if (status === 'Disposal') {
+      return (
+        <span className="badge-condition badge-poor">
+          <i className="bi bi-trash-fill me-1"></i> Disposal
+        </span>
+      );
+    }
+    return (
+      <span className="badge-condition badge-good">
+        <i className="bi bi-check-circle-fill me-1"></i> Good
+      </span>
+    );
   };
 
   const txBadge = (t) => {
@@ -323,8 +406,6 @@ const Reports = () => {
     };
     return <span className={`badge-condition badge-${map[t] || 'new'}`}>{t}</span>;
   };
-
-
 
   // ====== RENDER TABLE ROWS ======
   const renderTableRows = () => {
@@ -340,7 +421,7 @@ const Reports = () => {
           <td>{d.divisionName}</td>
           <td>{d.sectionName}</td>
           <td><strong>{d.quantity}</strong></td>
-          <td>{condBadge(d.itemCondition)}</td>
+          <td>{renderAdjustmentStatusBadge(d)}</td>
           <td>{d.purchaseDate ? new Date(d.purchaseDate).toLocaleDateString() : '–'}</td>
           <td>{d.warrantyExpireDate ? new Date(d.warrantyExpireDate).toLocaleDateString() : '–'}</td>
         </tr>
@@ -358,7 +439,7 @@ const Reports = () => {
           <td>{d.divisionName}</td>
           <td>{d.sectionName}</td>
           <td><strong>{d.quantity}</strong></td>
-          <td>{condBadge(d.itemCondition)}</td>
+          <td>{renderAdjustmentStatusBadge(d)}</td>
           <td>{d.purchaseDate ? new Date(d.purchaseDate).toLocaleDateString() : '–'}</td>
         </tr>
       ));
@@ -372,7 +453,7 @@ const Reports = () => {
           <td>{d.divisionName}</td>
           <td>{d.sectionName}</td>
           <td><strong>{d.quantity}</strong></td>
-          <td>{condBadge(d.itemCondition)}</td>
+          <td>{renderAdjustmentStatusBadge(d)}</td>
           <td>{d.purchaseDate ? new Date(d.purchaseDate).toLocaleDateString() : '–'}</td>
         </tr>
       ));
@@ -386,7 +467,7 @@ const Reports = () => {
           <td>{d.divisionName}</td>
           <td>{d.sectionName}</td>
           <td><strong>{d.quantity}</strong></td>
-          <td>{condBadge(d.itemCondition)}</td>
+          <td>{renderAdjustmentStatusBadge(d)}</td>
         </tr>
       ));
     }
@@ -444,7 +525,7 @@ const Reports = () => {
           <td>{d.divisionName}</td>
           <td>{d.sectionName}</td>
           <td><span style={{color:'#dc2626',fontWeight:'700'}}>{d.quantity}</span></td>
-          <td>{condBadge(d.itemCondition)}</td>
+          <td>{renderAdjustmentStatusBadge(d)}</td>
         </tr>
       ));
     }
@@ -591,12 +672,6 @@ const Reports = () => {
     );
   };
 
-  // ====== DASHBOARD VIEW ======
-  const renderDashboard = () => (
-    <>
-    </>
-  );
-
   // ====== MAIN RENDER ======
   return (
     <div className="reports-page">
@@ -615,7 +690,7 @@ const Reports = () => {
           <button
             key={r.id}
             className={`report-tab-btn ${activeReport === r.id ? 'active' : ''}`}
-            onClick={() => { setActiveReport(r.id); setGenerated(false); setReportData([]); }}
+            onClick={() => { setActiveReport(r.id); setGenerated(false); setReportData([]); setTransactionType(''); }}
           >
             <i className={`bi ${r.icon}`}></i>
             {r.label}
@@ -623,24 +698,17 @@ const Reports = () => {
         ))}
       </div>
 
-      {/* DASHBOARD */}
-      {activeReport === 'dashboard' && (
-        dashLoading
-          ? <div className="report-loading"><span className="spinner-border spinner-border-sm me-2"></span>Loading dashboard...</div>
-          : renderDashboard()
-      )}
-
       {/* FILTERS */}
-      {activeReport !== 'dashboard' && renderFilters()}
+      {renderFilters()}
 
-      {/* RESULTS TABLE */}
-      {activeReport !== 'dashboard' && generated && (
+      {/* RESULTS PANEL */}
+      {generated && (
         <div className="report-results-panel">
           <div className="report-results-header">
             <h6>
               <i className="bi bi-table me-2"></i>
               {REPORT_TYPES.find(r => r.id === activeReport)?.label}
-              <span className="report-results-title-badge">{reportData.length} records</span>
+              <span className="report-results-title-badge">{reportData.length} items</span>
             </h6>
             <div className="report-export-btns">
               <button className="btn-export btn-export-print" onClick={handlePrint}>
@@ -655,6 +723,47 @@ const Reports = () => {
             </div>
           </div>
 
+          {/* SUMMARY STATS CARDS FOR REPORT */}
+          {['monthly', 'yearly', 'item-wise', 'division-wise', 'section-wise'].includes(activeReport) && (
+            <div className="report-summary-grid mt-2 mb-4">
+              <div className="report-summary-card blue">
+                <div className="rsc-icon blue"><i className="bi bi-boxes"></i></div>
+                <div>
+                  <div className="rsc-label">Total All Items</div>
+                  <div className="rsc-value">{reportData.length}</div>
+                </div>
+              </div>
+              <div className="report-summary-card green">
+                <div className="rsc-icon green"><i className="bi bi-check-circle-fill"></i></div>
+                <div>
+                  <div className="rsc-label">Good / Active Items</div>
+                  <div className="rsc-value">{goodCount}</div>
+                </div>
+              </div>
+              <div className="report-summary-card yellow">
+                <div className="rsc-icon yellow"><i className="bi bi-exclamation-triangle-fill"></i></div>
+                <div>
+                  <div className="rsc-label">Damaged Count</div>
+                  <div className="rsc-value">{damagedCount}</div>
+                </div>
+              </div>
+              <div className="report-summary-card red">
+                <div className="rsc-icon red"><i className="bi bi-trash-fill"></i></div>
+                <div>
+                  <div className="rsc-label">Disposal Count</div>
+                  <div className="rsc-value">{disposalCount}</div>
+                </div>
+              </div>
+              <div className="report-summary-card purple">
+                <div className="rsc-icon purple"><i className="bi bi-shield-exclamation"></i></div>
+                <div>
+                  <div className="rsc-label">Stock Adjusted Items</div>
+                  <div className="rsc-value">{totalAdjustments}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {reportLoading ? (
             <div className="report-loading"><span className="spinner-border spinner-border-sm me-2"></span>Loading data...</div>
           ) : reportData.length === 0 ? (
@@ -663,27 +772,108 @@ const Reports = () => {
               <p>No records found. Try adjusting your filters.</p>
             </div>
           ) : (
-            <div className="report-table-wrapper">
-              <table className="report-table">
-                <thead>
-                  <tr>{renderTableHeader()}</tr>
-                </thead>
-                <tbody>
-                  {renderTableRows()}
-                </tbody>
-                {(totalQty > 0 || totalAmount > 0) && (
-                  <tfoot>
-                    <tr>
-                      <td colSpan={renderTableHeader().length - 2} style={{ textAlign: 'right' }}>
-                        <strong>TOTAL</strong>
-                      </td>
-                      {totalQty > 0 && <td><strong>{totalQty}</strong></td>}
-                      {totalAmount > 0 && <td><strong>LKR {totalAmount.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</strong></td>}
-                    </tr>
-                  </tfoot>
-                )}
-              </table>
-            </div>
+            <>
+              {/* 1. ALL INVENTORY ITEMS TABLE */}
+              <div className="mb-4">
+                <h6 className="fw-bold text-dark mb-2">
+                  <i className="bi bi-list-ul me-2"></i>1. All Inventory Items ({reportData.length})
+                </h6>
+                <div className="report-table-wrapper">
+                  <table className="report-table">
+                    <thead>
+                      <tr>{renderTableHeader()}</tr>
+                    </thead>
+                    <tbody>
+                      {renderTableRows()}
+                    </tbody>
+                    <tfoot>
+                      {['monthly', 'yearly', 'item-wise', 'division-wise', 'section-wise'].includes(activeReport) ? (
+                        <tr>
+                          <td colSpan={renderTableHeader().length} style={{ textAlign: 'left', padding: '10px 14px', background: '#f8fafc' }}>
+                            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', fontSize: '0.82rem' }}>
+                              <span><strong>Total Items:</strong> {reportData.length}</span>
+                              <span style={{ color: '#16a34a' }}><strong>Good / Active:</strong> {goodCount}</span>
+                              <span style={{ color: '#d97706' }}><strong>Damaged:</strong> {damagedCount}</span>
+                              <span style={{ color: '#dc2626' }}><strong>Disposal:</strong> {disposalCount}</span>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (totalQty > 0 || totalAmount > 0) ? (
+                        <tr>
+                          <td colSpan={renderTableHeader().length - 2} style={{ textAlign: 'right' }}>
+                            <strong>TOTAL</strong>
+                          </td>
+                          {totalQty > 0 && <td><strong>{totalQty}</strong></td>}
+                          {totalAmount > 0 && <td><strong>LKR {totalAmount.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</strong></td>}
+                        </tr>
+                      ) : null}
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+
+              {/* 2. STOCK ADJUSTMENTS ITEMS TABLE (SHOWN AFTER ALL ITEMS) */}
+              {['monthly', 'yearly', 'item-wise', 'division-wise', 'section-wise'].includes(activeReport) && (
+                <div className="mt-4 pt-3 border-top">
+                  <div className="d-flex align-items-center justify-content-between mb-3">
+                    <h6 className="fw-bold text-dark m-0">
+                      <i className="bi bi-shield-exclamation text-warning me-2"></i>
+                      2. Stock Adjustment Items Details ({adjustedItems.length})
+                    </h6>
+                    <span className="badge bg-light text-dark border">
+                      Damaged: <strong>{damagedCount}</strong> | Disposal: <strong>{disposalCount}</strong> | Total Adjusted: <strong>{totalAdjustments}</strong>
+                    </span>
+                  </div>
+
+                  {adjustedItems.length === 0 ? (
+                    <div className="alert alert-light border text-muted py-3 px-4 rounded-3" style={{ fontSize: '0.85rem' }}>
+                      <i className="bi bi-info-circle me-2 text-primary"></i>
+                      No stock adjustments (Damage / Disposal) were recorded for the items in this report.
+                    </div>
+                  ) : (
+                    <div className="report-table-wrapper">
+                      <table className="report-table">
+                        <thead>
+                          <tr style={{ background: '#2563a8' }}>
+                            <th>#</th>
+                            <th>Item Code</th>
+                            <th>Item Name</th>
+                            <th>Adjustment Type</th>
+                            <th>Division / Section</th>
+                            <th>Adjustment Date</th>
+                            <th>Remarks / Reason</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {adjustedItems.map((d, i) => (
+                            <tr key={i}>
+                              <td>{i + 1}</td>
+                              <td><code>{d.itemCode}</code></td>
+                              <td><strong>{d.itemName}</strong></td>
+                              <td>{renderAdjustmentStatusBadge(d)}</td>
+                              <td>{`${d.divisionName || '–'} / ${d.sectionName || '–'}`}</td>
+                              <td>{d.adjustmentDate ? new Date(d.adjustmentDate).toLocaleString() : '–'}</td>
+                              <td><span className="text-dark fw-semibold">{d.adjustmentRemarks || '–'}</span></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <td colSpan={7} style={{ textAlign: 'left', padding: '10px 14px', background: '#fef3c7' }}>
+                              <div style={{ display: 'flex', gap: '20px', fontSize: '0.82rem', color: '#92400e' }}>
+                                <span><strong>Total Stock Adjustment Items:</strong> {adjustedItems.length}</span>
+                                <span><strong>Damaged Items:</strong> {damagedCount}</span>
+                                <span><strong>Disposal Items:</strong> {disposalCount}</span>
+                              </div>
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

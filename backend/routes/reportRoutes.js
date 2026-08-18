@@ -70,21 +70,49 @@ router.get("/dashboard", async (req, res) => {
   }
 });
 
-// Helper for building common item joins
+// Helper for building common item joins with stock adjustment information
 const getBaseItemQuery = () => `
     SELECT i.*, 
         t.itemTypeName, 
         m.mainCategoryName, 
         s.subCategoryName,
         d.description as divisionName,
-        sec.sectionname as sectionName
+        sec.sectionname as sectionName,
+        adj.adjustmentType,
+        adj.adjustmentDate,
+        adj.adjustmentRemarks
     FROM inventory_items i
     LEFT JOIN item_types t ON i.itemTypeId = t.itemTypeId
     LEFT JOIN main_categories m ON i.mainCategoryId = m.mainCategoryId
     LEFT JOIN sub_categories s ON i.subCategoryId = s.subCategoryId
     LEFT JOIN divisions d ON i.divisionId = d.division_id
     LEFT JOIN sections sec ON i.sectionId = sec.sectionid
+    LEFT JOIN (
+        SELECT st1.itemId, st1.transactionType as adjustmentType, st1.transactionDate as adjustmentDate, st1.remarks as adjustmentRemarks
+        FROM stock_transactions st1
+        INNER JOIN (
+            SELECT itemId, MAX(transactionId) as maxId
+            FROM stock_transactions
+            WHERE flag = 1 AND transactionType IN ('DAMAGED', 'DISPOSAL', 'CORRECTION', 'Damaged', 'Disposal')
+            GROUP BY itemId
+        ) st2 ON st1.transactionId = st2.maxId
+    ) adj ON i.itemId = adj.itemId
 `;
+
+// Helper to append adjustment status filter if provided
+const applyAdjustmentFilter = (query, adjustmentType, params) => {
+    if (!adjustmentType) return query;
+    if (adjustmentType === 'DAMAGED') {
+        params.push('DAMAGED', 'Damaged');
+        return query + ` AND (adj.adjustmentType IN (?, ?))`;
+    } else if (adjustmentType === 'DISPOSAL') {
+        params.push('DISPOSAL', 'Disposal');
+        return query + ` AND (adj.adjustmentType IN (?, ?))`;
+    } else if (adjustmentType === 'GOOD') {
+        return query + ` AND (adj.adjustmentType IS NULL OR adj.adjustmentType NOT IN ('DAMAGED', 'DISPOSAL', 'Damaged', 'Disposal'))`;
+    }
+    return query;
+};
 
 // 2. COMPLETE INVENTORY REPORT
 router.get("/complete", (req, res) => {
@@ -106,7 +134,7 @@ router.get("/low-stock", (req, res) => {
 
 // 4. MONTHLY INVENTORY REPORT (items based on month/year)
 router.get("/monthly", (req, res) => {
-    const { month, year } = req.query;
+    const { month, year, adjustmentType } = req.query;
     let base = getBaseItemQuery();
     let query = base + ` WHERE i.flag = 1`;
     const params = [];
@@ -118,6 +146,7 @@ router.get("/monthly", (req, res) => {
         query += ` AND YEAR(i.purchaseDate) = ?`;
         params.push(year);
     }
+    query = applyAdjustmentFilter(query, adjustmentType, params);
     query += ` ORDER BY i.purchaseDate DESC`;
     
     db.query(query, params, (err, result) => {
@@ -128,7 +157,7 @@ router.get("/monthly", (req, res) => {
 
 // 5. YEARLY INVENTORY REPORT
 router.get("/yearly", (req, res) => {
-    const { year } = req.query;
+    const { year, adjustmentType } = req.query;
     let base = getBaseItemQuery();
     let query = base + ` WHERE i.flag = 1`;
     const params = [];
@@ -136,6 +165,7 @@ router.get("/yearly", (req, res) => {
         query += ` AND YEAR(i.purchaseDate) = ?`;
         params.push(year);
     }
+    query = applyAdjustmentFilter(query, adjustmentType, params);
     query += ` ORDER BY i.purchaseDate DESC`;
     
     db.query(query, params, (err, result) => {
@@ -146,7 +176,7 @@ router.get("/yearly", (req, res) => {
 
 // 6. ITEM WISE REPORT
 router.get("/item-wise", (req, res) => {
-    const { query: searchQuery } = req.query;
+    const { query: searchQuery, adjustmentType } = req.query;
     let base = getBaseItemQuery();
     let dbQuery = base + ` WHERE i.flag = 1`;
     const params = [];
@@ -155,6 +185,7 @@ router.get("/item-wise", (req, res) => {
         const wildCard = '%' + searchQuery + '%';
         params.push(wildCard, wildCard, wildCard, wildCard, wildCard);
     }
+    dbQuery = applyAdjustmentFilter(dbQuery, adjustmentType, params);
     dbQuery += ` ORDER BY i.createdDate DESC`;
     
     db.query(dbQuery, params, (err, result) => {
@@ -165,7 +196,7 @@ router.get("/item-wise", (req, res) => {
 
 // 7. DIVISION WISE REPORT
 router.get("/division-wise", (req, res) => {
-    const { divisionId } = req.query;
+    const { divisionId, adjustmentType } = req.query;
     let base = getBaseItemQuery();
     let query = base + ` WHERE i.flag = 1`;
     const params = [];
@@ -173,6 +204,7 @@ router.get("/division-wise", (req, res) => {
         query += ` AND i.divisionId = ?`;
         params.push(divisionId);
     }
+    query = applyAdjustmentFilter(query, adjustmentType, params);
     query += ` ORDER BY d.description ASC`;
     
     db.query(query, params, (err, result) => {
@@ -183,7 +215,7 @@ router.get("/division-wise", (req, res) => {
 
 // 8. SECTION WISE REPORT
 router.get("/section-wise", (req, res) => {
-    const { sectionId, divisionId } = req.query;
+    const { sectionId, divisionId, adjustmentType } = req.query;
     let base = getBaseItemQuery();
     let query = base + ` WHERE i.flag = 1`;
     const params = [];
@@ -195,6 +227,7 @@ router.get("/section-wise", (req, res) => {
       query += ` AND i.divisionId = ?`;
       params.push(divisionId);
     }
+    query = applyAdjustmentFilter(query, adjustmentType, params);
     query += ` ORDER BY sec.sectionname ASC`;
     
     db.query(query, params, (err, result) => {
@@ -268,12 +301,50 @@ router.get("/stock-transactions", (req, res) => {
     const params = [];
     
     if (startDate && endDate) {
-        query += ` AND st.transactionDate BETWEEN ? AND ?`;
+        query += ` AND DATE(st.transactionDate) BETWEEN ? AND ?`;
         params.push(startDate, endDate);
     }
     if (type) {
         query += ` AND st.transactionType = ?`;
         params.push(type);
+    }
+    query += ` ORDER BY st.transactionDate DESC`;
+    db.query(query, params, (err, result) => {
+        if (err) return res.status(500).json({ success: false, error: err });
+        res.json({ success: true, data: result });
+    });
+});
+
+// 12. STOCK ADJUSTMENTS REPORT
+router.get("/stock-adjustments", (req, res) => {
+    const { startDate, endDate, type, divisionId } = req.query;
+    let query = `
+        SELECT st.transactionId as adjustmentId, st.itemId, st.transactionType as adjustmentType, 
+               st.quantity, st.transactionDate as adjustmentDate, st.remarks, st.createdBy,
+               ii.itemName, ii.itemCode, ii.serialNumber, 
+               d.description as divisionName, sec.sectionname as sectionName,
+               sup.supplierName
+        FROM stock_transactions st
+        LEFT JOIN inventory_items ii ON st.itemId = ii.itemId
+        LEFT JOIN divisions d ON ii.divisionId = d.division_id
+        LEFT JOIN sections sec ON ii.sectionId = sec.sectionid
+        LEFT JOIN invoices inv ON ii.invoiceId = inv.invoiceId
+        LEFT JOIN suppliers sup ON inv.supplierId = sup.supplierId
+        WHERE st.flag = 1 AND st.transactionType IN ('DAMAGED', 'DISPOSAL', 'CORRECTION', 'Stock In', 'Stock Out', 'Transfer', 'Return', 'Damaged', 'Disposal')
+    `;
+    const params = [];
+    
+    if (startDate && endDate) {
+        query += ` AND DATE(st.transactionDate) BETWEEN ? AND ?`;
+        params.push(startDate, endDate);
+    }
+    if (type) {
+        query += ` AND st.transactionType = ?`;
+        params.push(type);
+    }
+    if (divisionId) {
+        query += ` AND ii.divisionId = ?`;
+        params.push(divisionId);
     }
     query += ` ORDER BY st.transactionDate DESC`;
     db.query(query, params, (err, result) => {
