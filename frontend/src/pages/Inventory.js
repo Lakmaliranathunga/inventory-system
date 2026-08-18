@@ -18,7 +18,6 @@ const Inventory = () => {
 
   // Modal Data
   const [showModal, setShowModal] = useState(false);
-  const [activeTab, setActiveTab] = useState('general');
   const [isEdit, setIsEdit] = useState(false);
   const [formData, setFormData] = useState({
     itemId: '',
@@ -92,7 +91,6 @@ const Inventory = () => {
 
   const openAddModal = () => {
     setIsEdit(false);
-    setActiveTab('general');
     setFormData({
       itemId: '', itemCode: '', itemName: '', serialNumber: '', itemTypeId: '',
       mainCategoryId: '', subCategoryId: '', divisionId: '', sectionId: '',
@@ -103,7 +101,6 @@ const Inventory = () => {
 
   const openEditModal = (item) => {
     setIsEdit(true);
-    setActiveTab('general');
     setFormData({
       itemId: item.itemId,
       itemCode: item.itemCode || '',
@@ -126,39 +123,23 @@ const Inventory = () => {
 
   const closeModal = () => setShowModal(false);
 
-  // Validate Tab 1 fields — returns true if all required fields are filled
-  const validateTab1 = () => {
-    if (!formData.itemTypeId) {
-      toast.warning('Please select an Item Type before proceeding.');
-      return false;
-    }
-    if (!formData.mainCategoryId) {
-      toast.warning('Please select a Main Category before proceeding.');
-      return false;
-    }
-    if (!formData.subCategoryId) {
-      toast.warning('Please select a Sub Category before proceeding.');
-      return false;
-    }
-    if (!formData.divisionId) {
-      toast.warning('Please select a Division before proceeding.');
-      return false;
-    }
-    return true;
-  };
-
-  const handleNextTab = () => {
-    if (validateTab1()) {
-      setActiveTab('purchase');
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate Tab 1 fields first
-    if (!validateTab1()) {
-      setActiveTab('general'); // Switch back to Tab 1 to show the issue
+    if (!formData.itemTypeId) {
+      toast.warning('Please select an Item Type.');
+      return;
+    }
+    if (!formData.mainCategoryId) {
+      toast.warning('Please select a Main Category.');
+      return;
+    }
+    if (!formData.subCategoryId) {
+      toast.warning('Please select a Sub Category.');
+      return;
+    }
+    if (!formData.divisionId) {
+      toast.warning('Please select a Division.');
       return;
     }
 
@@ -179,6 +160,20 @@ const Inventory = () => {
     } catch (error) {
       console.error(error);
       toast.error(isEdit ? 'Failed to update item' : 'Failed to add item');
+    }
+  };
+
+  const refreshInvoices = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      const invRes = await axios.get('http://localhost:5000/api/invoices', { headers });
+      if (invRes.data.success) {
+        setInvoices(invRes.data.invoices);
+        toast.info('Invoice list refreshed');
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -246,7 +241,7 @@ const Inventory = () => {
                 </thead>
                 <tbody>
                   {filteredItems.length === 0 ? (
-                    <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>No inventory items found</td></tr>
+                    <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>No inventory items found</td></tr>
                   ) : (
                     filteredItems.map(item => (
                       <tr key={item.itemId}>
@@ -304,21 +299,12 @@ const Inventory = () => {
               </div>
               <form onSubmit={handleSubmit}>
                 <div className="inventory-modal-body">
-                  <div className="inventory-tabs">
-                    <button type="button" className={`inventory-tab-btn ${activeTab === 'general' ? 'active' : ''}`} onClick={() => setActiveTab('general')}>
-                      <i className="bi bi-box-seam"></i> Item Details & Location
-                    </button>
-                    <button type="button" className={`inventory-tab-btn ${activeTab === 'purchase' ? 'active' : ''}`} onClick={() => setActiveTab('purchase')}>
-                      <i className="bi bi-receipt"></i> Purchase & Invoice
-                    </button>
-                  </div>
-
-                  {!isEdit && activeTab === 'general' && (
+                  {!isEdit && (
                     <div style={{ marginBottom: '15px', fontSize: '13px', color: '#007bff' }}>
                       <i className="bi bi-info-circle"></i> Item No. will be auto-generated sequentially upon save.
                     </div>
                   )}
-                  {isEdit && formData.itemCode && activeTab === 'general' && (
+                  {isEdit && formData.itemCode && (
                     <div style={{ marginBottom: '15px', fontSize: '13px', color: '#6c757d' }}>
                       <strong>Item No:</strong> {formData.itemCode}
                       <br/>
@@ -326,172 +312,225 @@ const Inventory = () => {
                     </div>
                   )}
 
-                  {activeTab === 'general' && (
-                    <>
-                      <div className="inventory-form-grid">
-                        <div className="inventory-form-group col-span-4">
-                          <label className="inventory-form-label">Item Type</label>
-                          <select className="inventory-form-select" name="itemTypeId" value={formData.itemTypeId} onChange={handleInputChange}>
-                            <option value="">Select Type</option>
-                            {itemTypes.map(t => <option key={t.itemTypeId} value={t.itemTypeId}>{t.itemTypeName}</option>)}
-                          </select>
-                        </div>
-                        <div className="inventory-form-group col-span-4">
-                          <label className="inventory-form-label">Main Category</label>
-                          <select className="inventory-form-select" name="mainCategoryId" value={formData.mainCategoryId} onChange={handleInputChange}>
-                            <option value="">Select Main Category</option>
-                            {mainCategories.filter(m => !formData.itemTypeId || m.itemTypeId == formData.itemTypeId).map(m => (
-                              <option key={m.mainCategoryId} value={m.mainCategoryId}>{m.mainCategoryName}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="inventory-form-group col-span-4">
-                          <label className="inventory-form-label">Sub Category</label>
-                          <select className="inventory-form-select" name="subCategoryId" value={formData.subCategoryId} onChange={handleInputChange}>
-                            <option value="">Select Sub Category</option>
-                            {subCategories.filter(s => !formData.mainCategoryId || s.mainCategoryId == formData.mainCategoryId).map(s => (
-                              <option key={s.subCategoryId} value={s.subCategoryId}>{s.subCategoryName}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="inventory-form-group col-span-4">
-                          <label className="inventory-form-label">Division</label>
-                          <select className="inventory-form-select" name="divisionId" value={formData.divisionId} onChange={handleInputChange}>
-                            <option value="">Select Division</option>
-                            {divisions.map(d => <option key={d.divisionId} value={d.divisionId}>{d.divisionName}</option>)}
-                          </select>
-                        </div>
-                        <div className="inventory-form-group col-span-4">
-                          <label className="inventory-form-label">Section</label>
-                          <select className="inventory-form-select" name="sectionId" value={formData.sectionId} onChange={handleInputChange}>
-                            <option value="">Select Section</option>
-                            {sections.filter(s => !formData.divisionId || s.divisionId == formData.divisionId).map(s => (
-                              <option key={s.sectionId} value={s.sectionId}>{s.sectionName}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="inventory-form-group col-span-4">
-                          <label className="inventory-form-label">Quantity</label>
-                          <input type="number" className="inventory-form-input" name="quantity" value={formData.quantity} onChange={handleInputChange} min="1" required disabled={isEdit} />
-                        </div>
-                        <div className="inventory-form-group col-span-12">
-                          <label className="inventory-form-label">Remarks</label>
-                          <textarea className="inventory-form-textarea" name="remarks" rows="2" value={formData.remarks} onChange={handleInputChange}></textarea>
-                        </div>
+                  {/* Section 1: Item Details & Location */}
+                  <div className="inventory-form-section">
+                    <i className="bi bi-box-seam" style={{ marginRight: '6px' }}></i> Item Details & Location
+                  </div>
+                  <div className="inventory-form-grid">
+                    <div className="inventory-form-group col-span-4">
+                      <label className="inventory-form-label">Item Type</label>
+                      <select className="inventory-form-select" name="itemTypeId" value={formData.itemTypeId} onChange={handleInputChange} required>
+                        <option value="">Select Type</option>
+                        {itemTypes.map(t => <option key={t.itemTypeId} value={t.itemTypeId}>{t.itemTypeName}</option>)}
+                      </select>
+                    </div>
+                    <div className="inventory-form-group col-span-4">
+                      <label className="inventory-form-label">Main Category</label>
+                      <select className="inventory-form-select" name="mainCategoryId" value={formData.mainCategoryId} onChange={handleInputChange} required>
+                        <option value="">Select Main Category</option>
+                        {mainCategories.filter(m => !formData.itemTypeId || m.itemTypeId == formData.itemTypeId).map(m => (
+                          <option key={m.mainCategoryId} value={m.mainCategoryId}>{m.mainCategoryName}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="inventory-form-group col-span-4">
+                      <label className="inventory-form-label">Sub Category</label>
+                      <select className="inventory-form-select" name="subCategoryId" value={formData.subCategoryId} onChange={handleInputChange} required>
+                        <option value="">Select Sub Category</option>
+                        {subCategories.filter(s => !formData.mainCategoryId || s.mainCategoryId == formData.mainCategoryId).map(s => (
+                          <option key={s.subCategoryId} value={s.subCategoryId}>{s.subCategoryName}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="inventory-form-group col-span-4">
+                      <label className="inventory-form-label">Division</label>
+                      <select className="inventory-form-select" name="divisionId" value={formData.divisionId} onChange={handleInputChange} required>
+                        <option value="">Select Division</option>
+                        {divisions.map(d => <option key={d.divisionId} value={d.divisionId}>{d.divisionName}</option>)}
+                      </select>
+                    </div>
+                    <div className="inventory-form-group col-span-4">
+                      <label className="inventory-form-label">Section</label>
+                      <select className="inventory-form-select" name="sectionId" value={formData.sectionId} onChange={handleInputChange}>
+                        <option value="">Select Section</option>
+                        {sections.filter(s => !formData.divisionId || s.divisionId == formData.divisionId).map(s => (
+                          <option key={s.sectionId} value={s.sectionId}>{s.sectionName}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="inventory-form-group col-span-4">
+                      <label className="inventory-form-label">Quantity</label>
+                      <input type="number" className="inventory-form-input" name="quantity" value={formData.quantity} onChange={handleInputChange} min="1" required disabled={isEdit} />
+                    </div>
+                    <div className="inventory-form-group col-span-12">
+                      <label className="inventory-form-label">Remarks</label>
+                      <textarea className="inventory-form-textarea" name="remarks" rows="2" value={formData.remarks} onChange={handleInputChange}></textarea>
+                    </div>
+                  </div>
+
+                  {/* Section 2: Purchase & Invoice Details */}
+                  <div className="inventory-form-section" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>
+                      <i className="bi bi-receipt" style={{ marginRight: '6px' }}></i> Purchase & Invoice Details
+                    </span>
+                    <a 
+                      href="/invoices" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      style={{ fontSize: '0.8rem', color: '#0d6efd', textDecoration: 'none', fontWeight: '500', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                      title="Open Invoice Management in a new browser tab to create/view invoices"
+                    >
+                      <i className="bi bi-plus-circle"></i> Create / Manage Invoices in New Tab <i className="bi bi-box-arrow-up-right" style={{ fontSize: '0.75rem' }}></i>
+                    </a>
+                  </div>
+                  <div className="inventory-form-grid">
+                    <div className="inventory-form-group col-span-4">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                        <label className="inventory-form-label" style={{ margin: 0 }}>Invoice / PO No.</label>
+                        <button 
+                          type="button" 
+                          onClick={refreshInvoices} 
+                          style={{ background: 'none', border: 'none', color: '#0d6efd', cursor: 'pointer', fontSize: '0.8rem', padding: 0 }}
+                          title="Refresh invoice dropdown"
+                        >
+                          <i className="bi bi-arrow-clockwise"></i> Refresh List
+                        </button>
                       </div>
-                    </>
-                  )}
+                      <select className="inventory-form-select" name="invoiceId" value={formData.invoiceId} onChange={handleInputChange}>
+                        <option value="">Select Invoice (Optional)</option>
+                        {invoices.map(inv => (
+                          <option key={inv.invoiceId} value={inv.invoiceId}>
+                            Invoice #{inv.invoiceNumber} {inv.poNo ? `(PO: ${inv.poNo})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="inventory-form-group col-span-4">
+                      <label className="inventory-form-label">Purchase Date</label>
+                      <input type="date" className="inventory-form-input" name="purchaseDate" value={formData.purchaseDate} onChange={handleInputChange} />
+                    </div>
+                    <div className="inventory-form-group col-span-4">
+                      <label className="inventory-form-label">Warranty Expiration Date</label>
+                      <input type="date" className="inventory-form-input" name="warrantyExpireDate" value={formData.warrantyExpireDate} onChange={handleInputChange} />
+                    </div>
+                    <div className="inventory-form-group col-span-4">
+                      <label className="inventory-form-label">Asset / Serial No.</label>
+                      <input 
+                        type="text" 
+                        className="inventory-form-input" 
+                        name="serialNumber" 
+                        value={formData.serialNumber} 
+                        onChange={handleInputChange} 
+                        placeholder={(!isEdit && parseInt(formData.quantity || 1) > 1) ? 'Disabled for Qty > 1' : 'Optional'}
+                        disabled={!isEdit && parseInt(formData.quantity || 1) > 1}
+                      />
+                    </div>
 
-                  {activeTab === 'purchase' && (
-                    <>
-                      <div className="inventory-form-grid">
-                        <div className="inventory-form-group col-span-4">
-                          <label className="inventory-form-label">Invoice / PO No.</label>
-                          <select className="inventory-form-select" name="invoiceId" value={formData.invoiceId} onChange={handleInputChange}>
-                            <option value="">Select Invoice (Optional)</option>
-                            {invoices.map(inv => (
-                              <option key={inv.invoiceId} value={inv.invoiceId}>
-                                {inv.invoiceNumber} {inv.poNo ? `(PO: ${inv.poNo})` : ''}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="inventory-form-group col-span-4">
-                          <label className="inventory-form-label">Purchase Date</label>
-                          <input type="date" className="inventory-form-input" name="purchaseDate" value={formData.purchaseDate} onChange={handleInputChange} />
-                        </div>
-                        <div className="inventory-form-group col-span-4">
-                          <label className="inventory-form-label">Warranty Expiration Date</label>
-                          <input type="date" className="inventory-form-input" name="warrantyExpireDate" value={formData.warrantyExpireDate} onChange={handleInputChange} />
-                        </div>
-                        <div className="inventory-form-group col-span-4">
-                          <label className="inventory-form-label">Asset / Serial No.</label>
-                          <input 
-                            type="text" 
-                            className="inventory-form-input" 
-                            name="serialNumber" 
-                            value={formData.serialNumber} 
-                            onChange={handleInputChange} 
-                            placeholder={(!isEdit && parseInt(formData.quantity || 1) > 1) ? 'Disabled for Qty > 1' : 'Optional'}
-                            disabled={!isEdit && parseInt(formData.quantity || 1) > 1}
-                          />
-                        </div>
-
-                        {formData.invoiceId && (
-                          <div className="inventory-form-group col-span-12">
-                            <div className="supplier-info-card">
-                              {(() => {
-                                const selectedInv = invoices.find(i => i.invoiceId == formData.invoiceId);
-                                if (!selectedInv) return <div>No details available</div>;
-                                return (
-                                  <>
-                                    <div className="supplier-card-header">
-                                      <div className="supplier-card-icon">
-                                        <i className="bi bi-building"></i>
-                                      </div>
-                                      <div>
-                                        <h4 className="supplier-card-title">{selectedInv.supplierName || 'Unknown Supplier'}</h4>
-                                        <div style={{fontSize: '0.85rem', color: '#64748b', marginTop: '2px'}}>Supplier details linked to Invoice #{selectedInv.invoiceNumber}</div>
+                    {formData.invoiceId && (
+                      <div className="inventory-form-group col-span-12">
+                        <div className="supplier-info-card">
+                          {(() => {
+                            const selectedInv = invoices.find(i => i.invoiceId == formData.invoiceId);
+                            if (!selectedInv) return <div>No details available</div>;
+                            return (
+                              <>
+                                <div className="supplier-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div className="supplier-card-icon">
+                                      <i className="bi bi-building"></i>
+                                    </div>
+                                    <div>
+                                      <h4 className="supplier-card-title">{selectedInv.supplierName || 'Unknown Supplier'}</h4>
+                                      <div style={{fontSize: '0.85rem', color: '#64748b', marginTop: '2px'}}>
+                                        Linked to Invoice #{selectedInv.invoiceNumber} {selectedInv.poNo ? `| PO No: ${selectedInv.poNo}` : ''}
                                       </div>
                                     </div>
-                                    <div className="supplier-card-grid">
-                                      <div className="supplier-detail-item">
-                                        <span className="supplier-detail-label">Invoice Date</span>
-                                        <span className="supplier-detail-val">
-                                          <i className="bi bi-calendar-check"></i>
-                                          {selectedInv.invoiceDate ? selectedInv.invoiceDate.split('T')[0] : 'N/A'}
-                                        </span>
-                                      </div>
-                                      <div className="supplier-detail-item">
-                                        <span className="supplier-detail-label">Total Amount</span>
-                                        <span className="supplier-detail-val highlight">
-                                          Rs. {selectedInv.totalAmount || '0.00'}
-                                        </span>
-                                      </div>
-                                      <div className="supplier-detail-item">
-                                        <span className="supplier-detail-label">Contact No</span>
-                                        <span className="supplier-detail-val">
-                                          <i className="bi bi-telephone"></i>
-                                          {selectedInv.contactNo || 'N/A'}
-                                        </span>
-                                      </div>
-                                      <div className="supplier-detail-item">
-                                        <span className="supplier-detail-label">Email</span>
-                                        <span className="supplier-detail-val">
-                                          <i className="bi bi-envelope"></i>
-                                          {selectedInv.email || 'N/A'}
-                                        </span>
-                                      </div>
-                                      <div className="supplier-detail-item" style={{ gridColumn: 'span 2' }}>
-                                        <span className="supplier-detail-label">Address</span>
-                                        <span className="supplier-detail-val" style={{ lineHeight: '1.4' }}>
-                                          <i className="bi bi-geo-alt"></i>
-                                          {selectedInv.address || 'N/A'}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </>
-                                );
-                              })()}
-                            </div>
-                          </div>
-                        )}
+                                  </div>
+                                  <div style={{ display: 'flex', gap: '8px' }}>
+                                    <a 
+                                      href="/invoices" 
+                                      target="_blank" 
+                                      rel="noopener noreferrer" 
+                                      className="inventory-action-btn inventory-action-btn--edit"
+                                      style={{ textDecoration: 'none', padding: '6px 12px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                      title="Open Invoices Page in New Browser Tab"
+                                    >
+                                      <i className="bi bi-file-text"></i> Open Invoices Page <i className="bi bi-box-arrow-up-right" style={{ fontSize: '0.7rem' }}></i>
+                                    </a>
+                                    <a 
+                                      href="/suppliers" 
+                                      target="_blank" 
+                                      rel="noopener noreferrer" 
+                                      className="inventory-action-btn inventory-action-btn--edit"
+                                      style={{ textDecoration: 'none', padding: '6px 12px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                      title="Open Suppliers Page in New Browser Tab"
+                                    >
+                                      <i className="bi bi-truck"></i> Open Suppliers Page <i className="bi bi-box-arrow-up-right" style={{ fontSize: '0.7rem' }}></i>
+                                    </a>
+                                  </div>
+                                </div>
+                                <div className="supplier-card-grid">
+                                  <div className="supplier-detail-item">
+                                    <span className="supplier-detail-label">Invoice No</span>
+                                    <span className="supplier-detail-val" style={{ fontWeight: '600', color: '#0d6efd' }}>
+                                      {selectedInv.invoiceNumber}
+                                    </span>
+                                  </div>
+                                  <div className="supplier-detail-item">
+                                    <span className="supplier-detail-label">PO No</span>
+                                    <span className="supplier-detail-val" style={{ fontWeight: '600' }}>
+                                      {selectedInv.poNo || 'N/A'}
+                                    </span>
+                                  </div>
+                                  <div className="supplier-detail-item">
+                                    <span className="supplier-detail-label">Invoice Date</span>
+                                    <span className="supplier-detail-val">
+                                      <i className="bi bi-calendar-check"></i>
+                                      {selectedInv.invoiceDate ? selectedInv.invoiceDate.split('T')[0] : 'N/A'}
+                                    </span>
+                                  </div>
+                                  <div className="supplier-detail-item">
+                                    <span className="supplier-detail-label">Total Amount</span>
+                                    <span className="supplier-detail-val highlight">
+                                      Rs. {selectedInv.totalAmount || '0.00'}
+                                    </span>
+                                  </div>
+                                  <div className="supplier-detail-item">
+                                    <span className="supplier-detail-label">Contact No</span>
+                                    <span className="supplier-detail-val">
+                                      <i className="bi bi-telephone"></i>
+                                      {selectedInv.contactNo || 'N/A'}
+                                    </span>
+                                  </div>
+                                  <div className="supplier-detail-item">
+                                    <span className="supplier-detail-label">Email</span>
+                                    <span className="supplier-detail-val">
+                                      <i className="bi bi-envelope"></i>
+                                      {selectedInv.email || 'N/A'}
+                                    </span>
+                                  </div>
+                                  <div className="supplier-detail-item" style={{ gridColumn: 'span 2' }}>
+                                    <span className="supplier-detail-label">Address</span>
+                                    <span className="supplier-detail-val" style={{ lineHeight: '1.4' }}>
+                                      <i className="bi bi-geo-alt"></i>
+                                      {selectedInv.address || 'N/A'}
+                                    </span>
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          })()}
+                        </div>
                       </div>
-                    </>
-                  )}
+                    )}
+                  </div>
                 </div>
-                <div className="inventory-modal-footer" style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                  {activeTab === 'general' ? (
-                    <>
-                      <button type="button" className="inventory-btn-secondary" onClick={closeModal}>Cancel</button>
-                      <button type="button" className="inventory-btn-primary" onClick={handleNextTab}>Next <i className="bi bi-arrow-right ml-1"></i></button>
-                    </>
-                  ) : (
-                    <>
-                      <button type="button" className="inventory-btn-secondary" onClick={() => setActiveTab('general')}><i className="bi bi-arrow-left mr-1"></i> Back</button>
-                      <button type="submit" className="inventory-btn-primary"><i className="bi bi-check-circle mr-1"></i> {isEdit ? 'Update Changes' : 'Save Item'}</button>
-                    </>
-                  )}
+                <div className="inventory-modal-footer">
+                  <button type="button" className="inventory-btn-secondary" onClick={closeModal}>Cancel</button>
+                  <button type="submit" className="inventory-btn-primary">
+                    <i className="bi bi-check-circle" style={{ marginRight: '6px' }}></i>
+                    {isEdit ? 'Update Changes' : 'Save Item'}
+                  </button>
                 </div>
               </form>
             </div>
