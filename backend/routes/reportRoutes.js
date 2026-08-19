@@ -73,6 +73,7 @@ router.get("/dashboard", async (req, res) => {
 // Helper for building common item joins with stock adjustment information
 const getBaseItemQuery = () => `
     SELECT i.*, 
+        i.itemCode,
         t.itemTypeName, 
         m.mainCategoryName, 
         s.subCategoryName,
@@ -88,14 +89,14 @@ const getBaseItemQuery = () => `
     LEFT JOIN divisions d ON i.divisionId = d.division_id
     LEFT JOIN sections sec ON i.sectionId = sec.sectionid
     LEFT JOIN (
-        SELECT st1.itemId, st1.transactionType as adjustmentType, st1.transactionDate as adjustmentDate, st1.remarks as adjustmentRemarks
-        FROM stock_transactions st1
+        SELECT sa1.itemId, sa1.adjustmentType, sa1.adjustmentDate, sa1.remarks as adjustmentRemarks
+        FROM stock_adjustments sa1
         INNER JOIN (
-            SELECT itemId, MAX(transactionId) as maxId
-            FROM stock_transactions
-            WHERE flag = 1 AND transactionType IN ('DAMAGED', 'DISPOSAL', 'CORRECTION', 'Damaged', 'Disposal')
+            SELECT itemId, MAX(adjustmentId) as maxId
+            FROM stock_adjustments
+            WHERE flag = 1 AND adjustmentType IN ('DAMAGED', 'DISPOSAL', 'CORRECTION', 'Damaged', 'Disposal')
             GROUP BY itemId
-        ) st2 ON st1.transactionId = st2.maxId
+        ) sa2 ON sa1.adjustmentId = sa2.maxId
     ) adj ON i.itemId = adj.itemId
 `;
 
@@ -319,34 +320,34 @@ router.get("/stock-transactions", (req, res) => {
 router.get("/stock-adjustments", (req, res) => {
     const { startDate, endDate, type, divisionId } = req.query;
     let query = `
-        SELECT st.transactionId as adjustmentId, st.itemId, st.transactionType as adjustmentType, 
-               st.quantity, st.transactionDate as adjustmentDate, st.remarks, st.createdBy,
+        SELECT sa.adjustmentId, sa.itemId, sa.adjustmentType, 
+               sa.quantity, sa.adjustmentDate, sa.remarks, sa.createdBy,
                ii.itemName, ii.itemCode, ii.serialNumber, 
                d.description as divisionName, sec.sectionname as sectionName,
                sup.supplierName
-        FROM stock_transactions st
-        LEFT JOIN inventory_items ii ON st.itemId = ii.itemId
+        FROM stock_adjustments sa
+        LEFT JOIN inventory_items ii ON sa.itemId = ii.itemId
         LEFT JOIN divisions d ON ii.divisionId = d.division_id
         LEFT JOIN sections sec ON ii.sectionId = sec.sectionid
         LEFT JOIN invoices inv ON ii.invoiceId = inv.invoiceId
         LEFT JOIN suppliers sup ON inv.supplierId = sup.supplierId
-        WHERE st.flag = 1 AND st.transactionType IN ('DAMAGED', 'DISPOSAL', 'CORRECTION', 'Stock In', 'Stock Out', 'Transfer', 'Return', 'Damaged', 'Disposal')
+        WHERE sa.flag = 1 AND sa.adjustmentType IN ('DAMAGED', 'DISPOSAL', 'CORRECTION', 'Damaged', 'Disposal')
     `;
     const params = [];
     
     if (startDate && endDate) {
-        query += ` AND DATE(st.transactionDate) BETWEEN ? AND ?`;
+        query += ` AND DATE(sa.adjustmentDate) BETWEEN ? AND ?`;
         params.push(startDate, endDate);
     }
     if (type) {
-        query += ` AND st.transactionType = ?`;
+        query += ` AND sa.adjustmentType = ?`;
         params.push(type);
     }
     if (divisionId) {
         query += ` AND ii.divisionId = ?`;
         params.push(divisionId);
     }
-    query += ` ORDER BY st.transactionDate DESC`;
+    query += ` ORDER BY sa.adjustmentDate DESC`;
     db.query(query, params, (err, result) => {
         if (err) return res.status(500).json({ success: false, error: err });
         res.json({ success: true, data: result });

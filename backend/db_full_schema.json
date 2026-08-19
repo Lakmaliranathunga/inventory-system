@@ -1,0 +1,528 @@
+{
+  "divisions": [
+    {
+      "Field": "division_id",
+      "Type": "int"
+    },
+    {
+      "Field": "locationid",
+      "Type": "int"
+    },
+    {
+      "Field": "description",
+      "Type": "text"
+    }
+  ],
+  "inventory_items": [
+    {
+      "Field": "itemId",
+      "Type": "int"
+    },
+    {
+      "Field": "itemCode",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "itemName",
+      "Type": "varchar(255)"
+    },
+    {
+      "Field": "serialNumber",
+      "Type": "varchar(255)"
+    },
+    {
+      "Field": "invoiceId",
+      "Type": "int"
+    },
+    {
+      "Field": "itemTypeId",
+      "Type": "int"
+    },
+    {
+      "Field": "mainCategoryId",
+      "Type": "int"
+    },
+    {
+      "Field": "subCategoryId",
+      "Type": "int"
+    },
+    {
+      "Field": "divisionId",
+      "Type": "int"
+    },
+    {
+      "Field": "sectionId",
+      "Type": "int"
+    },
+    {
+      "Field": "quantity",
+      "Type": "int"
+    },
+    {
+      "Field": "itemCondition",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "purchaseDate",
+      "Type": "date"
+    },
+    {
+      "Field": "warrantyExpireDate",
+      "Type": "date"
+    },
+    {
+      "Field": "remarks",
+      "Type": "text"
+    },
+    {
+      "Field": "createdDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "updatedDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "deletedDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "createdBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "updatedBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "deletedBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "flag",
+      "Type": "int"
+    }
+  ],
+  "invoices": [
+    {
+      "Field": "invoiceId",
+      "Type": "int"
+    },
+    {
+      "Field": "invoiceNumber",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "supplierId",
+      "Type": "int"
+    },
+    {
+      "Field": "invoiceDate",
+      "Type": "date"
+    },
+    {
+      "Field": "totalAmount",
+      "Type": "decimal(10,2)"
+    },
+    {
+      "Field": "remarks",
+      "Type": "text"
+    },
+    {
+      "Field": "createdDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "updatedDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "deletedDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "createdBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "updatedBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "deletedBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "flag",
+      "Type": "int"
+    },
+    {
+      "Field": "poNo",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "poDate",
+      "Type": "date"
+    },
+    {
+      "Field": "invoiceImage",
+      "Type": "varchar(255)"
+    }
+  ],
+  "item_types": [
+    {
+      "Field": "itemTypeId",
+      "Type": "int"
+    },
+    {
+      "Field": "itemTypeName",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "remarks",
+      "Type": "text"
+    },
+    {
+      "Field": "createdDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "updatedDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "deletedDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "createdBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "updatedBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "deletedBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "flag",
+      "Type": "int"
+    }
+  ],
+  "main_categories": [
+    {
+      "Field": "mainCategoryId",
+      "Type": "int"
+    },
+    {
+      "Field": "itemTypeId",
+      "Type": "int"
+    },
+    {
+      "Field": "mainCategoryName",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "remarks",
+      "Type": "text"
+    },
+    {
+      "Field": "createdDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "updatedDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "deletedDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "createdBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "updatedBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "deletedBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "flag",
+      "Type": "int"
+    }
+  ],
+  "sections": [
+    {
+      "Field": "sectionid",
+      "Type": "int"
+    },
+    {
+      "Field": "sectionname",
+      "Type": "text"
+    },
+    {
+      "Field": "division_id",
+      "Type": "int"
+    },
+    {
+      "Field": "locationid",
+      "Type": "int"
+    }
+  ],
+  "stock_transactions": [
+    {
+      "Field": "transactionId",
+      "Type": "int"
+    },
+    {
+      "Field": "itemId",
+      "Type": "int"
+    },
+    {
+      "Field": "transactionType",
+      "Type": "varchar(50)"
+    },
+    {
+      "Field": "quantity",
+      "Type": "int"
+    },
+    {
+      "Field": "transactionDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "fromDivisionId",
+      "Type": "int"
+    },
+    {
+      "Field": "toDivisionId",
+      "Type": "int"
+    },
+    {
+      "Field": "remarks",
+      "Type": "text"
+    },
+    {
+      "Field": "createdBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "updatedBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "deletedBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "updatedDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "deletedDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "flag",
+      "Type": "int"
+    }
+  ],
+  "sub_categories": [
+    {
+      "Field": "subCategoryId",
+      "Type": "int"
+    },
+    {
+      "Field": "mainCategoryId",
+      "Type": "int"
+    },
+    {
+      "Field": "subCategoryName",
+      "Type": "varchar(255)"
+    },
+    {
+      "Field": "remarks",
+      "Type": "text"
+    },
+    {
+      "Field": "createdDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "updatedDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "deletedDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "createdBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "updatedBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "deletedBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "flag",
+      "Type": "int"
+    }
+  ],
+  "suppliers": [
+    {
+      "Field": "supplierId",
+      "Type": "int"
+    },
+    {
+      "Field": "supplierName",
+      "Type": "varchar(255)"
+    },
+    {
+      "Field": "contactPerson",
+      "Type": "varchar(255)"
+    },
+    {
+      "Field": "contactNo",
+      "Type": "varchar(50)"
+    },
+    {
+      "Field": "email",
+      "Type": "varchar(255)"
+    },
+    {
+      "Field": "address",
+      "Type": "text"
+    },
+    {
+      "Field": "remarks",
+      "Type": "text"
+    },
+    {
+      "Field": "createdDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "updatedDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "deletedDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "createdBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "updatedBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "deletedBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "flag",
+      "Type": "int"
+    }
+  ],
+  "user_roles": [
+    {
+      "Field": "roleId",
+      "Type": "int"
+    },
+    {
+      "Field": "roleName",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "remarks",
+      "Type": "text"
+    },
+    {
+      "Field": "createdDate",
+      "Type": "timestamp"
+    }
+  ],
+  "users": [
+    {
+      "Field": "uId",
+      "Type": "int"
+    },
+    {
+      "Field": "uUsername",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "uFullName",
+      "Type": "varchar(200)"
+    },
+    {
+      "Field": "uPassword",
+      "Type": "varchar(255)"
+    },
+    {
+      "Field": "uStatus",
+      "Type": "varchar(20)"
+    },
+    {
+      "Field": "uEmpNo",
+      "Type": "varchar(50)"
+    },
+    {
+      "Field": "roleId",
+      "Type": "int"
+    },
+    {
+      "Field": "sectionId",
+      "Type": "int"
+    },
+    {
+      "Field": "divisionId",
+      "Type": "int"
+    },
+    {
+      "Field": "contactNo",
+      "Type": "varchar(20)"
+    },
+    {
+      "Field": "registeredDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "updatedDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "deletedDate",
+      "Type": "timestamp"
+    },
+    {
+      "Field": "createdBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "updatedBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "deletedBy",
+      "Type": "varchar(100)"
+    },
+    {
+      "Field": "flag",
+      "Type": "int"
+    }
+  ]
+}

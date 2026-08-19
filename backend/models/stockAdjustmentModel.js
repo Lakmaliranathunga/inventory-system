@@ -3,37 +3,39 @@ const db = require("../db");
 const StockAdjustmentModel = {
   getAll: (callback) => {
     const sql = `
-      SELECT st.transactionId as adjustmentId, st.itemId, st.transactionType as adjustmentType, 
-             st.quantity, st.transactionDate as adjustmentDate, st.remarks, st.createdBy,
-             i.itemName, i.itemCode, i.serialNumber, sup.supplierName
-      FROM stock_transactions st
-      LEFT JOIN inventory_items i ON st.itemId = i.itemId
+      SELECT sa.adjustmentId, sa.itemId, sa.adjustmentType, 
+             sa.quantity, sa.adjustmentDate, sa.remarks, sa.createdBy,
+             i.itemName, i.itemCode, i.serialNumber, sup.supplierName, u.uFullName as createdByName
+      FROM stock_adjustments sa
+      LEFT JOIN inventory_items i ON sa.itemId = i.itemId
       LEFT JOIN invoices inv ON i.invoiceId = inv.invoiceId
       LEFT JOIN suppliers sup ON inv.supplierId = sup.supplierId
-      WHERE st.flag = 1 AND st.transactionType IN ('DAMAGED', 'DISPOSAL', 'CORRECTION')
-      ORDER BY st.transactionDate DESC
+      LEFT JOIN users u ON sa.createdBy = u.uId
+      WHERE sa.flag = 1 AND sa.adjustmentType IN ('DAMAGED', 'DISPOSAL', 'CORRECTION', 'Damaged', 'Disposal')
+      ORDER BY sa.adjustmentDate DESC
     `;
     db.query(sql, callback);
   },
 
   getById: (id, callback) => {
     const sql = `
-      SELECT st.transactionId as adjustmentId, st.itemId, st.transactionType as adjustmentType, 
-             st.quantity, st.transactionDate as adjustmentDate, st.remarks, st.createdBy,
-             i.itemName, i.itemCode, i.serialNumber, sup.supplierName
-      FROM stock_transactions st
-      LEFT JOIN inventory_items i ON st.itemId = i.itemId
+      SELECT sa.adjustmentId, sa.itemId, sa.adjustmentType, 
+             sa.quantity, sa.adjustmentDate, sa.remarks, sa.createdBy,
+             i.itemName, i.itemCode, i.serialNumber, sup.supplierName, u.uFullName as createdByName
+      FROM stock_adjustments sa
+      LEFT JOIN inventory_items i ON sa.itemId = i.itemId
       LEFT JOIN invoices inv ON i.invoiceId = inv.invoiceId
       LEFT JOIN suppliers sup ON inv.supplierId = sup.supplierId
-      WHERE st.transactionId = ? AND st.flag = 1
+      LEFT JOIN users u ON sa.createdBy = u.uId
+      WHERE sa.adjustmentId = ? AND sa.flag = 1
     `;
     db.query(sql, [id], callback);
   },
 
   create: (data, callback) => {
     const sql = `
-      INSERT INTO stock_transactions (
-        itemId, transactionType, quantity, transactionDate, 
+      INSERT INTO stock_adjustments (
+        itemId, adjustmentType, quantity, adjustmentDate, 
         remarks, createdBy, flag
       ) VALUES (?, ?, ?, ?, ?, ?, 1)
     `;
@@ -50,10 +52,10 @@ const StockAdjustmentModel = {
 
   update: (id, data, callback) => {
     const sql = `
-      UPDATE stock_transactions 
-      SET itemId=?, transactionType=?, quantity=?, transactionDate=?, 
+      UPDATE stock_adjustments 
+      SET itemId=?, adjustmentType=?, quantity=?, adjustmentDate=?, 
           remarks=?, updatedBy=?, updatedDate=NOW()
-      WHERE transactionId=?
+      WHERE adjustmentId=?
     `;
     const values = [
       data.itemId,
@@ -69,9 +71,9 @@ const StockAdjustmentModel = {
 
   softDelete: (id, deletedBy, callback) => {
     const sql = `
-      UPDATE stock_transactions 
+      UPDATE stock_adjustments 
       SET flag=0, deletedBy=?, deletedDate=NOW() 
-      WHERE transactionId=?
+      WHERE adjustmentId=?
     `;
     db.query(sql, [deletedBy, id], callback);
   },

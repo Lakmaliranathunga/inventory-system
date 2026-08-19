@@ -564,18 +564,14 @@ app.post("/api/inventory", verifyToken, async (req, res) => {
     const subCatCode = getShortForm(subCategoryName, 'GEN');
     const year = new Date().getFullYear();
     const itemName = subCategoryName;
-
     const countRes = await new Promise((resolve, reject) => {
       db.query("SELECT COUNT(*) as cnt FROM inventory_items WHERE itemName=? AND subCategoryId=?", [itemName, subCategoryId || 0], (err, r) => err ? reject(err) : resolve(r));
     });
 
-    let currentCount = countRes[0].cnt;
     let qtyNum = parseInt(quantity) || 1;
-    let totalQty = currentCount + qtyNum;
 
     for (let i = 1; i <= qtyNum; i++) {
-        const itemNumber = currentCount + i;
-        const generatedItemCode = `${divCode}/${itemTypeCode}/${mainCatCode}/${subCatCode}/${year}/${itemNumber}/${totalQty}`;
+        const generatedItemCode = `${divCode}/${itemTypeCode}/${mainCatCode}/${subCatCode}/${year}/${i}/${qtyNum}`;
 
         const sql = `
           INSERT INTO inventory_items (
