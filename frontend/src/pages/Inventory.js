@@ -384,7 +384,7 @@ const Inventory = () => {
                     </a>
                   </div>
                   <div className="inventory-form-grid">
-                    <div className="inventory-form-group col-span-4">
+                    <div className="inventory-form-group col-span-4" style={{ position: 'relative' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                         <label className="inventory-form-label" style={{ margin: 0 }}>Invoice / PO No.</label>
                         <button 
@@ -404,6 +404,107 @@ const Inventory = () => {
                           </option>
                         ))}
                       </select>
+
+                      {formData.invoiceId && (
+                        <div className="supplier-info-card floating">
+                          {(() => {
+                            const selectedInv = invoices.find(i => i.invoiceId == formData.invoiceId);
+                            if (!selectedInv) return <div>No details available</div>;
+                            return (
+                              <>
+                                <div className="supplier-card-header">
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                    <div className="supplier-card-icon">
+                                      <i className="bi bi-building-check"></i>
+                                    </div>
+                                    <div>
+                                      <h4 className="supplier-card-title">{selectedInv.supplierName || 'Unknown Supplier'}</h4>
+                                      <div className="supplier-card-subtitle">
+                                        <span className="supplier-badge">
+                                          <i className="bi bi-receipt-cutoff"></i> Invoice #{selectedInv.invoiceNumber}
+                                        </span>
+                                        {selectedInv.poNo && (
+                                          <span className="supplier-badge" style={{ background: '#f3e8ff', color: '#7e22ce' }}>
+                                            <i className="bi bi-clipboard-check"></i> PO: {selectedInv.poNo}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div style={{ display: 'flex', gap: '8px' }}>
+                                    <a 
+                                      href="/invoices" 
+                                      target="_blank" 
+                                      rel="noopener noreferrer" 
+                                      className="inventory-btn-secondary"
+                                      style={{ textDecoration: 'none', padding: '6px 12px', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                                      title="Open Invoices Page in New Browser Tab"
+                                    >
+                                      <i className="bi bi-file-earmark-text"></i> Invoices <i className="bi bi-box-arrow-up-right" style={{ fontSize: '0.7rem' }}></i>
+                                    </a>
+                                    <a 
+                                      href="/suppliers" 
+                                      target="_blank" 
+                                      rel="noopener noreferrer" 
+                                      className="inventory-btn-secondary"
+                                      style={{ textDecoration: 'none', padding: '6px 12px', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                                      title="Open Suppliers Page in New Browser Tab"
+                                    >
+                                      <i className="bi bi-truck"></i> Suppliers <i className="bi bi-box-arrow-up-right" style={{ fontSize: '0.7rem' }}></i>
+                                    </a>
+                                  </div>
+                                </div>
+                                <div className="supplier-card-body">
+                                  <div className="supplier-card-grid">
+                                    <div className="supplier-detail-item">
+                                      <span className="supplier-detail-label"><i className="bi bi-hash"></i> Invoice No</span>
+                                      <span className="supplier-detail-val" style={{ fontWeight: '600' }}>
+                                        {selectedInv.invoiceNumber}
+                                      </span>
+                                    </div>
+                                    <div className="supplier-detail-item">
+                                      <span className="supplier-detail-label"><i className="bi bi-clipboard"></i> PO No</span>
+                                      <span className="supplier-detail-val" style={{ fontWeight: '600' }}>
+                                        {selectedInv.poNo || 'N/A'}
+                                      </span>
+                                    </div>
+                                    <div className="supplier-detail-item">
+                                      <span className="supplier-detail-label"><i className="bi bi-calendar-check"></i> Invoice Date</span>
+                                      <span className="supplier-detail-val">
+                                        {selectedInv.invoiceDate ? selectedInv.invoiceDate.split('T')[0] : 'N/A'}
+                                      </span>
+                                    </div>
+                                    <div className="supplier-detail-item">
+                                      <span className="supplier-detail-label"><i className="bi bi-cash-coin"></i> Total Amount</span>
+                                      <span className="supplier-detail-val highlight">
+                                        Rs. {selectedInv.totalAmount ? Number(selectedInv.totalAmount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00'}
+                                      </span>
+                                    </div>
+                                    <div className="supplier-detail-item">
+                                      <span className="supplier-detail-label"><i className="bi bi-telephone"></i> Contact No</span>
+                                      <span className="supplier-detail-val">
+                                        {selectedInv.contactNo || 'N/A'}
+                                      </span>
+                                    </div>
+                                    <div className="supplier-detail-item">
+                                      <span className="supplier-detail-label"><i className="bi bi-envelope"></i> Email</span>
+                                      <span className="supplier-detail-val">
+                                        {selectedInv.email || 'N/A'}
+                                      </span>
+                                    </div>
+                                    <div className="supplier-detail-item" style={{ gridColumn: '1 / -1' }}>
+                                      <span className="supplier-detail-label"><i className="bi bi-geo-alt"></i> Address</span>
+                                      <span className="supplier-detail-val" style={{ lineHeight: '1.5' }}>
+                                        {selectedInv.address || 'N/A'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      )}
                     </div>
                     <div className="inventory-form-group col-span-4">
                       <label className="inventory-form-label">Purchase Date</label>
@@ -425,104 +526,6 @@ const Inventory = () => {
                         disabled={!isEdit && parseInt(formData.quantity || 1) > 1}
                       />
                     </div>
-
-                    {formData.invoiceId && (
-                      <div className="inventory-form-group col-span-12">
-                        <div className="supplier-info-card">
-                          {(() => {
-                            const selectedInv = invoices.find(i => i.invoiceId == formData.invoiceId);
-                            if (!selectedInv) return <div>No details available</div>;
-                            return (
-                              <>
-                                <div className="supplier-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <div className="supplier-card-icon">
-                                      <i className="bi bi-building"></i>
-                                    </div>
-                                    <div>
-                                      <h4 className="supplier-card-title">{selectedInv.supplierName || 'Unknown Supplier'}</h4>
-                                      <div style={{fontSize: '0.85rem', color: '#64748b', marginTop: '2px'}}>
-                                        Linked to Invoice #{selectedInv.invoiceNumber} {selectedInv.poNo ? `| PO No: ${selectedInv.poNo}` : ''}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div style={{ display: 'flex', gap: '8px' }}>
-                                    <a 
-                                      href="/invoices" 
-                                      target="_blank" 
-                                      rel="noopener noreferrer" 
-                                      className="inventory-action-btn inventory-action-btn--edit"
-                                      style={{ textDecoration: 'none', padding: '6px 12px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                                      title="Open Invoices Page in New Browser Tab"
-                                    >
-                                      <i className="bi bi-file-text"></i> Open Invoices Page <i className="bi bi-box-arrow-up-right" style={{ fontSize: '0.7rem' }}></i>
-                                    </a>
-                                    <a 
-                                      href="/suppliers" 
-                                      target="_blank" 
-                                      rel="noopener noreferrer" 
-                                      className="inventory-action-btn inventory-action-btn--edit"
-                                      style={{ textDecoration: 'none', padding: '6px 12px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                                      title="Open Suppliers Page in New Browser Tab"
-                                    >
-                                      <i className="bi bi-truck"></i> Open Suppliers Page <i className="bi bi-box-arrow-up-right" style={{ fontSize: '0.7rem' }}></i>
-                                    </a>
-                                  </div>
-                                </div>
-                                <div className="supplier-card-grid">
-                                  <div className="supplier-detail-item">
-                                    <span className="supplier-detail-label">Invoice No</span>
-                                    <span className="supplier-detail-val" style={{ fontWeight: '600', color: '#0d6efd' }}>
-                                      {selectedInv.invoiceNumber}
-                                    </span>
-                                  </div>
-                                  <div className="supplier-detail-item">
-                                    <span className="supplier-detail-label">PO No</span>
-                                    <span className="supplier-detail-val" style={{ fontWeight: '600' }}>
-                                      {selectedInv.poNo || 'N/A'}
-                                    </span>
-                                  </div>
-                                  <div className="supplier-detail-item">
-                                    <span className="supplier-detail-label">Invoice Date</span>
-                                    <span className="supplier-detail-val">
-                                      <i className="bi bi-calendar-check"></i>
-                                      {selectedInv.invoiceDate ? selectedInv.invoiceDate.split('T')[0] : 'N/A'}
-                                    </span>
-                                  </div>
-                                  <div className="supplier-detail-item">
-                                    <span className="supplier-detail-label">Total Amount</span>
-                                    <span className="supplier-detail-val highlight">
-                                      Rs. {selectedInv.totalAmount || '0.00'}
-                                    </span>
-                                  </div>
-                                  <div className="supplier-detail-item">
-                                    <span className="supplier-detail-label">Contact No</span>
-                                    <span className="supplier-detail-val">
-                                      <i className="bi bi-telephone"></i>
-                                      {selectedInv.contactNo || 'N/A'}
-                                    </span>
-                                  </div>
-                                  <div className="supplier-detail-item">
-                                    <span className="supplier-detail-label">Email</span>
-                                    <span className="supplier-detail-val">
-                                      <i className="bi bi-envelope"></i>
-                                      {selectedInv.email || 'N/A'}
-                                    </span>
-                                  </div>
-                                  <div className="supplier-detail-item" style={{ gridColumn: 'span 2' }}>
-                                    <span className="supplier-detail-label">Address</span>
-                                    <span className="supplier-detail-val" style={{ lineHeight: '1.4' }}>
-                                      <i className="bi bi-geo-alt"></i>
-                                      {selectedInv.address || 'N/A'}
-                                    </span>
-                                  </div>
-                                </div>
-                              </>
-                            );
-                          })()}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
                 <div className="inventory-modal-footer">
