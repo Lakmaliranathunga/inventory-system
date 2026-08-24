@@ -98,7 +98,7 @@ function Login() {
               </div>
 
               <div className="login-forgot-row ">
-                <Link to="/forgot">Forgot password</Link>
+                <Link to="/register">Forgot password?</Link>
               </div>
 
               <button type="submit" className="login-submit-btn" disabled={loading}>

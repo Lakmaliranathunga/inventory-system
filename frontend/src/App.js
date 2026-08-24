@@ -10,7 +10,7 @@ import {
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import ForgotPassword from "./pages/ForgotPassword";
+
 import Dashboard from "./pages/Dashboard";
 
 import Layout from "./components/Layout";
@@ -37,11 +37,6 @@ function App() {
         <Route
           path="/register"
           element={<Register />}
-        />
-
-        <Route
-          path="/forgot"
-          element={<ForgotPassword />}
         />
 
         {/* Protected Routes Wrapped in Layout */}
