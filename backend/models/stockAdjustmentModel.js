@@ -81,10 +81,10 @@ const StockAdjustmentModel = {
   getDashboardStats: (callback) => {
     const sql = `
       SELECT 
-        SUM(CASE WHEN transactionType = 'IN' THEN quantity ELSE 0 END) as totalIn,
-        SUM(CASE WHEN transactionType = 'OUT' THEN quantity ELSE 0 END) as totalOut,
-        SUM(CASE WHEN transactionType IN ('DAMAGED', 'DISPOSAL', 'CORRECTION') THEN quantity ELSE 0 END) as totalTransfer
-      FROM stock_transactions
+        SUM(CASE WHEN adjustmentType = 'DAMAGED' THEN quantity ELSE 0 END) as totalIn,
+        SUM(CASE WHEN adjustmentType = 'DISPOSAL' THEN quantity ELSE 0 END) as totalOut,
+        SUM(CASE WHEN adjustmentType = 'CORRECTION' THEN quantity ELSE 0 END) as totalTransfer
+      FROM stock_adjustments
       WHERE flag = 1
     `;
     db.query(sql, callback);
