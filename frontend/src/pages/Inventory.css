@@ -217,26 +217,26 @@
 }
 
 .inventory-modal-body {
-  padding: 20px;
+  padding: 16px 20px;
   overflow-y: auto;
 }
 
 .inventory-form-section {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #0d6efd;
   border-bottom: 1px solid #e2e8f0;
-  padding-bottom: 8px;
-  margin-bottom: 16px;
-  margin-top: 10px;
+  padding-bottom: 4px;
+  margin-bottom: 12px;
+  margin-top: 8px;
 }
 .inventory-form-section:first-child { margin-top: 0; }
 
 .inventory-form-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  gap: 16px;
-  margin-bottom: 24px; /* Replaces .mb-4 */
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .inventory-form-group {
@@ -268,8 +268,8 @@
 .inventory-form-select,
 .inventory-form-textarea {
   width: 100%;
-  padding: 8px 12px;
-  font-size: 0.9rem;
+  padding: 6px 10px;
+  font-size: 0.85rem;
   border: 1px solid #ced4da;
   border-radius: 6px;
   outline: none;
@@ -513,4 +513,50 @@
   color: #059669;
   font-weight: 700;
   font-size: 1.15rem;
+}
+
+/* Compact layout overrides */
+.supplier-info-card.compact-card {
+  margin-top: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.supplier-info-card.compact-card::before {
+  height: 3px;
+}
+
+.compact-header {
+  padding: 12px 16px;
+  background-color: #f8fafc;
+}
+
+.compact-icon {
+  width: 40px;
+  height: 40px;
+  font-size: 1.2rem;
+}
+
+.compact-title {
+  font-size: 1.1rem;
+}
+
+.compact-subtitle {
+  margin-top: 2px;
+}
+
+.compact-btn {
+  padding: 4px 10px !important;
+  font-size: 0.75rem !important;
+}
+
+.compact-body {
+  padding: 16px;
+}
+
+.compact-grid {
+  gap: 12px;
+}
+
+.compact-item {
+  padding: 10px 12px;
 }
