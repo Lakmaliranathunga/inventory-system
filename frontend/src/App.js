@@ -9,7 +9,6 @@ import {
 } from "react-router-dom";
 
 import Login from "./pages/Login";
-import Register from "./pages/Register";
 
 import Dashboard from "./pages/Dashboard";
 
@@ -20,6 +19,7 @@ import Suppliers from "./pages/Suppliers";
 import Invoices from "./pages/Invoices";
 import StockAdjustments from "./pages/StockAdjustments";
 import Reports from "./pages/Reports";
+import Users from "./pages/Users";
 
 function App() {
 
@@ -34,11 +34,6 @@ function App() {
           element={<Login />}
         />
 
-        <Route
-          path="/register"
-          element={<Register />}
-        />
-
         {/* Protected Routes Wrapped in Layout */}
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />
@@ -48,6 +43,7 @@ function App() {
           <Route path="/invoices" element={<Invoices />} />
           <Route path="/stock-adjustments" element={<StockAdjustments />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/users" element={<Users />} />
         </Route>
 
       </Routes>

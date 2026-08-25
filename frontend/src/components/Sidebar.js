@@ -6,6 +6,8 @@ import logo from '../assets/images/slpa-logo.png';
 
 const Sidebar = () => {
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isAdmin = user.roleId === 1 || user.roleId === '1';
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -65,6 +67,14 @@ const Sidebar = () => {
             Reports
           </NavLink>
         </li>
+        {isAdmin && (
+          <li>
+            <NavLink to="/users" className={({isActive}) => isActive ? "sidebar-link active" : "sidebar-link"}>
+              <i className="bi bi-people-fill"></i>
+              User Management
+            </NavLink>
+          </li>
+        )}
       </ul>
       <div style={{ marginTop: 'auto', padding: '20px' }}>
         <button onClick={handleLogout} className="sidebar-logout-btn">

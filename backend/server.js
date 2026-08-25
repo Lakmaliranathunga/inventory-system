@@ -263,6 +263,14 @@ const verifyToken = (req, res, next) => {
   });
 };
 
+// MIDDLEWARE: VERIFY ADMIN (roleId = 1)
+const verifyAdmin = (req, res, next) => {
+  if (req.userRole !== 1 && req.userRole !== "1") {
+    return res.status(403).json({ success: false, message: "Access denied. Admins only." });
+  }
+  next();
+};
+
 // DASHBOARD STATS API
 app.get("/api/dashboard/stats", verifyToken, async (req, res) => {
   try {
@@ -301,6 +309,80 @@ app.get("/api/dashboard/stats", verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: "Server Error", error });
   }
+});
+
+// =========================
+// USER MANAGEMENT APIs (Admin Only)
+// =========================
+app.get("/api/users", verifyToken, verifyAdmin, (req, res) => {
+  const sql = `
+    SELECT u.uId, u.uUsername, u.uFullName, u.uEmpNo, u.uStatus, u.contactNo,
+           u.roleId, r.roleName, u.divisionId, d.description as divisionName,
+           u.sectionId, s.sectionname as sectionName, u.registeredDate as createdDate
+    FROM users u
+    LEFT JOIN user_roles r ON u.roleId = r.roleId
+    LEFT JOIN divisions d ON u.divisionId = d.division_id
+    LEFT JOIN sections s ON u.sectionId = s.sectionid
+    WHERE u.flag = 1
+    ORDER BY u.registeredDate DESC
+  `;
+  db.query(sql, (err, result) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, users: result });
+  });
+});
+
+app.post("/api/users", verifyToken, verifyAdmin, async (req, res) => {
+  const { uUsername, uFullName, uPassword, uStatus, uEmpNo, roleId, sectionId, divisionId, contactNo } = req.body;
+  if (!uUsername || !uPassword || !uFullName) {
+    return res.status(400).json({ success: false, message: "Username, full name and password are required." });
+  }
+  try {
+    const hashedPassword = await bcrypt.hash(uPassword, 10);
+    const sql = `INSERT INTO users (uUsername, uFullName, uPassword, uStatus, uEmpNo, roleId, sectionId, divisionId, contactNo)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    db.query(sql, [uUsername, uFullName, hashedPassword, uStatus || 'Active', uEmpNo, roleId, sectionId, divisionId, contactNo], (err, result) => {
+      if (err) return res.status(500).json({ success: false, message: "Database Error", error: err });
+      res.json({ success: true, message: "User created successfully!" });
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+});
+
+app.put("/api/users/:id", verifyToken, verifyAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { uUsername, uFullName, uPassword, uStatus, uEmpNo, roleId, sectionId, divisionId, contactNo } = req.body;
+  try {
+    if (uPassword && uPassword.trim() !== "") {
+      const hashedPassword = await bcrypt.hash(uPassword, 10);
+      const sql = `UPDATE users SET uUsername=?, uFullName=?, uPassword=?, uStatus=?, uEmpNo=?, roleId=?, sectionId=?, divisionId=?, contactNo=?, updatedDate=NOW() WHERE uId=?`;
+      db.query(sql, [uUsername, uFullName, hashedPassword, uStatus, uEmpNo, roleId, sectionId, divisionId, contactNo, id], (err) => {
+        if (err) return res.status(500).json({ success: false, error: err });
+        res.json({ success: true, message: "User updated successfully!" });
+      });
+    } else {
+      const sql = `UPDATE users SET uUsername=?, uFullName=?, uStatus=?, uEmpNo=?, roleId=?, sectionId=?, divisionId=?, contactNo=?, updatedDate=NOW() WHERE uId=?`;
+      db.query(sql, [uUsername, uFullName, uStatus, uEmpNo, roleId, sectionId, divisionId, contactNo, id], (err) => {
+        if (err) return res.status(500).json({ success: false, error: err });
+        res.json({ success: true, message: "User updated successfully!" });
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+});
+
+app.delete("/api/users/:id", verifyToken, verifyAdmin, (req, res) => {
+  const { id } = req.params;
+  if (parseInt(id) === req.userId) {
+    return res.status(400).json({ success: false, message: "You cannot deactivate your own account." });
+  }
+  const sql = `UPDATE users SET flag=0, deletedDate=NOW() WHERE uId=?`;
+  db.query(sql, [id], (err) => {
+    if (err) return res.status(500).json({ success: false, error: err });
+    res.json({ success: true, message: "User deactivated successfully!" });
+  });
 });
 
 // =========================

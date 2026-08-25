@@ -97,17 +97,11 @@ function Login() {
                 />
               </div>
 
-              <div className="login-forgot-row ">
-                <Link to="/register">Forgot password?</Link>
-              </div>
 
               <button type="submit" className="login-submit-btn" disabled={loading}>
                 {loading ? "Signing in..." : "Sign In"}
               </button>
 
-              <div className="login-register-row">
-                Don't have an account? <Link to="/register">Sign up</Link>
-              </div>
             </form>
           </div>
         </div>
