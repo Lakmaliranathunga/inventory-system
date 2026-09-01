@@ -201,19 +201,19 @@ const Suppliers = () => {
                     </div>
                     <div className="suppliers-form-group col-span-6">
                       <label className="suppliers-form-label">Contact Person</label>
-                      <input type="text" className="suppliers-form-input" name="contactPerson" value={formData.contactPerson || ''} onChange={handleInputChange} />
+                      <input type="text" className="suppliers-form-input" name="contactPerson" value={formData.contactPerson || ''} onChange={handleInputChange} required />
                     </div>
                     <div className="suppliers-form-group col-span-6">
                       <label className="suppliers-form-label">Contact Number</label>
-                      <input type="text" className="suppliers-form-input" name="contactNo" value={formData.contactNo} onChange={handleInputChange} />
+                      <input type="text" className="suppliers-form-input" name="contactNo" value={formData.contactNo} onChange={handleInputChange} required />
                     </div>
                     <div className="suppliers-form-group col-span-6">
                       <label className="suppliers-form-label">Email</label>
-                      <input type="email" className="suppliers-form-input" name="email" value={formData.email} onChange={handleInputChange} />
+                      <input type="email" className="suppliers-form-input" name="email" value={formData.email} onChange={handleInputChange} required />
                     </div>
                     <div className="suppliers-form-group col-span-12">
                       <label className="suppliers-form-label">Address</label>
-                      <textarea className="suppliers-form-textarea" name="address" rows="2" value={formData.address} onChange={handleInputChange}></textarea>
+                      <textarea className="suppliers-form-textarea" name="address" rows="2" value={formData.address} onChange={handleInputChange} required></textarea>
                     </div>
                     <div className="suppliers-form-group col-span-12">
                       <label className="suppliers-form-label">Remarks</label>
