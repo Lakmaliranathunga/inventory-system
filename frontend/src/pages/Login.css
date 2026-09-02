@@ -49,8 +49,9 @@
 .header-title-container {
   flex: 1;
   display: flex;
-  justify-content: flex-start;
-  padding-left: 10%;
+  justify-content: center;
+  align-items: center;
+  margin-left: -300px; /* Offset the width of left logo container to achieve exact horizontal centering */
 }
 
 .header-title-container h2 {
@@ -58,6 +59,7 @@
   color: #00305E;
   font-size: 28px;
   font-weight: 700;
+  text-align: center;
 }
 
 /* MAIN CONTENT */
@@ -445,6 +447,7 @@
   .header-title-container {
     padding-left: 0;
     justify-content: flex-end;
+    margin-left: 0;
   }
 
   .header-title-container h2 {
