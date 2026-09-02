@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import "./Login.css";
 
 import logo from "../assets/images/slpa-logo-original.png";
+import logoTransparent from "../assets/images/slpa-logo-transparent.png";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -66,6 +67,9 @@ function Login() {
         {/* Left column: Login Box */}
         <div className="login-left-pane">
           <div className="login-form-wrapper">
+            <div className="login-card-logo-container">
+              <img src={logoTransparent} alt="SLPA Logo" className="login-card-logo" />
+            </div>
             <h1 className="welcome-title">
               Welcome to Inventory <br />Management System
             </h1>
