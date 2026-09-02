@@ -37,7 +37,14 @@ const Suppliers = () => {
   }, []);
 
   const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'contactNo') {
+      const newValue = value.replace(/\D/g, '');
+      if (newValue.length > 10) return;
+      setFormData({ ...formData, [name]: newValue });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const openAddModal = () => {
@@ -64,6 +71,10 @@ const Suppliers = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.contactNo && formData.contactNo.length !== 10) {
+      toast.error('Contact Number must be exactly 10 digits.');
+      return;
+    }
     try {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
@@ -205,7 +216,7 @@ const Suppliers = () => {
                     </div>
                     <div className="suppliers-form-group col-span-6">
                       <label className="suppliers-form-label">Contact Number</label>
-                      <input type="text" className="suppliers-form-input" name="contactNo" value={formData.contactNo} onChange={handleInputChange} required />
+                      <input type="text" className="suppliers-form-input" name="contactNo" value={formData.contactNo} onChange={handleInputChange} maxLength="10" required />
                     </div>
                     <div className="suppliers-form-group col-span-6">
                       <label className="suppliers-form-label">Email</label>

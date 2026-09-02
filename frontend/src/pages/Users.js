@@ -16,16 +16,18 @@ const Users = () => {
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
 
-  const [users, setUsers]         = useState([]);
-  const [roles, setRoles]         = useState([]);
+  const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [divisions, setDivisions] = useState([]);
-  const [sections, setSections]   = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [search, setSearch]       = useState('');
+  const [sections, setSections] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const [editing, setEditing]     = useState(null);   // null = add, id = edit
-  const [form, setForm]           = useState({ ...emptyForm, uConfirmPassword: '' });
-  const [saving, setSaving]       = useState(false);
+  const [editing, setEditing] = useState(null);   // null = add, id = edit
+  const [form, setForm] = useState({ ...emptyForm, uConfirmPassword: '' });
+  const [saving, setSaving] = useState(false);
+  const [createdCredentials, setCreatedCredentials] = useState(null);
+  const [phoneError, setPhoneError] = useState('');
 
   useEffect(() => {
     if (!isAdmin) { setLoading(false); return; }
@@ -61,25 +63,34 @@ const Users = () => {
   const openEdit = (u) => {
     setEditing(u.uId);
     setForm({
-      uUsername:  u.uUsername  || '',
-      uFullName:  u.uFullName  || '',
-      uPassword:  '',
-      uEmpNo:     u.uEmpNo     || '',
-      contactNo:  u.contactNo  || '',
-      roleId:     u.roleId     || '',
+      uUsername: u.uUsername || '',
+      uFullName: u.uFullName || '',
+      uPassword: '',
+      uEmpNo: u.uEmpNo || '',
+      contactNo: u.contactNo || '',
+      roleId: u.roleId || '',
       divisionId: u.divisionId || '',
-      sectionId:  u.sectionId  || '',
-      uStatus:    u.uStatus    || 'Active',
+      sectionId: u.sectionId || '',
+      uStatus: u.uStatus || 'Active',
       uConfirmPassword: ''
     });
     setShowModal(true);
   };
 
-  const closeModal = () => { setShowModal(false); setEditing(null); };
+  const closeModal = () => { setShowModal(false); setEditing(null); setCreatedCredentials(null); setPhoneError(''); };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'divisionId') {
+    if (name === 'contactNo') {
+      const newValue = value.replace(/\D/g, '');
+      if (newValue.length > 10) return;
+      setForm(f => ({ ...f, [name]: newValue }));
+      if (newValue.length > 0 && newValue.length !== 10) {
+        setPhoneError('Phone number must be exactly 10 digits.');
+      } else {
+        setPhoneError('');
+      }
+    } else if (name === 'divisionId') {
       setForm(f => ({ ...f, divisionId: value, sectionId: '' }));
     } else {
       setForm(f => ({ ...f, [name]: value }));
@@ -92,6 +103,11 @@ const Users = () => {
       toast.error('Username and Full Name are required.');
       return;
     }
+    if (form.contactNo && form.contactNo.length !== 10) {
+      setPhoneError('Phone number must be exactly 10 digits.');
+      toast.error('Contact Number must be exactly 10 digits.');
+      return;
+    }
     if (!editing && !form.uPassword) {
       toast.error('Password is required for new users.');
       return;
@@ -100,17 +116,22 @@ const Users = () => {
       toast.error('Passwords do not match.');
       return;
     }
-    
+
     setSaving(true);
     try {
       if (editing) {
         await axios.put(`${API}/api/users/${editing}`, form, { headers });
         toast.success('User updated successfully!');
+        closeModal();
       } else {
         await axios.post(`${API}/api/users`, form, { headers });
         toast.success('User created successfully!');
+        setCreatedCredentials({
+          fullName: form.uFullName,
+          username: form.uUsername,
+          password: form.uPassword
+        });
       }
-      closeModal();
       fetchAll();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Save failed.');
@@ -243,117 +264,142 @@ const Users = () => {
       {showModal && (
         <div className="dark-modal-overlay" onClick={closeModal}>
           <div className="dark-user-modal" onClick={e => e.stopPropagation()}>
-            <div className="dark-modal-header">
-              <h2>{editing ? 'Edit Account' : 'Create an Account'}</h2>
-            </div>
-
-            <form onSubmit={handleSave}>
-              <div className="dark-modal-body">
-                <div className="dark-panels-container">
-                  
-                  {/* LEFT PANEL */}
-                  <fieldset className="dark-fieldset">
-                    <legend className="dark-legend">USER DETAILS</legend>
-                    
-                    <div className="dark-form-group">
-                      <label>Full Name</label>
-                      <input name="uFullName" value={form.uFullName} onChange={handleChange} placeholder="Enter full name" required />
-                    </div>
-                    
-                    <div className="dark-form-group">
-                      <label>Employee Number</label>
-                      <input name="uEmpNo" value={form.uEmpNo} onChange={handleChange} placeholder="Enter employee no" />
-                    </div>
-
-                    <div className="dark-form-group">
-                      <label>Contact Number</label>
-                      <input name="contactNo" value={form.contactNo} onChange={handleChange} placeholder="Enter contact no" />
-                    </div>
-
-                    <div className="dark-form-group">
-                      <label>Division</label>
-                      <select name="divisionId" value={form.divisionId} onChange={handleChange}>
-                        <option value="">Select division</option>
-                        {divisions.map(d => {
-                          const id = d.division_id ?? d.divisionId;
-                          const label = d.description ?? d.divisionName ?? 'Unnamed';
-                          return <option key={id} value={id}>{label}</option>;
-                        })}
-                      </select>
-                    </div>
-
-                    <div className="dark-form-group">
-                      <label>Section</label>
-                      <select name="sectionId" value={form.sectionId} onChange={handleChange} disabled={!form.divisionId}>
-                        <option value="">Select section</option>
-                        {filteredSections.map(s => {
-                          const id = s.sectionid ?? s.sectionId;
-                          const label = s.sectionname ?? s.sectionName ?? 'Unnamed';
-                          return <option key={id} value={id}>{label}</option>;
-                        })}
-                      </select>
-                    </div>
-
-                  </fieldset>
-
-                  {/* RIGHT PANEL */}
-                  <fieldset className="dark-fieldset">
-                    <legend className="dark-legend">ACCOUNT DETAILS</legend>
-                    
-                    <div className="dark-form-group">
-                      <label>Username</label>
-                      <input name="uUsername" value={form.uUsername} onChange={handleChange} placeholder="Enter username" required />
-                    </div>
-                    
-                    <div className="dark-form-group">
-                      <label>Password</label>
-                      <input
-                        name="uPassword" type="password"
-                        value={form.uPassword} onChange={handleChange}
-                        placeholder={editing ? 'Leave blank to keep' : 'Enter password'}
-                        required={!editing}
-                      />
-                    </div>
-
-                    <div className="dark-form-group">
-                      <label>Confirm Password</label>
-                      <input
-                        name="uConfirmPassword" type="password"
-                        value={form.uConfirmPassword} onChange={handleChange}
-                        placeholder="Confirm password"
-                        required={!editing && form.uPassword !== ''}
-                      />
-                    </div>
-
-                    <div className="dark-form-group">
-                      <label>Status</label>
-                      <select name="uStatus" value={form.uStatus} onChange={handleChange}>
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                      </select>
-                    </div>
-
-                    <div className="dark-form-group">
-                      <label>Role</label>
-                      <select name="roleId" value={form.roleId} onChange={handleChange}>
-                        <option value="">Select Role</option>
-                        {roles.map(r => (
-                          <option key={r.roleId} value={r.roleId}>{r.roleName}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                  </fieldset>
+            {createdCredentials ? (
+              <div className="credentials-view">
+                <div className="dark-modal-header" style={{ paddingBottom: '20px' }}>
+                  <h2 style={{ color: '#4ade80' }}>Account Created!</h2>
+                  <p style={{ color: '#94a3b8', marginTop: '10px' }}>Please share these credentials with the new user.</p>
+                </div>
+                <div className="dark-modal-body" style={{ textAlign: 'center', padding: '10px 50px 30px' }}>
+                  <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '15px', fontSize: '1.05rem', marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8' }}><span>Name:</span> <strong style={{ color: '#f8fafc' }}>{createdCredentials.fullName}</strong></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8' }}><span>Username:</span> <strong style={{ color: '#f8fafc' }}>{createdCredentials.username}</strong></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8' }}><span>Password:</span> <strong style={{ color: '#f8fafc' }}>{createdCredentials.password}</strong></div>
+                  </div>
+                </div>
+                <div className="dark-modal-footer">
+                  <button type="button" className="btn-cancel-dark" onClick={closeModal}>DONE</button>
+                  <button type="button" className="btn-save-dark" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 4px 12px -2px rgba(16, 185, 129, 0.4)' }} onClick={() => {
+                    navigator.clipboard.writeText(`Name: ${createdCredentials.fullName}\nUsername: ${createdCredentials.username}\nPassword: ${createdCredentials.password}`);
+                    toast.success('Credentials copied to clipboard!');
+                  }}><i className="bi bi-clipboard" style={{ marginRight: '8px' }}></i>COPY CREDENTIALS</button>
                 </div>
               </div>
+            ) : (
+              <>
+                <div className="dark-modal-header">
+                  <h2>{editing ? 'Edit Account' : 'Create an Account'}</h2>
+                </div>
 
-              <div className="dark-modal-footer">
-                <button type="button" className="btn-cancel-dark" onClick={closeModal}>CANCEL</button>
-                <button type="submit" className="btn-save-dark" disabled={saving}>
-                  {saving ? 'SAVING...' : editing ? 'UPDATE ACCOUNT' : 'CREATE ACCOUNT'}
-                </button>
-              </div>
-            </form>
+                <form onSubmit={handleSave}>
+                  <div className="dark-modal-body">
+                    <div className="dark-panels-container">
+
+                      {/* LEFT PANEL */}
+                      <fieldset className="dark-fieldset">
+                        <legend className="dark-legend">USER DETAILS</legend>
+
+                        <div className="dark-form-group">
+                          <label>Full Name</label>
+                          <input name="uFullName" value={form.uFullName} onChange={handleChange} placeholder="Enter full name" required />
+                        </div>
+
+                        <div className="dark-form-group">
+                          <label>Employee Number</label>
+                          <input name="uEmpNo" value={form.uEmpNo} onChange={handleChange} placeholder="Enter employee no" />
+                        </div>
+
+                        <div className="dark-form-group">
+                          <label>Contact Number</label>
+                          <input name="contactNo" value={form.contactNo} onChange={handleChange} placeholder="Enter contact no" maxLength="10" />
+                        </div>
+
+                        <div className="dark-form-group">
+                          <label>Division</label>
+                          <select name="divisionId" value={form.divisionId} onChange={handleChange}>
+                            <option value="">Select division</option>
+                            {divisions.map(d => {
+                              const id = d.division_id ?? d.divisionId;
+                              const label = d.description ?? d.divisionName ?? 'Unnamed';
+                              return <option key={id} value={id}>{label}</option>;
+                            })}
+                          </select>
+                        </div>
+
+                        <div className="dark-form-group">
+                          <label>Section</label>
+                          <select name="sectionId" value={form.sectionId} onChange={handleChange} disabled={!form.divisionId}>
+                            <option value="">Select section</option>
+                            {filteredSections.map(s => {
+                              const id = s.sectionid ?? s.sectionId;
+                              const label = s.sectionname ?? s.sectionName ?? 'Unnamed';
+                              return <option key={id} value={id}>{label}</option>;
+                            })}
+                          </select>
+                        </div>
+
+                      </fieldset>
+
+                      {/* RIGHT PANEL */}
+                      <fieldset className="dark-fieldset">
+                        <legend className="dark-legend">ACCOUNT DETAILS</legend>
+
+                        <div className="dark-form-group">
+                          <label>Username</label>
+                          <input name="uUsername" value={form.uUsername} onChange={handleChange} placeholder="Enter username" required />
+                        </div>
+
+                        <div className="dark-form-group">
+                          <label>Password</label>
+                          <input
+                            name="uPassword" type="password"
+                            value={form.uPassword} onChange={handleChange}
+                            placeholder={editing ? 'Leave blank to keep' : 'Enter password'}
+                            required={!editing}
+                          />
+                        </div>
+
+                        <div className="dark-form-group">
+                          <label>Confirm Password</label>
+                          <input
+                            name="uConfirmPassword" type="password"
+                            value={form.uConfirmPassword} onChange={handleChange}
+                            placeholder="Confirm password"
+                            required={!editing && form.uPassword !== ''}
+                          />
+                        </div>
+
+                        <div className="dark-form-group">
+                          <label>Status</label>
+                          <select name="uStatus" value={form.uStatus} onChange={handleChange}>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                          </select>
+                        </div>
+
+                        <div className="dark-form-group">
+                          <label>Role</label>
+                          <select name="roleId" value={form.roleId} onChange={handleChange}>
+                            <option value="">Select Role</option>
+                            {roles.map(r => (
+                              <option key={r.roleId} value={r.roleId}>{r.roleName}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                      </fieldset>
+                    </div>
+                  </div>
+
+                  <div className="dark-modal-footer">
+                    <button type="button" className="btn-cancel-dark" onClick={closeModal}>CANCEL</button>
+                    <button type="submit" className="btn-save-dark" disabled={saving}>
+                      {saving ? 'SAVING...' : editing ? 'UPDATE ACCOUNT' : 'CREATE ACCOUNT'}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}
