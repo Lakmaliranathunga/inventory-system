@@ -745,9 +745,17 @@ app.get("/api/invoices", verifyToken, (req, res) => {
 app.post("/api/invoices", verifyToken, upload.single('invoiceImage'), (req, res) => {
   const { invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks } = req.body;
   const invoiceImage = req.file ? req.file.filename : null;
+  const cleanPoDate = poDate && poDate.trim() !== "" ? poDate : null;
+  const cleanInvoiceDate = invoiceDate && invoiceDate.trim() !== "" ? invoiceDate : null;
+  const cleanPoNo = poNo && poNo.trim() !== "" ? poNo : null;
+  const cleanRemarks = remarks && remarks.trim() !== "" ? remarks : null;
+
   const sql = `INSERT INTO invoices (invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks, invoiceImage, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-  db.query(sql, [invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks, invoiceImage, req.userId], (err, result) => {
-    if (err) return res.status(500).json({ success: false, error: err });
+  db.query(sql, [invoiceNumber, supplierId, cleanPoNo, cleanPoDate, cleanInvoiceDate, totalAmount, cleanRemarks, invoiceImage, req.userId], (err, result) => {
+    if (err) {
+      console.error("Invoice Add Error:", err);
+      return res.status(500).json({ success: false, error: err, message: err.message });
+    }
     res.json({ success: true, message: "Invoice added successfully!" });
   });
 });
@@ -756,17 +764,24 @@ app.put("/api/invoices/:id", verifyToken, upload.single('invoiceImage'), (req, r
   const { id } = req.params;
   const { invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks } = req.body;
   const invoiceImage = req.file ? req.file.filename : null;
+  const cleanPoDate = poDate && poDate.trim() !== "" ? poDate : null;
+  const cleanInvoiceDate = invoiceDate && invoiceDate.trim() !== "" ? invoiceDate : null;
+  const cleanPoNo = poNo && poNo.trim() !== "" ? poNo : null;
+  const cleanRemarks = remarks && remarks.trim() !== "" ? remarks : null;
   
   let sql = `UPDATE invoices SET invoiceNumber=?, supplierId=?, poNo=?, poDate=?, invoiceDate=?, totalAmount=?, remarks=?, updatedBy=?, updatedDate=NOW() WHERE invoiceId=?`;
-  let params = [invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks, req.userId, id];
+  let params = [invoiceNumber, supplierId, cleanPoNo, cleanPoDate, cleanInvoiceDate, totalAmount, cleanRemarks, req.userId, id];
 
   if (invoiceImage) {
     sql = `UPDATE invoices SET invoiceNumber=?, supplierId=?, poNo=?, poDate=?, invoiceDate=?, totalAmount=?, remarks=?, invoiceImage=?, updatedBy=?, updatedDate=NOW() WHERE invoiceId=?`;
-    params = [invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks, invoiceImage, req.userId, id];
+    params = [invoiceNumber, supplierId, cleanPoNo, cleanPoDate, cleanInvoiceDate, totalAmount, cleanRemarks, invoiceImage, req.userId, id];
   }
 
   db.query(sql, params, (err, result) => {
-    if (err) return res.status(500).json({ success: false, error: err });
+    if (err) {
+      console.error("Invoice Update Error:", err);
+      return res.status(500).json({ success: false, error: err, message: err.message });
+    }
     res.json({ success: true, message: "Invoice updated successfully!" });
   });
 });

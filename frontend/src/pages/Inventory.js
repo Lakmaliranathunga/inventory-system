@@ -78,6 +78,11 @@ const Inventory = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     let newFormData = { ...formData, [name]: value };
+
+    // Reset sectionId if divisionId changes
+    if (name === 'divisionId') {
+      newFormData.sectionId = '';
+    }
     
     // Automatically fill purchase date based on selected invoice
     if (name === 'invoiceId' && value) {
@@ -380,8 +385,15 @@ const Inventory = () => {
                     </div>
                     <div className="inventory-form-group col-span-4">
                       <label className="inventory-form-label">Section</label>
-                      <select className="inventory-form-select" name="sectionId" value={formData.sectionId} onChange={handleInputChange} required>
-                        <option value="">Select Section</option>
+                      <select 
+                        className="inventory-form-select" 
+                        name="sectionId" 
+                        value={formData.sectionId} 
+                        onChange={handleInputChange} 
+                        disabled={!formData.divisionId}
+                        required
+                      >
+                        <option value="">{formData.divisionId ? 'Select Section' : 'Select Division First'}</option>
                         {sections.filter(s => !formData.divisionId || s.divisionId == formData.divisionId).map(s => (
                           <option key={s.sectionId} value={s.sectionId}>{s.sectionName}</option>
                         ))}

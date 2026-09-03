@@ -98,7 +98,10 @@ const Invoices = () => {
       fetchData();
     } catch (error) {
       console.error(error);
-      toast.error(isEdit ? 'Failed to update invoice' : 'Failed to add invoice');
+      const errMsg = error.response && error.response.data && error.response.data.message 
+        ? error.response.data.message 
+        : (isEdit ? 'Failed to update invoice' : 'Failed to add invoice');
+      toast.error(errMsg);
     }
   };
 
