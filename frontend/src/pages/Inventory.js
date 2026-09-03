@@ -142,6 +142,35 @@ const Inventory = () => {
       toast.warning('Please select a Division.');
       return;
     }
+    if (!formData.sectionId) {
+      toast.warning('Please select a Section.');
+      return;
+    }
+    if (!formData.quantity) {
+      toast.warning('Please enter Quantity.');
+      return;
+    }
+    // Asset / Serial No. validation for individual item tracking (quantity == 1 or when editing)
+    if (!isEdit && parseInt(formData.quantity || 1) === 1 && !formData.serialNumber.trim()) {
+      toast.warning('Please enter Asset / Serial No.');
+      return;
+    }
+    if (isEdit && !formData.serialNumber.trim()) {
+      toast.warning('Please enter Asset / Serial No.');
+      return;
+    }
+    if (!formData.invoiceId) {
+      toast.warning('Please select an Invoice / PO No.');
+      return;
+    }
+    if (!formData.purchaseDate) {
+      toast.warning('Please select a Purchase Date.');
+      return;
+    }
+    if (!formData.warrantyExpireDate) {
+      toast.warning('Please select a Warranty Expiration Date.');
+      return;
+    }
 
     try {
       const token = localStorage.getItem('token');
@@ -351,7 +380,7 @@ const Inventory = () => {
                     </div>
                     <div className="inventory-form-group col-span-4">
                       <label className="inventory-form-label">Section</label>
-                      <select className="inventory-form-select" name="sectionId" value={formData.sectionId} onChange={handleInputChange}>
+                      <select className="inventory-form-select" name="sectionId" value={formData.sectionId} onChange={handleInputChange} required>
                         <option value="">Select Section</option>
                         {sections.filter(s => !formData.divisionId || s.divisionId == formData.divisionId).map(s => (
                           <option key={s.sectionId} value={s.sectionId}>{s.sectionName}</option>
@@ -370,8 +399,9 @@ const Inventory = () => {
                         name="serialNumber" 
                         value={formData.serialNumber} 
                         onChange={handleInputChange} 
-                        placeholder={(!isEdit && parseInt(formData.quantity || 1) > 1) ? 'Disabled for Qty > 1' : 'Optional'}
+                        placeholder={(!isEdit && parseInt(formData.quantity || 1) > 1) ? 'Disabled for Qty > 1' : 'Enter Asset / Serial No.'}
                         disabled={!isEdit && parseInt(formData.quantity || 1) > 1}
+                        required={isEdit || parseInt(formData.quantity || 1) === 1}
                       />
                     </div>
                     <div className="inventory-form-group col-span-8">
@@ -408,8 +438,8 @@ const Inventory = () => {
                           <i className="bi bi-arrow-clockwise"></i> Refresh List
                         </button>
                       </div>
-                      <select className="inventory-form-select" name="invoiceId" value={formData.invoiceId} onChange={handleInputChange}>
-                        <option value="">Select Invoice (Optional)</option>
+                      <select className="inventory-form-select" name="invoiceId" value={formData.invoiceId} onChange={handleInputChange} required>
+                        <option value="">Select Invoice</option>
                         {invoices.map(inv => (
                           <option key={inv.invoiceId} value={inv.invoiceId}>
                             Invoice #{inv.invoiceNumber} {inv.poNo ? `(PO: ${inv.poNo})` : ''}
@@ -421,11 +451,11 @@ const Inventory = () => {
                     </div>
                     <div className="inventory-form-group col-span-4">
                       <label className="inventory-form-label">Purchase Date</label>
-                      <input type="date" className="inventory-form-input" name="purchaseDate" value={formData.purchaseDate} onChange={handleInputChange} />
+                      <input type="date" className="inventory-form-input" name="purchaseDate" value={formData.purchaseDate} onChange={handleInputChange} required />
                     </div>
                     <div className="inventory-form-group col-span-4">
                       <label className="inventory-form-label">Warranty Expiration Date</label>
-                      <input type="date" className="inventory-form-input" name="warrantyExpireDate" value={formData.warrantyExpireDate} onChange={handleInputChange} />
+                      <input type="date" className="inventory-form-input" name="warrantyExpireDate" value={formData.warrantyExpireDate} onChange={handleInputChange} required />
                     </div>
                     {formData.invoiceId && (
                       <div className="inventory-form-group col-span-12">
