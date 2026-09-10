@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/client';
 import { toast } from 'react-toastify';
 import './Inventory.css';
 
@@ -39,19 +39,16 @@ const Inventory = () => {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      
       const [
         itemsRes, typeRes, mainRes, subRes, divRes, secRes, invRes
       ] = await Promise.all([
-        axios.get('http://localhost:5000/api/inventory', { headers }),
-        axios.get('http://localhost:5000/api/categories/item-types', { headers }),
-        axios.get('http://localhost:5000/api/categories/main-categories', { headers }),
-        axios.get('http://localhost:5000/api/categories/sub-categories', { headers }),
-        axios.get('http://localhost:5000/divisions'),
-        axios.get('http://localhost:5000/sections'),
-        axios.get('http://localhost:5000/api/invoices', { headers })
+        api.get('/api/inventory'),
+        api.get('/api/categories/item-types'),
+        api.get('/api/categories/main-categories'),
+        api.get('/api/categories/sub-categories'),
+        api.get('/divisions'),
+        api.get('/sections'),
+        api.get('/api/invoices')
       ]);
 
       if (itemsRes.data.success) setItems(itemsRes.data.items);
@@ -86,7 +83,7 @@ const Inventory = () => {
     
     // Automatically fill purchase date based on selected invoice
     if (name === 'invoiceId' && value) {
-      const selectedInvoice = invoices.find(inv => inv.invoiceId == value);
+      const selectedInvoice = invoices.find(inv => String(inv.invoiceId) === String(value));
       if (selectedInvoice && selectedInvoice.invoiceDate) {
          newFormData.purchaseDate = selectedInvoice.invoiceDate.split('T')[0];
       }
@@ -178,14 +175,11 @@ const Inventory = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      
       if (isEdit) {
-        await axios.put(`http://localhost:5000/api/inventory/${formData.itemId}`, formData, { headers });
+        await api.put(`/api/inventory/${formData.itemId}`, formData);
         toast.success('Item updated successfully');
       } else {
-        await axios.post('http://localhost:5000/api/inventory', formData, { headers });
+        await api.post('/api/inventory', formData);
         toast.success('Item added successfully');
       }
       
@@ -193,15 +187,13 @@ const Inventory = () => {
       fetchData(); // Refresh list
     } catch (error) {
       console.error(error);
-      toast.error(isEdit ? 'Failed to update item' : 'Failed to add item');
+      toast.error(error.response?.data?.message || (isEdit ? 'Failed to update item' : 'Failed to add item'));
     }
   };
 
   const refreshInvoices = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      const invRes = await axios.get('http://localhost:5000/api/invoices', { headers });
+      const invRes = await api.get('/api/invoices');
       if (invRes.data.success) {
         setInvoices(invRes.data.invoices);
         toast.info('Invoice list refreshed');
@@ -214,10 +206,7 @@ const Inventory = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
-        const token = localStorage.getItem('token');
-        await axios.delete(`http://localhost:5000/api/inventory/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await api.delete(`/api/inventory/${id}`);
         toast.success('Item deleted successfully');
         fetchData();
       } catch (error) {
@@ -362,7 +351,7 @@ const Inventory = () => {
                       <label className="inventory-form-label">Main Category</label>
                       <select className="inventory-form-select" name="mainCategoryId" value={formData.mainCategoryId} onChange={handleInputChange} required>
                         <option value="">Select Main Category</option>
-                        {mainCategories.filter(m => !formData.itemTypeId || m.itemTypeId == formData.itemTypeId).map(m => (
+                        {mainCategories.filter(m => !formData.itemTypeId || String(m.itemTypeId) === String(formData.itemTypeId)).map(m => (
                           <option key={m.mainCategoryId} value={m.mainCategoryId}>{m.mainCategoryName}</option>
                         ))}
                       </select>
@@ -371,7 +360,7 @@ const Inventory = () => {
                       <label className="inventory-form-label">Sub Category</label>
                       <select className="inventory-form-select" name="subCategoryId" value={formData.subCategoryId} onChange={handleInputChange} required>
                         <option value="">Select Sub Category</option>
-                        {subCategories.filter(s => !formData.mainCategoryId || s.mainCategoryId == formData.mainCategoryId).map(s => (
+                        {subCategories.filter(s => !formData.mainCategoryId || String(s.mainCategoryId) === String(formData.mainCategoryId)).map(s => (
                           <option key={s.subCategoryId} value={s.subCategoryId}>{s.subCategoryName}</option>
                         ))}
                       </select>
@@ -394,7 +383,7 @@ const Inventory = () => {
                         required
                       >
                         <option value="">{formData.divisionId ? 'Select Section' : 'Select Division First'}</option>
-                        {sections.filter(s => !formData.divisionId || s.divisionId == formData.divisionId).map(s => (
+                        {sections.filter(s => !formData.divisionId || String(s.divisionId) === String(formData.divisionId)).map(s => (
                           <option key={s.sectionId} value={s.sectionId}>{s.sectionName}</option>
                         ))}
                       </select>
@@ -473,7 +462,7 @@ const Inventory = () => {
                       <div className="inventory-form-group col-span-12">
                         <div className="supplier-info-card compact-card">
                           {(() => {
-                            const selectedInv = invoices.find(i => i.invoiceId == formData.invoiceId);
+                            const selectedInv = invoices.find(i => String(i.invoiceId) === String(formData.invoiceId));
                             if (!selectedInv) return <div>No details available</div>;
                             return (
                               <>

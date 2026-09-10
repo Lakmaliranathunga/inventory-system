@@ -1,6 +1,4 @@
-/* Invoices.css */
-
-.invoices-page {
+/* Invoices.css */ .invoices-page {
   padding: 24px;
   width: 100%;
 }
@@ -29,7 +27,7 @@
   border: none;
   border-radius: 6px;
   font-weight: 500;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
   cursor: pointer;
   transition: background-color 0.2s;
 }
@@ -108,8 +106,7 @@
   font-size: 0.9rem;
 }
 
-.invoices-table th,
-.invoices-table td {
+.invoices-table th, .invoices-table td {
   padding: 12px 14px;
   border-bottom: 1px solid #e2e8f0;
   vertical-align: middle;
@@ -159,13 +156,21 @@
   color: #0d6efd;
   border: 1px solid #0d6efd;
 }
-.invoices-action-btn--edit:hover { background: #0d6efd; color: #fff; }
+
+.invoices-action-btn--edit:hover {
+  background: #0d6efd;
+  color: #fff;
+}
 
 .invoices-action-btn--delete {
   color: #dc3545;
   border: 1px solid #dc3545;
 }
-.invoices-action-btn--delete:hover { background: #dc3545; color: #fff; }
+
+.invoices-action-btn--delete:hover {
+  background: #dc3545;
+  color: #fff;
+}
 
 .invoices-empty-state {
   text-align: center;
@@ -173,11 +178,10 @@
   color: #6c757d;
 }
 
-/* Modal Styles */
-.invoices-modal-backdrop {
+/* Modal Styles */ .invoices-modal-backdrop {
   position: fixed;
   inset: 0;
-  background-color: rgba(0,0,0,0.5);
+  background-color: rgba(0, 0, 0, 0.5);
   z-index: 1050;
   display: flex;
   align-items: center;
@@ -189,7 +193,7 @@
 .invoices-modal-dialog {
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
   width: 100%;
   max-width: 600px;
   display: flex;
@@ -237,11 +241,18 @@
   flex-direction: column;
 }
 
-.col-span-12 { grid-column: span 12; }
-.col-span-6 { grid-column: span 6; }
+.col-span-12 {
+  grid-column: span 12;
+}
+
+.col-span-6 {
+  grid-column: span 6;
+}
 
 @media (max-width: 576px) {
-  .invoices-form-grid > div { grid-column: span 12; }
+  .invoices-form-grid > div {
+    grid-column: span 12;
+  }
 }
 
 .invoices-form-label {
@@ -251,9 +262,7 @@
   color: #374151;
 }
 
-.invoices-form-input,
-.invoices-form-select,
-.invoices-form-textarea {
+.invoices-form-input, .invoices-form-select, .invoices-form-textarea {
   width: 100%;
   padding: 10px 12px;
   font-size: 0.95rem;
@@ -262,9 +271,7 @@
   outline: none;
 }
 
-.invoices-form-input:focus,
-.invoices-form-select:focus,
-.invoices-form-textarea:focus {
+.invoices-form-input:focus, .invoices-form-select:focus, .invoices-form-textarea:focus {
   border-color: #86b7fe;
   box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
 }
@@ -319,7 +326,7 @@
   border-radius: 6px;
   cursor: pointer;
   font-weight: 700;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   gap: 8px;

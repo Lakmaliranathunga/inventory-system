@@ -1,21 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/client';
 import { toast } from 'react-toastify';
 import './Users.css';
-
-const API = 'http://localhost:5000';
+import { getStoredUser } from '../auth/session';
 
 const emptyForm = {
   uUsername: '', uFullName: '', uPassword: '', uEmpNo: '',
-  contactNo: '', roleId: '', divisionId: '', sectionId: '', uStatus: 'Active'
+  contactNo: '', uEmail: '', roleId: '', divisionId: '', sectionId: '', uStatus: 'Active'
 };
 
 const Users = () => {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const user = getStoredUser();
   const isAdmin = user.roleId === 1 || user.roleId === '1';
-  const token = localStorage.getItem('token');
-  const headers = { Authorization: `Bearer ${token}` };
-
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
   const [divisions, setDivisions] = useState([]);
@@ -25,6 +21,8 @@ const Users = () => {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);   // null = add, id = edit
   const [form, setForm] = useState({ ...emptyForm, uConfirmPassword: '' });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [createdCredentials, setCreatedCredentials] = useState(null);
   const [phoneError, setPhoneError] = useState('');
@@ -38,10 +36,10 @@ const Users = () => {
     setLoading(true);
     try {
       const [uRes, rRes, dRes, sRes] = await Promise.all([
-        axios.get(`${API}/api/users`, { headers }),
-        axios.get(`${API}/roles`),
-        axios.get(`${API}/divisions`),
-        axios.get(`${API}/sections`),
+        api.get('/api/users'),
+        api.get('/roles'),
+        api.get('/divisions'),
+        api.get('/sections'),
       ]);
       if (uRes.data.success) setUsers(uRes.data.users);
       setRoles(rRes.data || []);
@@ -57,6 +55,8 @@ const Users = () => {
   const openAdd = () => {
     setEditing(null);
     setForm(emptyForm);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
     setShowModal(true);
   };
 
@@ -68,16 +68,26 @@ const Users = () => {
       uPassword: '',
       uEmpNo: u.uEmpNo || '',
       contactNo: u.contactNo || '',
+      uEmail: u.uEmail || '',
       roleId: u.roleId || '',
       divisionId: u.divisionId || '',
       sectionId: u.sectionId || '',
       uStatus: u.uStatus || 'Active',
       uConfirmPassword: ''
     });
+    setShowPassword(false);
+    setShowConfirmPassword(false);
     setShowModal(true);
   };
 
-  const closeModal = () => { setShowModal(false); setEditing(null); setCreatedCredentials(null); setPhoneError(''); };
+  const closeModal = () => {
+    setShowModal(false);
+    setEditing(null);
+    setCreatedCredentials(null);
+    setPhoneError('');
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -112,6 +122,10 @@ const Users = () => {
       toast.error('Password is required for new users.');
       return;
     }
+    if (form.uEmail && !/^\S+@\S+\.\S+$/.test(form.uEmail)) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
     if (form.uPassword !== form.uConfirmPassword) {
       toast.error('Passwords do not match.');
       return;
@@ -120,16 +134,19 @@ const Users = () => {
     setSaving(true);
     try {
       if (editing) {
-        await axios.put(`${API}/api/users/${editing}`, form, { headers });
+        await api.put(`/api/users/${editing}`, form);
         toast.success('User updated successfully!');
         closeModal();
       } else {
-        await axios.post(`${API}/api/users`, form, { headers });
-        toast.success('User created successfully!');
+        const response = await api.post('/api/users', form);
+        toast.success(response.data?.message || 'User created successfully!');
         setCreatedCredentials({
           fullName: form.uFullName,
           username: form.uUsername,
-          password: form.uPassword
+          password: form.uPassword,
+          email: form.uEmail,
+          emailSent: Boolean(response.data?.emailSent),
+          emailError: response.data?.emailError || '',
         });
       }
       fetchAll();
@@ -143,7 +160,7 @@ const Users = () => {
   const handleDelete = async (u) => {
     if (!window.confirm(`Deactivate user "${u.uUsername}"?`)) return;
     try {
-      await axios.delete(`${API}/api/users/${u.uId}`, { headers });
+      await api.delete(`/api/users/${u.uId}`);
       toast.success('User deactivated.');
       fetchAll();
     } catch (err) {
@@ -275,6 +292,10 @@ const Users = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8' }}><span>Name:</span> <strong style={{ color: '#f8fafc' }}>{createdCredentials.fullName}</strong></div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8' }}><span>Username:</span> <strong style={{ color: '#f8fafc' }}>{createdCredentials.username}</strong></div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8' }}><span>Password:</span> <strong style={{ color: '#f8fafc' }}>{createdCredentials.password}</strong></div>
+                    {createdCredentials.email && <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8' }}><span>Email:</span> <strong style={{ color: createdCredentials.emailSent ? '#4ade80' : '#facc15' }}>{createdCredentials.emailSent ? 'Sent' : 'Not sent'}</strong></div>}
+                    {createdCredentials.email && !createdCredentials.emailSent && createdCredentials.emailError && (
+                      <div style={{ color: '#facc15', fontSize: '0.85rem', textAlign: 'right' }}>{createdCredentials.emailError}</div>
+                    )}
                   </div>
                 </div>
                 <div className="dark-modal-footer">
@@ -312,6 +333,12 @@ const Users = () => {
                         <div className="dark-form-group">
                           <label>Contact Number</label>
                           <input name="contactNo" value={form.contactNo} onChange={handleChange} placeholder="Enter contact no" maxLength="10" />
+                          {phoneError && <small style={{ color: '#fca5a5' }}>{phoneError}</small>}
+                        </div>
+
+                        <div className="dark-form-group">
+                          <label>Email Address</label>
+                          <input name="uEmail" type="email" value={form.uEmail} onChange={handleChange} placeholder="User email for OTP and account details" />
                         </div>
 
                         <div className="dark-form-group">
@@ -351,22 +378,50 @@ const Users = () => {
 
                         <div className="dark-form-group">
                           <label>Password</label>
-                          <input
-                            name="uPassword" type="password"
-                            value={form.uPassword} onChange={handleChange}
-                            placeholder={editing ? 'Leave blank to keep' : 'Enter password'}
-                            required={!editing}
-                          />
+                          <div className="password-input-wrapper">
+                            <input
+                              name="uPassword"
+                              type={showPassword ? "text" : "password"}
+                              value={form.uPassword}
+                              onChange={handleChange}
+                              placeholder={editing ? 'Leave blank to keep' : 'Enter password'}
+                              required={!editing}
+                            />
+                            <button
+                              type="button"
+                              className="password-toggle-btn"
+                              onClick={() => setShowPassword(!showPassword)}
+                              title={showPassword ? "Hide password" : "Show password"}
+                              aria-label={showPassword ? "Hide password" : "Show password"}
+                              tabIndex="-1"
+                            >
+                              <i className={`bi ${showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"}`}></i>
+                            </button>
+                          </div>
                         </div>
 
                         <div className="dark-form-group">
                           <label>Confirm Password</label>
-                          <input
-                            name="uConfirmPassword" type="password"
-                            value={form.uConfirmPassword} onChange={handleChange}
-                            placeholder="Confirm password"
-                            required={!editing && form.uPassword !== ''}
-                          />
+                          <div className="password-input-wrapper">
+                            <input
+                              name="uConfirmPassword"
+                              type={showConfirmPassword ? "text" : "password"}
+                              value={form.uConfirmPassword}
+                              onChange={handleChange}
+                              placeholder="Confirm password"
+                              required={!editing && form.uPassword !== ''}
+                            />
+                            <button
+                              type="button"
+                              className="password-toggle-btn"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              title={showConfirmPassword ? "Hide password" : "Show password"}
+                              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                              tabIndex="-1"
+                            >
+                              <i className={`bi ${showConfirmPassword ? "bi-eye-slash-fill" : "bi-eye-fill"}`}></i>
+                            </button>
+                          </div>
                         </div>
 
                         <div className="dark-form-group">

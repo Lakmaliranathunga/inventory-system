@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/client';
 import { toast } from 'react-toastify';
 import './Suppliers.css';
 
@@ -17,10 +17,7 @@ const Suppliers = () => {
 
   const fetchSuppliers = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/suppliers', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/api/suppliers');
       if (response.data.success) {
         setSuppliers(response.data.suppliers);
       }
@@ -76,14 +73,11 @@ const Suppliers = () => {
       return;
     }
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      
       if (isEdit) {
-        await axios.put(`http://localhost:5000/api/suppliers/${formData.supplierId}`, formData, { headers });
+        await api.put(`/api/suppliers/${formData.supplierId}`, formData);
         toast.success('Supplier updated successfully');
       } else {
-        await axios.post('http://localhost:5000/api/suppliers', formData, { headers });
+        await api.post('/api/suppliers', formData);
         toast.success('Supplier added successfully');
       }
       
@@ -98,10 +92,7 @@ const Suppliers = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this supplier?')) {
       try {
-        const token = localStorage.getItem('token');
-        await axios.delete(`http://localhost:5000/api/suppliers/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await api.delete(`/api/suppliers/${id}`);
         toast.success('Supplier deleted successfully');
         fetchSuppliers();
       } catch (error) {
@@ -169,7 +160,7 @@ const Suppliers = () => {
                   ) : (
                     filteredSuppliers.map(supplier => (
                       <tr key={supplier.supplierId}>
-                        <td style={{ fontWeight: 'bold' }}>{supplier.supplierName}</td>
+                        <td className="supplier-name-cell">{supplier.supplierName}</td>
                         <td>{supplier.contactPerson}</td>
                         <td>{supplier.contactNo}</td>
                         <td>{supplier.email}</td>

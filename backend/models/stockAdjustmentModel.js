@@ -78,6 +78,26 @@ const StockAdjustmentModel = {
     db.query(sql, [deletedBy, id], callback);
   },
 
+  syncItemCondition: (itemId, callback) => {
+    const latestSql = `
+      SELECT adjustmentType
+      FROM stock_adjustments
+      WHERE itemId=? AND flag=1
+      ORDER BY adjustmentDate DESC, adjustmentId DESC
+      LIMIT 1
+    `;
+    db.query(latestSql, [itemId], (err, rows) => {
+      if (err) return callback(err);
+      const type = String(rows[0]?.adjustmentType || '').toUpperCase();
+      const condition = type === 'DAMAGED' ? 'Damaged' : type === 'DISPOSAL' ? 'Disposal' : 'Good';
+      db.query(
+        'UPDATE inventory_items SET itemCondition=?, updatedDate=NOW() WHERE itemId=?',
+        [condition, itemId],
+        callback
+      );
+    });
+  },
+
   getDashboardStats: (callback) => {
     const sql = `
       SELECT 

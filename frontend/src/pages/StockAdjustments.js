@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/client';
 import { toast } from 'react-toastify';
 import './StockAdjustments.css';
 
@@ -30,10 +30,6 @@ const StockAdjustments = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
-  // APIs
-  const apiBase = "http://localhost:5000/api";
-  const token = localStorage.getItem('token');
-
   useEffect(() => {
     fetchData();
   }, []);
@@ -41,11 +37,9 @@ const StockAdjustments = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const headers = { Authorization: `Bearer ${token}` };
-      
       const [adjRes, itemsRes] = await Promise.all([
-        axios.get(`${apiBase}/stock-adjustments`, { headers }),
-        axios.get(`${apiBase}/inventory`, { headers })
+        api.get('/api/stock-adjustments'),
+        api.get('/api/inventory')
       ]);
 
       if (adjRes.data.success) {
@@ -73,14 +67,13 @@ const StockAdjustments = () => {
     }
 
     try {
-      const headers = { Authorization: `Bearer ${token}` };
       if (editId) {
-        const res = await axios.put(`${apiBase}/stock-adjustments/${editId}`, formData, { headers });
+        const res = await api.put(`/api/stock-adjustments/${editId}`, formData);
         if (res.data.success) {
           toast.success('Adjustment updated');
         }
       } else {
-        const res = await axios.post(`${apiBase}/stock-adjustments`, formData, { headers });
+        const res = await api.post('/api/stock-adjustments', formData);
         if (res.data.success) {
           toast.success('Adjustment recorded');
         }
@@ -127,8 +120,7 @@ const StockAdjustments = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this adjustment record?")) {
       try {
-        const headers = { Authorization: `Bearer ${token}` };
-        const res = await axios.delete(`${apiBase}/stock-adjustments/${id}`, { headers });
+        const res = await api.delete(`/api/stock-adjustments/${id}`);
         if (res.data.success) {
           toast.success('Adjustment deleted');
           fetchData();

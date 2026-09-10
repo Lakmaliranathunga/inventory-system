@@ -1,0 +1,2 @@
+ALTER TABLE users
+  ADD COLUMN uEmail VARCHAR(255) NULL AFTER contactNo;

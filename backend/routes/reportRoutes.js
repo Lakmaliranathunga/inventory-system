@@ -126,10 +126,9 @@ router.get("/complete", (req, res) => {
 
 // 3. LOW STOCK REPORT
 router.get("/low-stock", (req, res) => {
-    let query = getBaseItemQuery() + ` WHERE i.flag = 1 AND i.quantity <= 5 ORDER BY i.quantity ASC`;
-    db.query(query, (err, result) => {
-      if (err) return res.status(500).json({ success: false, error: err });
-      res.json({ success: true, data: result });
+    res.status(410).json({
+      success: false,
+      message: "Low-stock reporting does not apply to individually tracked assets."
     });
 });
 
@@ -291,25 +290,28 @@ router.get("/invoice", (req, res) => {
 router.get("/stock-transactions", (req, res) => {
     const { startDate, endDate, type } = req.query;
     let query = `
-        SELECT st.*, 
-               ii.itemCode, ii.itemName, ii.serialNumber, 
-               u.uFullName as handledByName
-        FROM stock_transactions st
-        LEFT JOIN inventory_items ii ON st.itemId = ii.itemId
-        LEFT JOIN users u ON st.handledBy = u.uId
-        WHERE 1=1
+        SELECT sa.adjustmentId AS transactionId, sa.itemId,
+               sa.adjustmentType AS transactionType, sa.quantity,
+               sa.adjustmentDate AS transactionDate, NULL AS fromLocation,
+               NULL AS toLocation, sa.remarks,
+               ii.itemCode, ii.itemName, ii.serialNumber,
+               u.uFullName AS handledByName
+        FROM stock_adjustments sa
+        LEFT JOIN inventory_items ii ON sa.itemId = ii.itemId
+        LEFT JOIN users u ON sa.createdBy = u.uId
+        WHERE sa.flag=1
     `;
     const params = [];
     
     if (startDate && endDate) {
-        query += ` AND DATE(st.transactionDate) BETWEEN ? AND ?`;
+        query += ` AND DATE(sa.adjustmentDate) BETWEEN ? AND ?`;
         params.push(startDate, endDate);
     }
     if (type) {
-        query += ` AND st.transactionType = ?`;
+        query += ` AND sa.adjustmentType = ?`;
         params.push(type);
     }
-    query += ` ORDER BY st.transactionDate DESC`;
+    query += ` ORDER BY sa.adjustmentDate DESC`;
     db.query(query, params, (err, result) => {
         if (err) return res.status(500).json({ success: false, error: err });
         res.json({ success: true, data: result });

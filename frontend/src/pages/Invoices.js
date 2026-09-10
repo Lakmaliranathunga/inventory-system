@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/client';
 import { toast } from 'react-toastify';
 import './Invoices.css';
 
@@ -19,12 +19,9 @@ const Invoices = () => {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-
       const [invRes, supRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/invoices', { headers }),
-        axios.get('http://localhost:5000/api/suppliers', { headers })
+        api.get('/api/invoices'),
+        api.get('/api/suppliers')
       ]);
 
       if (invRes.data.success) setInvoices(invRes.data.invoices);
@@ -75,9 +72,6 @@ const Invoices = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-
       const submitData = new FormData();
       for (const key in formData) {
         submitData.append(key, formData[key] || '');
@@ -87,10 +81,10 @@ const Invoices = () => {
       }
 
       if (isEdit) {
-        await axios.put(`http://localhost:5000/api/invoices/${formData.invoiceId}`, submitData, { headers });
+        await api.put(`/api/invoices/${formData.invoiceId}`, submitData);
         toast.success('Invoice updated successfully');
       } else {
-        await axios.post('http://localhost:5000/api/invoices', submitData, { headers });
+        await api.post('/api/invoices', submitData);
         toast.success('Invoice added successfully');
       }
 
@@ -108,16 +102,24 @@ const Invoices = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this invoice?')) {
       try {
-        const token = localStorage.getItem('token');
-        await axios.delete(`http://localhost:5000/api/invoices/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await api.delete(`/api/invoices/${id}`);
         toast.success('Invoice deleted successfully');
         fetchData();
       } catch (error) {
         console.error(error);
         toast.error('Failed to delete invoice');
       }
+    }
+  };
+
+  const openAttachment = async (invoice) => {
+    try {
+      const response = await api.get(`/api/invoices/${invoice.invoiceId}/attachment`, { responseType: 'blob' });
+      const url = URL.createObjectURL(response.data);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Unable to open attachment');
     }
   };
 
@@ -190,9 +192,9 @@ const Invoices = () => {
                         </td>
                         <td>
                           {invoice.invoiceImage ? (
-                            <a href={`http://localhost:5000/uploads/${invoice.invoiceImage}`} target="_blank" rel="noopener noreferrer" style={{color: '#0d6efd', textDecoration: 'none'}}>
+                            <button type="button" onClick={() => openAttachment(invoice)} style={{color: '#0d6efd', border: 0, background: 'none', cursor: 'pointer'}}>
                               <i className="bi bi-file-earmark-image"></i> View
-                            </a>
+                            </button>
                           ) : <span style={{ color: '#94a3b8' }}>-</span>}
                         </td>
                         <td><span style={{ color: '#6c757d', fontSize: '0.875rem' }}>{invoice.remarks || '-'}</span></td>
@@ -264,7 +266,7 @@ const Invoices = () => {
                       <input type="file" className="invoices-form-input" onChange={(e) => setImageFile(e.target.files[0])} accept="image/*,.pdf" style={{padding: '5px 10px'}} />
                       {isEdit && formData.invoiceImage && (
                         <div style={{marginTop: '5px', fontSize: '13px', color: '#6c757d'}}>
-                          <i className="bi bi-paperclip"></i> Currently uploaded: <a href={`http://localhost:5000/uploads/${formData.invoiceImage}`} target="_blank" rel="noopener noreferrer">{formData.invoiceImage}</a>
+                          <i className="bi bi-paperclip"></i> Currently uploaded: <button type="button" onClick={() => openAttachment(formData)} style={{border: 0, background: 'none', color: '#0d6efd', cursor: 'pointer'}}>{formData.invoiceImage}</button>
                         </div>
                       )}
                     </div>

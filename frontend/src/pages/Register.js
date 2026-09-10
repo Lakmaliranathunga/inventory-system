@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../api/client";
 import { Link } from "react-router-dom";
 import "./Login.css";
 import logo from "../assets/images/slpa-logo-original.png";
@@ -15,12 +15,14 @@ function Register() {
     roleId: "",
     sectionId: "",
     divisionId: "",
-    contactNo: ""
+    contactNo: "",
   });
   const [divisions, setDivisions] = useState([]);
   const [sections, setSections] = useState([]);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -32,7 +34,7 @@ function Register() {
 
   const fetchDivisions = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/divisions");
+      const response = await api.get("/divisions");
       setDivisions(response.data);
     } catch (err) {
       setError("Unable to load division list.");
@@ -41,7 +43,7 @@ function Register() {
 
   const fetchRoles = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/roles");
+      const response = await api.get("/roles");
       setRoles(response.data);
     } catch (err) {
       setError("Unable to load roles list.");
@@ -50,7 +52,7 @@ function Register() {
 
   const fetchSections = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/sections");
+      const response = await api.get("/sections");
       setSections(response.data);
     } catch (err) {
       setError("Unable to load section list.");
@@ -91,7 +93,7 @@ function Register() {
     setLoading(true);
 
     try {
-      const response = await axios.post("http://localhost:5000/register", formData);
+      const response = await api.post("/register", formData);
       setSuccess(response.data?.message || "User registered successfully.");
       setFormData({
         uUsername: "",
@@ -103,7 +105,7 @@ function Register() {
         roleId: "",
         sectionId: "",
         divisionId: "",
-        contactNo: ""
+        contactNo: "",
       });
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed. Please try again.");
@@ -114,7 +116,6 @@ function Register() {
 
   return (
     <div className="login-layout">
-      {/* Top Header */}
       <header className="custom-login-header">
         <div className="header-logo-container">
           <img src={logo} alt="SLPA Logo" className="slpa-logo" />
@@ -129,24 +130,17 @@ function Register() {
         </div>
       </header>
 
-      {/* Main split screen */}
-      <div 
-        className="login-main-content register-main-bg" 
-      >
-        {/* Left column: Login Box styled for Register */}
+      <div className="login-main-content register-main-bg">
         <div className="login-left-pane register-full-pane">
           <div className="login-form-wrapper register-form-wrapper">
-            <h1 className="welcome-title" style={{ marginBottom: "20px" }}>
-              Create an Account
-            </h1>
+            <h1 className="welcome-title register-title">Create an Account</h1>
 
             {error && <div className="login-error-message">{error}</div>}
-            {success && <div className="login-error-message" style={{ backgroundColor: "#dcfce7", color: "#166534", borderColor: "#bbf7d0" }}>{success}</div>}
+            {success && <div className="login-success-message">{success}</div>}
 
             <form onSubmit={handleSubmit} className="login-form">
               <div className="register-grid">
                 
-                {/* User Details Fieldset */}
                 <fieldset className="register-fieldset">
                   <legend className="register-legend">User Details</legend>
                   
@@ -237,7 +231,6 @@ function Register() {
                   </div>
                 </fieldset>
 
-                {/* Account Details Fieldset */}
                 <fieldset className="register-fieldset">
                   <legend className="register-legend">Account Details</legend>
 
@@ -255,26 +248,50 @@ function Register() {
 
                   <div className="login-input-group">
                     <label htmlFor="uPassword">Password</label>
-                    <input
-                      id="uPassword"
-                      name="uPassword"
-                      type="password"
-                      placeholder="Enter password"
-                      value={formData.uPassword}
-                      onChange={handleChange}
-                    />
+                    <div className="password-input-wrapper">
+                      <input
+                        id="uPassword"
+                        name="uPassword"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Enter password"
+                        value={formData.uPassword}
+                        onChange={handleChange}
+                      />
+                      <button
+                        type="button"
+                        className="password-toggle-btn"
+                        onClick={() => setShowPassword(!showPassword)}
+                        title={showPassword ? "Hide password" : "Show password"}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        tabIndex="-1"
+                      >
+                        <i className={`bi ${showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"}`}></i>
+                      </button>
+                    </div>
                   </div>
 
                   <div className="login-input-group">
                     <label htmlFor="uConfirmPassword">Confirm Password</label>
-                    <input
-                      id="uConfirmPassword"
-                      name="uConfirmPassword"
-                      type="password"
-                      placeholder="Confirm password"
-                      value={formData.uConfirmPassword}
-                      onChange={handleChange}
-                    />
+                    <div className="password-input-wrapper">
+                      <input
+                        id="uConfirmPassword"
+                        name="uConfirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Confirm password"
+                        value={formData.uConfirmPassword}
+                        onChange={handleChange}
+                      />
+                      <button
+                        type="button"
+                        className="password-toggle-btn"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        title={showConfirmPassword ? "Hide password" : "Show password"}
+                        aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                        tabIndex="-1"
+                      >
+                        <i className={`bi ${showConfirmPassword ? "bi-eye-slash-fill" : "bi-eye-fill"}`}></i>
+                      </button>
+                    </div>
                   </div>
 
                   <div className="login-input-group">
@@ -311,8 +328,7 @@ function Register() {
                   </div>
                 </fieldset>
 
-                {/* Empty cell to keep submit and footer aligned or push submit full width */}
-                <div className="login-input-group register-submit-btn" style={{ marginTop: "12px" }}>
+                <div className="login-input-group register-submit-btn">
                   <button type="submit" className="login-submit-btn" disabled={loading}>
                     {loading ? "Registering..." : "Create Account"}
                   </button>
@@ -327,10 +343,9 @@ function Register() {
         </div>
       </div>
 
-      {/* Footer */}
       <footer className="login-page-footer">
         <p>Developed by UCT 2026</p>
-        <p>Copyrights © 2026 Sri Lanka Ports Authority. All Rights Reserved.</p>
+        <p>Copyright 2026 Sri Lanka Ports Authority. All rights reserved.</p>
       </footer>
     </div>
   );

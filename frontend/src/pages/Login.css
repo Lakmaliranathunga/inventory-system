@@ -1,5 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 .login-layout {
   display: flex;
   flex-direction: column;
@@ -7,8 +6,7 @@
   font-family: 'Inter', sans-serif;
 }
 
-/* HEADER */
-.custom-login-header {
+/* HEADER */ .custom-login-header {
   display: flex;
   align-items: center;
   background-color: #ffffff;
@@ -51,7 +49,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-left: -300px; /* Offset the width of left logo container to achieve exact horizontal centering */
+  margin-left: -300px;
+  /* Offset the width of left logo container to achieve exact horizontal centering */
 }
 
 .header-title-container h2 {
@@ -62,8 +61,7 @@
   text-align: center;
 }
 
-/* MAIN CONTENT */
-.login-main-content {
+/* MAIN CONTENT */ .login-main-content {
   display: flex;
   flex: 1;
   background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e3a8a 100%);
@@ -97,8 +95,7 @@
   z-index: 0;
 }
 
-/* LOGIN CARD */
-.login-left-pane {
+/* LOGIN CARD */ .login-left-pane {
   background: rgba(0, 33, 71, 0.65);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -118,7 +115,8 @@
 .login-form-wrapper {
   max-width: 420px;
   width: 100%;
-  margin: auto 0; /* Auto margin vertically centers content when space allows */
+  margin: auto 0;
+  /* Auto margin vertically centers content when space allows */
 }
 
 .login-card-logo-container {
@@ -244,13 +242,11 @@
   text-decoration: underline;
 }
 
-/* RIGHT PANE (Removed for centered layout) */
-.login-right-pane {
+/* RIGHT PANE (Removed for centered layout) */ .login-right-pane {
   display: none;
 }
 
-/* FOOTER */
-.login-page-footer {
+/* FOOTER */ .login-page-footer {
   background-color: #1c1c1c;
   color: #a0a0a0;
   text-align: center;
@@ -263,12 +259,11 @@
   margin: 4px 0;
 }
 
-/* REGISTER SPECIFIC STYLES */
-/* REGISTER SPECIFIC STYLES */
-.register-form-wrapper {
+/* REGISTER SPECIFIC STYLES */ /* REGISTER SPECIFIC STYLES */ .register-form-wrapper {
   max-width: 900px;
   width: 100%;
-  margin: auto; /* horizontally and vertically centered */
+  margin: auto;
+  /* horizontally and vertically centered */
 }
 
 .register-form-wrapper .welcome-title {
@@ -320,8 +315,7 @@
   backdrop-filter: blur(4px);
 }
 
-.register-grid > .login-input-group,
-.register-fieldset .login-input-group {
+.register-grid > .login-input-group, .register-fieldset .login-input-group {
   margin-bottom: 22px;
 }
 
@@ -331,8 +325,7 @@
   letter-spacing: 0.3px;
 }
 
-.register-fieldset .login-input-group input,
-.register-fieldset .register-select {
+.register-fieldset .login-input-group input, .register-fieldset .register-select {
   background-color: rgba(255, 255, 255, 0.92);
   border: 1px solid transparent;
   border-radius: 10px;
@@ -340,19 +333,17 @@
   font-size: 15px;
   color: #0f172a;
   transition: all 0.3s ease;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
-.register-fieldset .login-input-group input:focus,
-.register-fieldset .register-select:focus {
+.register-fieldset .login-input-group input:focus, .register-fieldset .register-select:focus {
   background-color: #ffffff;
   border-color: #60A5FA;
-  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.25), inset 0 2px 4px rgba(0,0,0,0.02);
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.02);
   transform: scale(1.01);
 }
 
-/* Make submit button span full width in grid if needed */
-.register-submit-btn {
+/* Make submit button span full width in grid if needed */ .register-submit-btn {
   grid-column: 1 / -1;
   margin-top: 20px;
   display: flex;
@@ -389,9 +380,22 @@
   flex: 1;
   max-width: 100%;
   border-right: none;
-  background: transparent !important; 
+  background: transparent !important;
   padding-top: 40px;
   padding-bottom: 60px;
+}
+
+.register-title {
+  margin-bottom: 20px;
+}
+
+.login-success-message {
+  background-color: #dcfce7;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  color: #166534;
+  margin-bottom: 16px;
+  padding: 10px 12px;
 }
 
 .register-main-bg {
@@ -400,7 +404,6 @@
   overflow: hidden;
 }
 
-/* Elegant abstract glowing orbs in the background */
 .register-main-bg::before {
   content: '';
   position: absolute;

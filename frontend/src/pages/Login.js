@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import api from "../api/client";
 import "./Login.css";
 
 import logo from "../assets/images/slpa-logo-original.png";
@@ -9,6 +9,7 @@ import logoTransparent from "../assets/images/slpa-logo-transparent.png";
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -26,7 +27,7 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await axios.post("http://localhost:5000/login", {
+      const response = await api.post("/login", {
         uUsername: username,
         uPassword: password,
       });
@@ -47,7 +48,6 @@ function Login() {
 
   return (
     <div className="login-layout">
-      {/* Top Header */}
       <header className="custom-login-header">
         <div className="header-logo-container">
           <img src={logo} alt="SLPA Logo" className="slpa-logo" />
@@ -62,17 +62,18 @@ function Login() {
         </div>
       </header>
 
-      {/* Main split screen */}
       <div className="login-main-content">
-        {/* Left column: Login Box */}
         <div className="login-left-pane">
           <div className="login-form-wrapper">
             <div className="login-card-logo-container">
               <img src={logoTransparent} alt="SLPA Logo" className="login-card-logo" />
             </div>
-            <h1 className="welcome-title">
-              Welcome to Inventory <br />Management System
-            </h1>
+
+            <div className="login-eyebrow">
+              <i className="bi bi-shield-check"></i> Secure staff portal
+            </div>
+            <h1 className="welcome-title">Welcome back</h1>
+            <p className="login-intro">Sign in to manage inventory, suppliers, invoices, and reports.</p>
 
             {error && <div className="login-error-message">{error}</div>}
 
@@ -91,35 +92,41 @@ function Login() {
 
               <div className="login-input-group">
                 <label htmlFor="password">Password</label>
-                <input
-                  id="password"
-                  type="password"
-                  placeholder="........"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password"
-                />
+                <div className="password-input-wrapper">
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    onClick={() => setShowPassword(!showPassword)}
+                    title={showPassword ? "Hide password" : "Show password"}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    tabIndex="-1"
+                  >
+                    <i className={`bi ${showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"}`}></i>
+                  </button>
+                </div>
               </div>
-
 
               <button type="submit" className="login-submit-btn" disabled={loading}>
                 {loading ? "Signing in..." : "Sign In"}
               </button>
-
             </form>
           </div>
         </div>
 
-        {/* Right column: Image background */}
-        <div className="login-right-pane">
-          {/* the background image is on the parent (.login-main-content), this pane is just blank layout spacer */}
-        </div>
+        <div className="login-right-pane"></div>
       </div>
 
-      {/* Footer */}
       <footer className="login-page-footer">
         <p>Developed by UCT 2026</p>
-        <p>Copyrights © 2026 Sri Lanka Ports Authority. All Rights Reserved.</p>
+        <p>Copyright 2026 Sri Lanka Ports Authority. All rights reserved.</p>
       </footer>
     </div>
   );

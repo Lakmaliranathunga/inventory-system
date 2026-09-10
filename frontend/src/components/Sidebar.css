@@ -1,6 +1,6 @@
 .sidebar-container {
   width: 250px;
-  background-color: #0b2239; /* Official dark blue */
+  background-color: #0b2239;
   color: #fff;
   height: 100vh;
   position: fixed;
@@ -9,26 +9,28 @@
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
 }
 
 .sidebar-logo {
-  padding: 20px;
-  text-align: center;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  min-height: 124px;
+  padding: 20px 16px 18px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .logo-wrapper {
-  width: 80px;
-  height: auto;
+  width: 60px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 
 .sidebar-logo-img {
@@ -39,13 +41,15 @@
 
 .sidebar-logo h4 {
   margin: 0;
-  font-weight: 700;
-  font-size: 1.2rem;
-  letter-spacing: 1px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 1rem;
+  line-height: 1.1;
 }
 
 .sidebar-logo span {
-  font-size: 0.8rem;
+  font-size: 0.64rem;
+  line-height: 1.2;
   color: #a0aec0;
 }
 
@@ -74,14 +78,12 @@
   font-size: 1.2rem;
 }
 
-.sidebar-link:hover,
-.sidebar-link.active {
+.sidebar-link:hover, .sidebar-link.active {
   background-color: rgba(255, 255, 255, 0.1);
   color: #fff;
   border-left: 4px solid #3498db;
 }
 
-/* Logout button — full-width, outlined white style */
 .sidebar-logout-btn {
   display: flex;
   align-items: center;

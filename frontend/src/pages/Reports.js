@@ -1,13 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../api/client';
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
 import './Reports.css';
-
-const API = 'http://localhost:5000';
-const getToken = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
 
 const MONTHS = [
   '', 'January', 'February', 'March', 'April', 'May', 'June',
@@ -20,6 +16,7 @@ const REPORT_TYPES = [
   { id: 'item-wise',         label: 'Item Wise',            icon: 'bi-box-seam' },
   { id: 'division-wise',     label: 'Division Wise',        icon: 'bi-building' },
   { id: 'section-wise',      label: 'Section Wise',         icon: 'bi-diagram-3' },
+  { id: 'complete',          label: 'Complete Inventory',    icon: 'bi-card-list' },
 ];
 
 // ========== PRINT UTILITY ==========
@@ -61,11 +58,8 @@ function printTable(title, html) {
 // ========== MAIN COMPONENT ==========
 const Reports = () => {
   const [activeReport, setActiveReport] = useState('monthly');
-  const [dashStats, setDashStats] = useState(null);
-  const [dashLoading, setDashLoading] = useState(true);
   const [divisions, setDivisions] = useState([]);
   const [sections, setSections] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
   const [reportData, setReportData] = useState([]);
   const [reportLoading, setReportLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
@@ -75,42 +69,22 @@ const Reports = () => {
   const [month, setMonth] = useState('');
   const [divisionId, setDivisionId] = useState('');
   const [sectionId, setSectionId] = useState('');
-  const [supplierId, setSupplierId] = useState('');
   const [itemSearch, setItemSearch] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [invoiceNumber, setInvoiceNumber] = useState('');
-  const [transactionType, setTransactionType] = useState('');
 
   const yearOptions = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i);
 
   useEffect(() => {
-    fetchDashboard();
     fetchDropdowns();
   }, []);
 
-  const fetchDashboard = async () => {
-    setDashLoading(true);
-    try {
-      const res = await axios.get(`${API}/api/reports/dashboard`, getToken());
-      if (res.data.success) setDashStats(res.data.stats);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setDashLoading(false);
-    }
-  };
-
   const fetchDropdowns = async () => {
     try {
-      const [divRes, secRes, supRes] = await Promise.all([
-        axios.get(`${API}/divisions`, getToken()),
-        axios.get(`${API}/sections`, getToken()),
-        axios.get(`${API}/api/suppliers`, getToken()),
+      const [divRes, secRes] = await Promise.all([
+        api.get('/divisions'),
+        api.get('/sections'),
       ]);
       setDivisions(divRes.data || []);
       setSections(secRes.data || []);
-      setSuppliers(supRes.data.suppliers || []);
     } catch (e) { console.error(e); }
   };
 
@@ -128,48 +102,32 @@ const Reports = () => {
 
     switch (activeReport) {
       case 'monthly':
-        url = `${API}/api/reports/monthly`;
+        url = `/api/reports/monthly`;
         if (year) params.year = year;
         if (month) params.month = month;
         break;
       case 'yearly':
-        url = `${API}/api/reports/yearly`;
+        url = `/api/reports/yearly`;
         if (year) params.year = year;
         break;
       case 'item-wise':
-        url = `${API}/api/reports/item-wise`;
+        url = `/api/reports/item-wise`;
         if (itemSearch) params.query = itemSearch;
         break;
       case 'division-wise':
-        url = `${API}/api/reports/division-wise`;
+        url = `/api/reports/division-wise`;
         if (divisionId) params.divisionId = divisionId;
         break;
       case 'section-wise':
-        url = `${API}/api/reports/section-wise`;
+        url = `/api/reports/section-wise`;
         if (sectionId) params.sectionId = sectionId;
         if (divisionId) params.divisionId = divisionId;
         break;
-      case 'supplier':
-        url = `${API}/api/reports/supplier`;
-        break;
-      case 'invoice':
-        url = `${API}/api/reports/invoice`;
-        if (startDate) params.startDate = startDate;
-        if (endDate) params.endDate = endDate;
-        if (supplierId) params.supplierId = supplierId;
-        if (invoiceNumber) params.invoiceNumber = invoiceNumber;
-        break;
-      case 'stock-transactions':
-        url = `${API}/api/reports/stock-transactions`;
-        if (startDate) params.startDate = startDate;
-        if (endDate) params.endDate = endDate;
-        if (transactionType) params.type = transactionType;
-        break;
       case 'low-stock':
-        url = `${API}/api/reports/low-stock`;
+        url = `/api/reports/low-stock`;
         break;
       case 'complete':
-        url = `${API}/api/reports/complete`;
+        url = `/api/reports/complete`;
         break;
       default:
         setReportLoading(false);
@@ -177,7 +135,7 @@ const Reports = () => {
     }
 
     try {
-      const res = await axios.get(url, { ...getToken(), params });
+      const res = await api.get(url, { params });
       setReportData(res.data.data || []);
       setGenerated(true);
     } catch (e) {
@@ -187,7 +145,7 @@ const Reports = () => {
     } finally {
       setReportLoading(false);
     }
-  }, [activeReport, year, month, divisionId, sectionId, supplierId, itemSearch, startDate, endDate, invoiceNumber, transactionType]);
+  }, [activeReport, year, month, divisionId, sectionId, itemSearch]);
 
   // Derived datasets & counts
   const totalQty = reportData.reduce((acc, r) => acc + (Number(r.quantity) || 0), 0);
@@ -250,19 +208,19 @@ const Reports = () => {
     doc.save(`${reportLabel.replace(/\s/g, '_')}_${new Date().toISOString().slice(0,10)}.pdf`);
   };
 
-  // ====== EXPORT EXCEL ======
-  const exportExcel = () => {
+  // ====== EXPORT CSV (opens directly in spreadsheet applications) ======
+  const exportCSV = () => {
     const reportLabel = REPORT_TYPES.find(r => r.id === activeReport)?.label || 'Report';
-    const ws = XLSX.utils.json_to_sheet(reportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'All_Items');
-
-    if (adjustedItems.length > 0) {
-      const adjWs = XLSX.utils.json_to_sheet(adjustedItems);
-      XLSX.utils.book_append_sheet(wb, adjWs, 'Stock_Adjustments');
-    }
-
-    XLSX.writeFile(wb, `${reportLabel.replace(/\s/g, '_')}_${new Date().toISOString().slice(0,10)}.xlsx`);
+    const keys = [...new Set(reportData.flatMap(Object.keys))];
+    const escape = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+    const csv = [keys.map(escape).join(','), ...reportData.map(row => keys.map(key => escape(row[key])).join(','))].join('\r\n');
+    const blob = new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${reportLabel.replace(/\s/g, '_')}_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   // ====== PRINT ======
@@ -402,7 +360,8 @@ const Reports = () => {
   const txBadge = (t) => {
     const map = {
       'Stock In': 'stockin', 'Stock Out': 'stockout', 'Transfer': 'transfer',
-      'Return': 'return', 'Damaged': 'damaged', 'Disposal': 'disposal'
+      'Return': 'return', 'Damaged': 'damaged', 'Disposal': 'disposal',
+      'DAMAGED': 'damaged', 'DISPOSAL': 'disposal', 'CORRECTION': 'good'
     };
     return <span className={`badge-condition badge-${map[t] || 'new'}`}>{t}</span>;
   };
@@ -556,11 +515,11 @@ const Reports = () => {
     return (
       <div className="report-filter-panel">
         <h6><i className="bi bi-funnel me-2"></i>Filter Options</h6>
-        <div className="row g-3 align-items-end">
+        <div className="report-filter-grid">
 
           {/* Year */}
           {['monthly', 'yearly'].includes(activeReport) && (
-            <div className="col-md-2 col-sm-4">
+            <div className="report-filter-field">
               <label className="form-label">Year</label>
               <select className="form-select" value={year} onChange={e => setYear(e.target.value)}>
                 {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
@@ -570,7 +529,7 @@ const Reports = () => {
 
           {/* Month */}
           {activeReport === 'monthly' && (
-            <div className="col-md-2 col-sm-4">
+            <div className="report-filter-field">
               <label className="form-label">Month</label>
               <select className="form-select" value={month} onChange={e => setMonth(e.target.value)}>
                 <option value="">All Months</option>
@@ -581,7 +540,7 @@ const Reports = () => {
 
           {/* Item Search */}
           {activeReport === 'item-wise' && (
-            <div className="col-md-4">
+            <div className="report-filter-field report-filter-field-wide">
               <label className="form-label">Search (Item Code / Name / Type / Category)</label>
               <input className="form-control" type="text" value={itemSearch} onChange={e => setItemSearch(e.target.value)} placeholder="Enter item code, name, or category..." />
             </div>
@@ -589,7 +548,7 @@ const Reports = () => {
 
           {/* Division */}
           {['division-wise', 'section-wise'].includes(activeReport) && (
-            <div className="col-md-3 col-sm-6">
+            <div className="report-filter-field">
               <label className="form-label">Division</label>
               <select className="form-select" value={divisionId} onChange={e => setDivisionId(e.target.value)}>
                 <option value="">All Divisions</option>
@@ -600,7 +559,7 @@ const Reports = () => {
 
           {/* Section */}
           {activeReport === 'section-wise' && (
-            <div className="col-md-3 col-sm-6">
+            <div className="report-filter-field">
               <label className="form-label">Section</label>
               <select className="form-select" value={sectionId} onChange={e => setSectionId(e.target.value)}>
                 <option value="">All Sections</option>
@@ -612,54 +571,7 @@ const Reports = () => {
             </div>
           )}
 
-          {/* Invoice Filters */}
-          {activeReport === 'invoice' && (
-            <>
-              <div className="col-md-2 col-sm-6">
-                <label className="form-label">Invoice No</label>
-                <input className="form-control" type="text" value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)} placeholder="Search invoice..." />
-              </div>
-              <div className="col-md-3 col-sm-6">
-                <label className="form-label">Supplier</label>
-                <select className="form-select" value={supplierId} onChange={e => setSupplierId(e.target.value)}>
-                  <option value="">All Suppliers</option>
-                  {suppliers.map(s => <option key={s.supplierId} value={s.supplierId}>{s.supplierName}</option>)}
-                </select>
-              </div>
-            </>
-          )}
-
-          {/* Date Range */}
-          {['invoice', 'stock-transactions'].includes(activeReport) && (
-            <>
-              <div className="col-md-2 col-sm-6">
-                <label className="form-label">Start Date</label>
-                <input className="form-control" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
-              </div>
-              <div className="col-md-2 col-sm-6">
-                <label className="form-label">End Date</label>
-                <input className="form-control" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
-              </div>
-            </>
-          )}
-
-          {/* Transaction Type */}
-          {activeReport === 'stock-transactions' && (
-            <div className="col-md-2 col-sm-6">
-              <label className="form-label">Transaction Type</label>
-              <select className="form-select" value={transactionType} onChange={e => setTransactionType(e.target.value)}>
-                <option value="">All Types</option>
-                <option>Stock In</option>
-                <option>Stock Out</option>
-                <option>Transfer</option>
-                <option>Return</option>
-                <option>Damaged</option>
-                <option>Disposal</option>
-              </select>
-            </div>
-          )}
-
-          <div className="col-md-2 col-sm-12">
+          <div className="report-filter-field report-filter-action">
             <button className="report-generate-btn w-100" onClick={generateReport} disabled={reportLoading}>
               {reportLoading
                 ? <><span className="spinner-border spinner-border-sm me-1"></span> Generating...</>
@@ -690,7 +602,7 @@ const Reports = () => {
           <button
             key={r.id}
             className={`report-tab-btn ${activeReport === r.id ? 'active' : ''}`}
-            onClick={() => { setActiveReport(r.id); setGenerated(false); setReportData([]); setTransactionType(''); }}
+            onClick={() => { setActiveReport(r.id); setGenerated(false); setReportData([]); }}
           >
             <i className={`bi ${r.icon}`}></i>
             {r.label}
@@ -717,8 +629,8 @@ const Reports = () => {
               <button className="btn-export btn-export-pdf" onClick={exportPDF} disabled={reportData.length === 0}>
                 <i className="bi bi-file-pdf"></i> Export PDF
               </button>
-              <button className="btn-export btn-export-excel" onClick={exportExcel} disabled={reportData.length === 0}>
-                <i className="bi bi-file-excel"></i> Export Excel
+              <button className="btn-export btn-export-excel" onClick={exportCSV} disabled={reportData.length === 0}>
+                <i className="bi bi-filetype-csv"></i> Export CSV
               </button>
             </div>
           </div>
