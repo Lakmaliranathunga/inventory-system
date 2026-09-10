@@ -228,7 +228,6 @@ const Users = () => {
           <table className="users-table">
             <thead>
               <tr>
-                <th>#</th>
                 <th>User</th>
                 <th>Employee No</th>
                 <th>Role</th>
@@ -239,9 +238,8 @@ const Users = () => {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((u, i) => (
+              {filtered.map((u) => (
                 <tr key={u.uId}>
-                  <td style={{ color: '#94a3b8', fontSize: '0.8rem' }}>{i + 1}</td>
                   <td>
                     <div className="user-name-cell">
                       <div className="user-avatar-sm">{u.uFullName?.charAt(0).toUpperCase()}</div>
