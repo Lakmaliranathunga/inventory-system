@@ -113,7 +113,7 @@
 }
 
 .category-card-title {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
   margin: 0;
   color: #0d6efd;
@@ -132,8 +132,8 @@
   color: #fff;
   border: 1px solid #0d6efd;
   border-radius: 8px;
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   cursor: pointer;
   display: flex;
@@ -141,6 +141,11 @@
   justify-content: center;
   transition: all 0.2s;
   flex: 0 0 auto;
+}
+
+.category-action-btn i {
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .category-action-btn:hover {
@@ -158,7 +163,7 @@
 }
 
 .category-card-body {
-  padding: 20px;
+  padding: 16px;
   flex: 1;
 }
 
@@ -258,7 +263,7 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
-  padding: 12px 4px;
+  padding: 11px 4px;
   border-bottom: 1px solid #e2e8f0;
 }
 
@@ -269,16 +274,17 @@
 .category-list-item-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 4px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 2px;
 }
 
 .category-item-name {
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 700;
   color: #1e293b;
   overflow-wrap: anywhere;
-  line-height: 1.35;
+  line-height: 1.3;
 }
 
 .category-row-actions {
@@ -289,10 +295,10 @@
 }
 
 .category-icon-btn {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border: 1px solid #dbe4ee;
-  border-radius: 8px;
+  border-radius: 6px;
   background: #fff;
   color: #475569;
   cursor: pointer;
@@ -300,6 +306,11 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+}
+
+.category-icon-btn i {
+  font-size: 0.9rem;
+  line-height: 1;
 }
 
 .category-icon-btn:not(.is-danger) {
@@ -336,7 +347,8 @@
 }
 
 .category-item-meta {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
   color: #64748b;
   overflow-wrap: anywhere;
 }
