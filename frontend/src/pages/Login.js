@@ -40,7 +40,14 @@ function Login() {
         setError(response.data?.message || "Invalid credentials.");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Server error. Please try again later.");
+      const status = err.response?.status;
+      const message = err.response?.data?.message;
+
+      if (status === 401) {
+        setError(message || "Invalid username or password.");
+      } else {
+        setError(message || "Server error. Please try again later.");
+      }
     } finally {
       setLoading(false);
     }
@@ -75,7 +82,11 @@ function Login() {
             <h1 className="welcome-title">Welcome back</h1>
             <p className="login-intro">Sign in to manage inventory, suppliers, invoices, and reports.</p>
 
-            {error && <div className="login-error-message">{error}</div>}
+            {error && (
+              <div className="login-error-message" role="alert" aria-live="assertive">
+                {error}
+              </div>
+            )}
 
             <form onSubmit={handleLogin} className="login-form">
               <div className="login-input-group">

@@ -150,13 +150,12 @@ const Suppliers = () => {
                     <th>Phone</th>
                     <th>Email</th>
                     <th>Address</th>
-                    <th>Remarks</th>
                     <th style={{ textAlign: 'center' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredSuppliers.length === 0 ? (
-                    <tr><td colSpan="7" className="suppliers-empty-state">No suppliers found</td></tr>
+                    <tr><td colSpan="6" className="suppliers-empty-state">No suppliers found</td></tr>
                   ) : (
                     filteredSuppliers.map(supplier => (
                       <tr key={supplier.supplierId}>
@@ -165,7 +164,6 @@ const Suppliers = () => {
                         <td>{supplier.contactNo}</td>
                         <td>{supplier.email}</td>
                         <td>{supplier.address}</td>
-                        <td><span style={{ color: '#6c757d', fontSize: '0.875rem' }}>{supplier.remarks || '-'}</span></td>
                         <td>
                           <div className="suppliers-action-group">
                             <button onClick={() => openEditModal(supplier)} className="suppliers-action-btn suppliers-action-btn--edit">

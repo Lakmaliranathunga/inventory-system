@@ -11,7 +11,13 @@
   <body>
     <noscript>JavaScript is required to use this application.</noscript>
     <div id="root"></div>
+    <script>
+      const redirect = sessionStorage.redirect;
+      delete sessionStorage.redirect;
+      if (redirect && redirect !== location.href) {
+        history.replaceState(null, '', redirect);
+      }
+    </script>
     <script type="module" src="/src/index.js"></script>
   </body>
 </html>
-

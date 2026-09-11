@@ -8,6 +8,8 @@ const ChangePassword = () => {
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const requestOtp = async () => {
@@ -87,24 +89,48 @@ const ChangePassword = () => {
 
           <label>
             New Password
-            <input
-              type="password"
-              value={newPassword}
-              onChange={e => setNewPassword(e.target.value)}
-              placeholder="Minimum 8 characters"
-              disabled={!otpSent}
-            />
+            <span className="password-input-wrap">
+              <input
+                type={showNewPassword ? 'text' : 'password'}
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                placeholder="Minimum 8 characters"
+                disabled={!otpSent}
+              />
+              <button
+                type="button"
+                className="password-view-btn"
+                onClick={() => setShowNewPassword(value => !value)}
+                disabled={!otpSent}
+                aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
+                title={showNewPassword ? 'Hide password' : 'Show password'}
+              >
+                <i className={`bi ${showNewPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
+              </button>
+            </span>
           </label>
 
           <label>
             Confirm Password
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={e => setConfirmPassword(e.target.value)}
-              placeholder="Re-enter new password"
-              disabled={!otpSent}
-            />
+            <span className="password-input-wrap">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                placeholder="Re-enter new password"
+                disabled={!otpSent}
+              />
+              <button
+                type="button"
+                className="password-view-btn"
+                onClick={() => setShowConfirmPassword(value => !value)}
+                disabled={!otpSent}
+                aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                title={showConfirmPassword ? 'Hide password' : 'Show password'}
+              >
+                <i className={`bi ${showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
+              </button>
+            </span>
           </label>
 
           <button type="submit" className="password-change-btn" disabled={!otpSent || loading}>

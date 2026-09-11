@@ -20,7 +20,7 @@ const ChangePassword = lazy(() => import("./pages/ChangePassword"));
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/inventory-system">
       <Suspense fallback={<div className="page-loading"><span className="app-loader" />Loading workspace...</div>}>
         <Routes>
           <Route path="/" element={<Login />} />

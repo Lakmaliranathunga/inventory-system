@@ -1074,10 +1074,13 @@ app.post("/api/inventory", verifyToken, verifyEditor, async (req, res) => {
       [subCategoryId, year]
     );
     const sequenceStart = Number(sequenceRows[0].count);
+    const itemCodePrefix = `${divCode}/${itemTypeCode}/${mainCatCode}/${subCatCode}/${year}`;
 
     for (let i = 1; i <= qtyNum; i++) {
-        const sequence = String(sequenceStart + i).padStart(5, '0');
-        const generatedItemCode = `${divCode}/${itemTypeCode}/${mainCatCode}/${subCatCode}/${year}/${sequence}`;
+        const sequenceNumber = sequenceStart + i;
+        const generatedItemCode = qtyNum > 1
+          ? `${itemCodePrefix}/${sequenceNumber}/${qtyNum}`
+          : `${itemCodePrefix}/${String(sequenceNumber).padStart(5, '0')}`;
 
         const sql = `
           INSERT INTO inventory_items (
