@@ -19,7 +19,7 @@ const menuItems = [
 const Sidebar = ({ open, onClose }) => {
   const navigate = useNavigate();
   const user = getStoredUser();
-  const isAdmin = user.roleId === 1 || user.roleId === '1';
+  const canManageUsers = user.roleId === 4 || user.roleId === '4';
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -49,7 +49,7 @@ const Sidebar = ({ open, onClose }) => {
           </li>
         ))}
 
-        {isAdmin && (
+        {canManageUsers && (
           <li>
             <NavLink to="/users" onClick={onClose} className={({ isActive }) => isActive ? 'sidebar-link active' : 'sidebar-link'}>
               <i className="bi bi-people-fill"></i>

@@ -16,9 +16,9 @@ before(async () => {
       resolve();
     });
   });
-  const [admins] = await db.promise().query("SELECT uId, uUsername, roleId FROM users WHERE flag=1 AND uStatus='Active' AND roleId=1 LIMIT 1");
-  assert.ok(admins.length, 'An active administrator is required for integration tests');
-  authHeader = `Bearer ${jwt.sign({ id: admins[0].uId, username: admins[0].uUsername, roleId: admins[0].roleId }, jwtSecret, { expiresIn: '5m' })}`;
+  const [users] = await db.promise().query("SELECT uId, uUsername, roleId FROM users WHERE flag=1 AND uStatus='Active' LIMIT 1");
+  assert.ok(users.length, 'An active user is required for integration tests');
+  authHeader = `Bearer ${jwt.sign({ id: users[0].uId, username: users[0].uUsername, roleId: users[0].roleId }, jwtSecret, { expiresIn: '5m' })}`;
 });
 
 after(async () => {

@@ -11,7 +11,7 @@ const emptyForm = {
 
 const Users = () => {
   const user = getStoredUser();
-  const isAdmin = user.roleId === 1 || user.roleId === '1';
+  const canManageUsers = user.roleId === 4 || user.roleId === '4';
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
   const [divisions, setDivisions] = useState([]);
@@ -28,7 +28,7 @@ const Users = () => {
   const [phoneError, setPhoneError] = useState('');
 
   useEffect(() => {
-    if (!isAdmin) { setLoading(false); return; }
+    if (!canManageUsers) { setLoading(false); return; }
     fetchAll();
   }, []);
 
@@ -182,7 +182,7 @@ const Users = () => {
   );
 
   /* ──────────── ACCESS DENIED ──────────── */
-  if (!isAdmin) {
+  if (!canManageUsers) {
     return (
       <div className="users-page">
         <div className="access-denied">

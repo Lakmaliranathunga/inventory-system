@@ -429,16 +429,16 @@ const verifyToken = (req, res, next) => {
   });
 };
 
-// MIDDLEWARE: VERIFY ADMIN (roleId = 1)
-const verifyAdmin = (req, res, next) => {
-  if (req.userRole !== 1 && req.userRole !== "1") {
-    return res.status(403).json({ success: false, message: "Access denied. Admins only." });
+// MIDDLEWARE: VERIFY ADMIN OFFICER (roleId = 4)
+const verifyAdminOfficer = (req, res, next) => {
+  if (Number(req.userRole) !== 4) {
+    return res.status(403).json({ success: false, message: "Access denied. Admin Officers only." });
   }
   next();
 };
 
 const verifyEditor = (req, res, next) => {
-  const allowed = [1, 3, 4]; // Admin, Inventory Officer, Admin Officer
+  const allowed = [1, 2, 3, 4]; // All active roles can manage operational data.
   if (!allowed.includes(Number(req.userRole))) {
     return res.status(403).json({ success: false, message: "This account has read-only access." });
   }
@@ -645,7 +645,7 @@ app.get("/api/dashboard/stats", verifyToken, async (req, res) => {
 // =========================
 // USER MANAGEMENT APIs (Admin Only)
 // =========================
-app.get("/api/users", verifyToken, verifyAdmin, (req, res) => {
+app.get("/api/users", verifyToken, verifyAdminOfficer, (req, res) => {
   const sql = `
     SELECT u.uId, u.uUsername, u.uFullName, u.uEmpNo, u.uStatus, u.contactNo, u.uEmail,
            u.roleId, r.roleName, u.divisionId, d.description as divisionName,
@@ -663,7 +663,7 @@ app.get("/api/users", verifyToken, verifyAdmin, (req, res) => {
   });
 });
 
-app.post("/api/users", verifyToken, verifyAdmin, async (req, res) => {
+app.post("/api/users", verifyToken, verifyAdminOfficer, async (req, res) => {
   const { uFullName, uPassword, uStatus, uEmpNo, roleId, sectionId, divisionId, contactNo } = req.body;
   const uUsername = String(req.body.uUsername || '').trim();
   const uEmail = String(req.body.uEmail || '').trim();
@@ -722,7 +722,7 @@ app.post("/api/users", verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
-app.put("/api/users/:id", verifyToken, verifyAdmin, async (req, res) => {
+app.put("/api/users/:id", verifyToken, verifyAdminOfficer, async (req, res) => {
   const { id } = req.params;
   const { uFullName, uPassword, uStatus, uEmpNo, roleId, sectionId, divisionId, contactNo } = req.body;
   const uUsername = String(req.body.uUsername || '').trim();
@@ -760,7 +760,7 @@ app.put("/api/users/:id", verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
-app.delete("/api/users/:id", verifyToken, verifyAdmin, (req, res) => {
+app.delete("/api/users/:id", verifyToken, verifyAdminOfficer, (req, res) => {
   const { id } = req.params;
   if (parseInt(id) === req.userId) {
     return res.status(400).json({ success: false, message: "You cannot deactivate your own account." });
