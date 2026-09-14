@@ -243,11 +243,11 @@ const Invoices = () => {
                       </select>
                     </div>
                     <div className="invoices-form-group col-span-6">
-                      <label className="invoices-form-label">PO No (Optional)</label>
+                      <label className="invoices-form-label">PO No</label>
                       <input type="text" className="invoices-form-input" name="poNo" value={formData.poNo} onChange={handleInputChange} />
                     </div>
                     <div className="invoices-form-group col-span-6">
-                      <label className="invoices-form-label">PO Date (Optional)</label>
+                      <label className="invoices-form-label">PO Date</label>
                       <input type="date" className="invoices-form-input" name="poDate" value={formData.poDate} onChange={handleInputChange} />
                     </div>
                     <div className="invoices-form-group col-span-6">

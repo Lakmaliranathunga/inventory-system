@@ -313,10 +313,27 @@ app.post("/login", loginRateLimit, (req, res) => {
 
     const user = result[0];
 
-    const match = await bcrypt.compare(
-      uPassword,
-      user.uPassword
-    );
+    if (!user.uPassword || !String(user.uPassword).startsWith('$2')) {
+      console.error(`Invalid password hash for user ${user.uUsername}`);
+      return res.status(401).json({
+        success: false,
+        message: "Invalid username or password."
+      });
+    }
+
+    let match = false;
+    try {
+      match = await bcrypt.compare(
+        uPassword,
+        user.uPassword
+      );
+    } catch (error) {
+      console.error(`Password check failed for user ${user.uUsername}:`, error.message || error);
+      return res.status(401).json({
+        success: false,
+        message: "Invalid username or password."
+      });
+    }
 
     if (match) {
       loginAttempts.delete(req.ip);
