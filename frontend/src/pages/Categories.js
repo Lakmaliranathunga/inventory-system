@@ -179,7 +179,7 @@ const Categories = () => {
   };
 
   const deleteCategory = async (type, id) => {
-    if (!window.confirm('Delete this category? This is allowed only when it is not in use.')) return;
+    if (!window.confirm('Delete this category? Existing inventory records will be kept.')) return;
     const resource = type === 'item' ? 'item-types' : type === 'main' ? 'main-categories' : 'sub-categories';
     try {
       await api.delete(`/api/categories/${resource}/${id}`);

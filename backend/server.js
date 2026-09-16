@@ -176,10 +176,6 @@ const sendAccountEmail = async ({ to, fullName, username, password }) => {
       `Username: <strong>${escapeHtml(username)}</strong><br>Temporary password: <strong>${escapeHtml(password)}</strong>`,
       'Please sign in and change your password after your first login. Keep these credentials private.',
     ],
-    action: {
-      label: 'Sign in to the portal',
-      href: mailBrand.signInUrl,
-    },
   });
 
   await transporter.sendMail({
@@ -193,8 +189,6 @@ const sendAccountEmail = async ({ to, fullName, username, password }) => {
       '',
       `Username: ${username}`,
       `Temporary password: ${password}`,
-      '',
-      `Sign in: ${mailBrand.signInUrl}`,
       '',
       'Please change your password after your first login and keep these credentials private.',
     ].join('\n'),
@@ -834,13 +828,42 @@ app.put("/api/categories/item-types/:id", verifyToken, verifyEditor, (req, res) 
 
 app.delete("/api/categories/item-types/:id", verifyToken, verifyEditor, (req, res) => {
   const { id } = req.params;
-  const sql = `UPDATE item_types SET flag=0, deletedBy=?, deletedDate=NOW()
-               WHERE itemTypeId=? AND NOT EXISTS (SELECT 1 FROM main_categories WHERE itemTypeId=? AND flag=1)
-               AND NOT EXISTS (SELECT 1 FROM inventory_items WHERE itemTypeId=? AND flag=1)`;
-  db.query(sql, [req.userId, id, id, id], (err, result) => {
-    if (err) return res.status(500).json({ success: false, error: err });
-    if (!result.affectedRows) return res.status(409).json({ success: false, message: "Item type is in use and cannot be deleted." });
-    res.json({ success: true, message: "Item type deleted!" });
+  db.getConnection((connErr, connection) => {
+    if (connErr) return res.status(500).json({ success: false, error: connErr });
+    connection.beginTransaction((txErr) => {
+      if (txErr) {
+        connection.release();
+        return res.status(500).json({ success: false, error: txErr });
+      }
+
+      const queries = [
+        ['UPDATE sub_categories s JOIN main_categories m ON s.mainCategoryId = m.mainCategoryId SET s.flag=0, s.deletedBy=?, s.deletedDate=NOW() WHERE m.itemTypeId=?', [req.userId, id]],
+        ['UPDATE main_categories SET flag=0, deletedBy=?, deletedDate=NOW() WHERE itemTypeId=?', [req.userId, id]],
+        ['UPDATE item_types SET flag=0, deletedBy=?, deletedDate=NOW() WHERE itemTypeId=?', [req.userId, id]],
+      ];
+
+      const runNext = (index = 0) => {
+        if (index >= queries.length) {
+          return connection.commit((commitErr) => {
+            connection.release();
+            if (commitErr) return res.status(500).json({ success: false, error: commitErr });
+            res.json({ success: true, message: "Item type deleted!" });
+          });
+        }
+
+        connection.query(queries[index][0], queries[index][1], (err) => {
+          if (err) {
+            return connection.rollback(() => {
+              connection.release();
+              res.status(500).json({ success: false, error: err });
+            });
+          }
+          runNext(index + 1);
+        });
+      };
+
+      runNext();
+    });
   });
 });
 
@@ -880,13 +903,38 @@ app.put("/api/categories/main-categories/:id", verifyToken, verifyEditor, (req, 
 
 app.delete("/api/categories/main-categories/:id", verifyToken, verifyEditor, (req, res) => {
   const { id } = req.params;
-  const sql = `UPDATE main_categories SET flag=0, deletedBy=?, deletedDate=NOW()
-               WHERE mainCategoryId=? AND NOT EXISTS (SELECT 1 FROM sub_categories WHERE mainCategoryId=? AND flag=1)
-               AND NOT EXISTS (SELECT 1 FROM inventory_items WHERE mainCategoryId=? AND flag=1)`;
-  db.query(sql, [req.userId, id, id, id], (err, result) => {
-    if (err) return res.status(500).json({ success: false, error: err });
-    if (!result.affectedRows) return res.status(409).json({ success: false, message: "Main category is in use and cannot be deleted." });
-    res.json({ success: true, message: "Main category deleted!" });
+  db.getConnection((connErr, connection) => {
+    if (connErr) return res.status(500).json({ success: false, error: connErr });
+    connection.beginTransaction((txErr) => {
+      if (txErr) {
+        connection.release();
+        return res.status(500).json({ success: false, error: txErr });
+      }
+
+      connection.query('UPDATE sub_categories SET flag=0, deletedBy=?, deletedDate=NOW() WHERE mainCategoryId=?', [req.userId, id], (subErr) => {
+        if (subErr) {
+          return connection.rollback(() => {
+            connection.release();
+            res.status(500).json({ success: false, error: subErr });
+          });
+        }
+
+        connection.query('UPDATE main_categories SET flag=0, deletedBy=?, deletedDate=NOW() WHERE mainCategoryId=?', [req.userId, id], (mainErr) => {
+          if (mainErr) {
+            return connection.rollback(() => {
+              connection.release();
+              res.status(500).json({ success: false, error: mainErr });
+            });
+          }
+
+          connection.commit((commitErr) => {
+            connection.release();
+            if (commitErr) return res.status(500).json({ success: false, error: commitErr });
+            res.json({ success: true, message: "Main category deleted!" });
+          });
+        });
+      });
+    });
   });
 });
 
@@ -927,11 +975,10 @@ app.put("/api/categories/sub-categories/:id", verifyToken, verifyEditor, (req, r
 
 app.delete("/api/categories/sub-categories/:id", verifyToken, verifyEditor, (req, res) => {
   const { id } = req.params;
-  const sql = `UPDATE sub_categories SET flag=0, deletedBy=?, deletedDate=NOW()
-               WHERE subCategoryId=? AND NOT EXISTS (SELECT 1 FROM inventory_items WHERE subCategoryId=? AND flag=1)`;
-  db.query(sql, [req.userId, id, id], (err, result) => {
+  const sql = `UPDATE sub_categories SET flag=0, deletedBy=?, deletedDate=NOW() WHERE subCategoryId=?`;
+  db.query(sql, [req.userId, id], (err, result) => {
     if (err) return res.status(500).json({ success: false, error: err });
-    if (!result.affectedRows) return res.status(409).json({ success: false, message: "Subcategory is in use and cannot be deleted." });
+    if (!result.affectedRows) return res.status(404).json({ success: false, message: "Subcategory not found." });
     res.json({ success: true, message: "Sub category deleted!" });
   });
 });
@@ -1033,8 +1080,9 @@ app.post("/api/inventory", verifyToken, verifyEditor, async (req, res) => {
       !Number.isInteger(qtyNum) || qtyNum < 1 || qtyNum > 500 || !purchaseDate || !warrantyExpireDate) {
     return res.status(400).json({ success: false, message: "Valid categories, location, invoice, dates, and quantity (1-500) are required." });
   }
-  if (qtyNum === 1 && !String(serialNumber || '').trim()) {
-    return res.status(400).json({ success: false, message: "A serial number is required for an individual asset." });
+  const serialValue = String(serialNumber || '').trim();
+  if (!serialValue) {
+    return res.status(400).json({ success: false, message: "A serial number is required." });
   }
 
   const connection = await db.promise().getConnection();
@@ -1092,12 +1140,11 @@ app.post("/api/inventory", verifyToken, verifyEditor, async (req, res) => {
     );
     const sequenceStart = Number(sequenceRows[0].count);
     const itemCodePrefix = `${divCode}/${itemTypeCode}/${mainCatCode}/${subCatCode}/${year}`;
+    const serialCode = serialValue.toUpperCase().replace(/[^A-Z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'SN';
 
     for (let i = 1; i <= qtyNum; i++) {
         const sequenceNumber = sequenceStart + i;
-        const generatedItemCode = qtyNum > 1
-          ? `${itemCodePrefix}/${sequenceNumber}/${qtyNum}`
-          : `${itemCodePrefix}/${String(sequenceNumber).padStart(5, '0')}`;
+        const generatedItemCode = `${itemCodePrefix}/${sequenceNumber}/${serialCode}`;
 
         const sql = `
           INSERT INTO inventory_items (
@@ -1107,7 +1154,7 @@ app.post("/api/inventory", verifyToken, verifyEditor, async (req, res) => {
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const values = [
-          generatedItemCode, itemName, (qtyNum === 1 ? serialNumber || null : null), itemTypeId, mainCategoryId,
+          generatedItemCode, itemName, serialValue, itemTypeId, mainCategoryId,
           subCategoryId, divisionId, sectionId, 1, 'Good',
           purchaseDate || null, warrantyExpireDate || null, remarks || null, invoiceId || null, req.userId
         ];

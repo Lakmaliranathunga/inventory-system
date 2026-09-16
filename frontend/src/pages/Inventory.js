@@ -152,12 +152,7 @@ const Inventory = () => {
       toast.warning('Please enter Quantity.');
       return;
     }
-    // Asset / Serial No. validation for individual item tracking (quantity == 1 or when editing)
-    if (!isEdit && parseInt(formData.quantity || 1) === 1 && !formData.serialNumber.trim()) {
-      toast.warning('Please enter Asset / Serial No.');
-      return;
-    }
-    if (isEdit && !formData.serialNumber.trim()) {
+    if (!formData.serialNumber.trim()) {
       toast.warning('Please enter Asset / Serial No.');
       return;
     }
@@ -400,9 +395,8 @@ const Inventory = () => {
                         name="serialNumber" 
                         value={formData.serialNumber} 
                         onChange={handleInputChange} 
-                        placeholder={(!isEdit && parseInt(formData.quantity || 1) > 1) ? 'Disabled for Qty > 1' : 'Enter Asset / Serial No.'}
-                        disabled={!isEdit && parseInt(formData.quantity || 1) > 1}
-                        required={isEdit || parseInt(formData.quantity || 1) === 1}
+                        placeholder="Enter Asset / Serial No."
+                        required
                       />
                     </div>
                     <div className="inventory-form-group col-span-8">
@@ -412,19 +406,8 @@ const Inventory = () => {
                   </div>
 
                   {/* Section 2: Purchase & Invoice Details */}
-                  <div className="inventory-form-section" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span>
-                      <i className="bi bi-receipt" style={{ marginRight: '6px' }}></i> Purchase & Invoice Details
-                    </span>
-                    <a 
-                      href="/invoices" 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      style={{ fontSize: '0.8rem', color: '#0d6efd', textDecoration: 'none', fontWeight: '500', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                      title="Open Invoice Management in a new browser tab to create/view invoices"
-                    >
-                      <i className="bi bi-plus-circle"></i> Create / Manage Invoices in New Tab <i className="bi bi-box-arrow-up-right" style={{ fontSize: '0.75rem' }}></i>
-                    </a>
+                  <div className="inventory-form-section">
+                    <i className="bi bi-receipt" style={{ marginRight: '6px' }}></i> Purchase & Invoice Details
                   </div>
                   <div className="inventory-form-grid">
                     <div className="inventory-form-group col-span-4" style={{ position: 'relative' }}>

@@ -11,7 +11,7 @@ const StockAdjustments = () => {
   // Form State
   const [formData, setFormData] = useState({
     itemId: '',
-    adjustmentType: 'DAMAGED',
+    adjustmentType: '',
     quantity: '1',
     remarks: '',
     adjustmentDate: new Date().toISOString().slice(0, 16)
@@ -81,7 +81,7 @@ const StockAdjustments = () => {
       resetForm();
       fetchData();
     } catch (error) {
-      toast.error('Failed to save adjustment');
+      toast.error(error.response?.data?.message || 'Failed to save adjustment');
       console.error(error);
     }
   };
@@ -89,7 +89,7 @@ const StockAdjustments = () => {
   const resetForm = () => {
     setFormData({
       itemId: '',
-      adjustmentType: 'DAMAGED',
+      adjustmentType: '',
       quantity: '1',
       remarks: '',
       adjustmentDate: new Date().toISOString().slice(0, 16)
@@ -126,7 +126,7 @@ const StockAdjustments = () => {
           fetchData();
         }
       } catch (error) {
-        toast.error('Failed to delete adjustment');
+        toast.error(error.response?.data?.message || 'Failed to delete adjustment');
       }
     }
   };
@@ -237,6 +237,7 @@ const StockAdjustments = () => {
                     onChange={handleInputChange}
                     required
                   >
+                    <option value="">Select Type</option>
                     <option value="DAMAGED">Damage</option>
                     <option value="DISPOSAL">Disposal</option>
                   </select>

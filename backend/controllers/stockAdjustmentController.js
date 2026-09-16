@@ -34,9 +34,15 @@ const StockAdjustmentController = {
     };
 
     StockAdjustmentModel.create(data, (err) => {
-      if (err) return res.status(500).json({ success: false, error: err });
+      if (err) {
+        console.error('Unable to create stock adjustment:', err.message || err);
+        return res.status(500).json({ success: false, message: "Unable to save adjustment." });
+      }
       StockAdjustmentModel.syncItemCondition(itemId, (syncErr) => {
-        if (syncErr) return res.status(500).json({ success: false, message: "Adjustment saved, but item condition could not be synchronized." });
+        if (syncErr) {
+          console.error('Unable to synchronize item condition:', syncErr.message || syncErr);
+          return res.status(500).json({ success: false, message: "Adjustment saved, but item condition could not be synchronized." });
+        }
         res.status(201).json({ success: true, message: "Stock adjustment created successfully!" });
       });
     });
