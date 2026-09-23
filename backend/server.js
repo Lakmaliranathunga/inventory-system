@@ -16,14 +16,20 @@ try {
 
 const app = express();
 
-app.disable('x-powered-by');
-app.use(cors({
+const corsOptions = {
   origin(origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
     return callback(new Error('Origin is not allowed by CORS'));
   },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'ngrok-skip-browser-warning'],
   credentials: false,
-}));
+  optionsSuccessStatus: 204,
+};
+
+app.disable('x-powered-by');
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 app.use(express.json({ limit: '1mb' }));
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -1081,9 +1087,6 @@ app.post("/api/inventory", verifyToken, verifyEditor, async (req, res) => {
     return res.status(400).json({ success: false, message: "Valid categories, location, invoice, dates, and quantity (1-500) are required." });
   }
   const serialValue = String(serialNumber || '').trim();
-  if (!serialValue) {
-    return res.status(400).json({ success: false, message: "A serial number is required." });
-  }
 
   const connection = await db.promise().getConnection();
   const year = new Date().getFullYear();
@@ -1140,11 +1143,10 @@ app.post("/api/inventory", verifyToken, verifyEditor, async (req, res) => {
     );
     const sequenceStart = Number(sequenceRows[0].count);
     const itemCodePrefix = `${divCode}/${itemTypeCode}/${mainCatCode}/${subCatCode}/${year}`;
-    const serialCode = serialValue.toUpperCase().replace(/[^A-Z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'SN';
 
     for (let i = 1; i <= qtyNum; i++) {
         const sequenceNumber = sequenceStart + i;
-        const generatedItemCode = `${itemCodePrefix}/${sequenceNumber}/${serialCode}`;
+        const generatedItemCode = `${itemCodePrefix}/${sequenceNumber}/${qtyNum}`;
 
         const sql = `
           INSERT INTO inventory_items (
@@ -1154,7 +1156,7 @@ app.post("/api/inventory", verifyToken, verifyEditor, async (req, res) => {
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const values = [
-          generatedItemCode, itemName, serialValue, itemTypeId, mainCategoryId,
+          generatedItemCode, itemName, serialValue || null, itemTypeId, mainCategoryId,
           subCategoryId, divisionId, sectionId, 1, 'Good',
           purchaseDate || null, warrantyExpireDate || null, remarks || null, invoiceId || null, req.userId
         ];
@@ -1185,8 +1187,8 @@ app.put("/api/inventory/:id", verifyToken, verifyEditor, async (req, res) => {
   } = req.body;
 
   if (![itemTypeId, mainCategoryId, subCategoryId, divisionId, sectionId, invoiceId].every(Boolean) ||
-      !String(serialNumber || '').trim() || !purchaseDate || !warrantyExpireDate) {
-    return res.status(400).json({ success: false, message: "Categories, location, serial number, invoice, and dates are required." });
+      !purchaseDate || !warrantyExpireDate) {
+    return res.status(400).json({ success: false, message: "Categories, location, invoice, and dates are required." });
   }
   try {
     const subCatRes = await new Promise((resolve, reject) => {
@@ -1202,7 +1204,7 @@ app.put("/api/inventory/:id", verifyToken, verifyEditor, async (req, res) => {
       WHERE itemId=?
     `;
     const values = [
-      itemName, serialNumber || null, itemTypeId, mainCategoryId,
+      itemName, String(serialNumber || '').trim() || null, itemTypeId, mainCategoryId,
       subCategoryId, divisionId, sectionId,
       purchaseDate || null, warrantyExpireDate || null, remarks || null, invoiceId || null, req.userId, id
     ];
