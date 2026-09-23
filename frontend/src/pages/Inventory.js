@@ -152,10 +152,6 @@ const Inventory = () => {
       toast.warning('Please enter Quantity.');
       return;
     }
-    if (!formData.serialNumber.trim()) {
-      toast.warning('Please enter Asset / Serial No.');
-      return;
-    }
     if (!formData.invoiceId) {
       toast.warning('Please select an Invoice / PO No.');
       return;
@@ -396,7 +392,6 @@ const Inventory = () => {
                         value={formData.serialNumber} 
                         onChange={handleInputChange} 
                         placeholder="Enter Asset / Serial No."
-                        required
                       />
                     </div>
                     <div className="inventory-form-group col-span-8">
