@@ -1137,10 +1137,12 @@ app.post("/api/inventory", verifyToken, verifyEditor, async (req, res) => {
     );
     const sequenceStart = Number(sequenceRows[0].count);
     const itemCodePrefix = `${divCode}/${itemTypeCode}/${mainCatCode}/${subCatCode}/${year}`;
+    const generatedItemCodes = [];
 
     for (let i = 1; i <= qtyNum; i++) {
         const sequenceNumber = sequenceStart + i;
         const generatedItemCode = `${itemCodePrefix}/${sequenceNumber}/${qtyNum}`;
+        generatedItemCodes.push(generatedItemCode);
 
         const sql = `
           INSERT INTO inventory_items (
@@ -1159,7 +1161,14 @@ app.post("/api/inventory", verifyToken, verifyEditor, async (req, res) => {
     }
 
     await connection.commit();
-    res.json({ success: true, message: "Item(s) added successfully!" });
+    const codeSummary = generatedItemCodes.length === 1
+      ? generatedItemCodes[0]
+      : `${generatedItemCodes[0]} to ${generatedItemCodes[generatedItemCodes.length - 1]}`;
+    res.json({
+      success: true,
+      message: `Item(s) added successfully: ${codeSummary}`,
+      itemCodes: generatedItemCodes
+    });
   } catch (err) {
     await connection.rollback();
     console.error(err);

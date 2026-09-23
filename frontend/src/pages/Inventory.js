@@ -174,8 +174,8 @@ const Inventory = () => {
         await api.put(`/api/inventory/${formData.itemId}`, formData);
         toast.success('Item updated successfully');
       } else {
-        await api.post('/api/inventory', formData);
-        toast.success('Item added successfully');
+        const response = await api.post('/api/inventory', formData);
+        toast.success(response.data?.message || 'Item added successfully');
       }
       
       closeModal();
