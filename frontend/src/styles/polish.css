@@ -61,18 +61,22 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .login-main-content {
-  padding: 40px 20px;
-  background: radial-gradient(circle at 18% 15%, rgba(35, 130, 196, 0.22), transparent 29%), radial-gradient(circle at 83% 80%, rgba(242, 183, 5, 0.1), transparent 24%), linear-gradient(135deg, #061426, #0b2239 54%, #153f66);
+  padding: 48px clamp(130px, 16vw, 280px) 48px clamp(24px, 5vw, 84px);
+  gap: clamp(28px, 5vw, 76px);
+  justify-content: flex-end;
+  background:
+    linear-gradient(90deg, rgba(3, 16, 30, 0.64) 0%, rgba(7, 28, 49, 0.42) 42%, rgba(6, 20, 38, 0.22) 100%),
+    url("../assets/images/login-port-inventory-bg.png") center / cover no-repeat;
 }
 
 .login-left-pane {
   max-width: 470px;
   margin: 0;
   padding: 32px 42px 38px;
-  border-color: rgba(255, 255, 255, 0.13);
-  border-radius: 22px;
-  background: rgba(8, 30, 51, 0.74);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.32);
+  border-color: rgba(159, 205, 236, 0.22);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(5, 24, 43, 0.86), rgba(7, 29, 50, 0.72));
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .login-card-logo {
@@ -140,6 +144,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .login-submit-btn:hover {
   background: linear-gradient(145deg, #dc2626, #b91c1c);
   transform: translateY(-1px);
+}
+
+.login-right-pane {
+  display: none;
 }
 
 .login-error-message {
@@ -712,6 +720,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 .login-main-content {
     padding: 24px 14px;
+    justify-content: center;
   }
 
 .login-left-pane {
