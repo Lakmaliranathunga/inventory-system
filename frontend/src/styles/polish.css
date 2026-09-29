@@ -182,8 +182,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .sidebar-container {
   width: 264px;
   z-index: 50;
-  background: radial-gradient(circle at 20% -5%, rgba(35, 130, 196, 0.24), transparent 31%), linear-gradient(180deg, var(--slpa-navy-900), var(--slpa-navy-950));
-  box-shadow: 10px 0 35px rgba(7, 23, 41, 0.1);
+  background:
+    radial-gradient(circle at 20% -5%, rgba(101, 185, 236, 0.22), transparent 32%),
+    linear-gradient(180deg, rgba(14, 45, 73, 0.96), rgba(16, 55, 87, 0.92));
+  box-shadow: 10px 0 35px rgba(4, 18, 32, 0.18);
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
 }
@@ -198,6 +200,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   min-height: 124px;
   padding: 20px 16px 18px;
   text-align: center;
+  background: linear-gradient(180deg, rgba(25, 76, 116, 0.5), rgba(16, 55, 87, 0.18));
+  border-bottom: 1px solid rgba(176, 221, 250, 0.18);
 }
 
 .sidebar-logo .logo-wrapper {
@@ -217,7 +221,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   height: 100%;
   border-radius: 0;
   object-fit: contain;
-  filter: drop-shadow(0 7px 9px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 6px 8px rgba(4, 18, 32, 0.28));
 }
 
 .sidebar-logo h4 {
@@ -231,7 +235,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 .sidebar-logo span {
   display: block;
-  color: #9fb4c8;
+  color: #d0deeb;
   font-size: 0.64rem;
   line-height: 1.2;
 }
@@ -253,7 +257,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   min-height: 46px;
   padding: 11px 14px;
   border-radius: 10px;
-  color: #b9cada;
+  color: #d8e8f4;
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -261,7 +265,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .sidebar-link i {
   width: 22px;
   margin-right: 11px;
-  color: #86a4bf;
+  color: #b9d9ed;
   font-size: 1.05rem;
   text-align: center;
 }
@@ -269,15 +273,15 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .sidebar-link:hover {
   border-left: 0;
   color: #fff;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(216, 238, 252, 0.14);
   transform: translateX(2px);
 }
 
 .sidebar-link.active {
   border-left: 0;
   color: #fff;
-  background: linear-gradient(100deg, rgba(35, 130, 196, 0.34), rgba(35, 130, 196, 0.16));
-  box-shadow: inset 0 0 0 1px rgba(113, 190, 235, 0.12);
+  background: linear-gradient(100deg, rgba(101, 185, 236, 0.32), rgba(216, 238, 252, 0.16));
+  box-shadow: inset 0 0 0 1px rgba(176, 221, 250, 0.2);
 }
 
 .sidebar-link.active::before {
@@ -291,13 +295,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .sidebar-link.active i {
-  color: #6dc2f2;
+  color: #9bdcff;
 }
 
 .sidebar-footer {
   margin-top: auto;
   padding: 16px 18px 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(176, 221, 250, 0.18);
 }
 
 .sidebar-logout-btn {
@@ -305,8 +309,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   gap: 8px;
   min-height: 44px;
   padding-inline: 14px;
-  border-color: rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(216, 238, 252, 0.28);
+  background: rgba(216, 238, 252, 0.08);
 }
 
 .sidebar-close-btn, .header-menu-btn, .sidebar-backdrop {
