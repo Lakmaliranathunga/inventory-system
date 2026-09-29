@@ -109,13 +109,14 @@ const Categories = () => {
     e.preventDefault();
     if (!itemTypeForm.name.trim()) return toast.warning('Enter an item type name');
     try {
-      if (editing.type === 'item') await api.put(`/api/categories/item-types/${editing.id}`, itemTypeForm);
+      const wasEditing = editing.type === 'item';
+      if (wasEditing) await api.put(`/api/categories/item-types/${editing.id}`, itemTypeForm);
       else await api.post('/api/categories/item-types', itemTypeForm);
       setItemTypeForm({ name: '', remarks: '' });
       setShowItemTypeForm(false);
-      fetchCategories();
+      await fetchCategories();
       setEditing({ type: '', id: null });
-      toast.success(editing.type === 'item' ? 'Item type updated' : 'Item type added');
+      toast.success(wasEditing ? 'Item type updated' : 'Item type added');
     } catch (error) {
       console.error(error);
       toast.error(error.response?.data?.message || 'Failed to save item type');
@@ -127,13 +128,14 @@ const Categories = () => {
     if (!mainCategoryForm.itemTypeId) return toast.warning('Select an item type first');
     if (!mainCategoryForm.name.trim()) return toast.warning('Enter a main category name');
     try {
-      if (editing.type === 'main') await api.put(`/api/categories/main-categories/${editing.id}`, mainCategoryForm);
+      const wasEditing = editing.type === 'main';
+      if (wasEditing) await api.put(`/api/categories/main-categories/${editing.id}`, mainCategoryForm);
       else await api.post('/api/categories/main-categories', mainCategoryForm);
       setMainCategoryForm({ itemTypeId: '', name: '', remarks: '' });
       setShowMainCategoryForm(false);
-      fetchCategories();
+      await fetchCategories();
       setEditing({ type: '', id: null });
-      toast.success(editing.type === 'main' ? 'Main category updated' : 'Main category added');
+      toast.success(wasEditing ? 'Main category updated' : 'Main category added');
     } catch (error) {
       console.error(error);
       toast.error(error.response?.data?.message || 'Failed to save main category');
@@ -145,13 +147,14 @@ const Categories = () => {
     if (!subCategoryForm.mainCategoryId) return toast.warning('Select a main category first');
     if (!subCategoryForm.name.trim()) return toast.warning('Enter a sub category name');
     try {
-      if (editing.type === 'sub') await api.put(`/api/categories/sub-categories/${editing.id}`, subCategoryForm);
+      const wasEditing = editing.type === 'sub';
+      if (wasEditing) await api.put(`/api/categories/sub-categories/${editing.id}`, subCategoryForm);
       else await api.post('/api/categories/sub-categories', subCategoryForm);
       setSubCategoryForm({ mainCategoryId: '', name: '', remarks: '' });
       setShowSubCategoryForm(false);
-      fetchCategories();
+      await fetchCategories();
       setEditing({ type: '', id: null });
-      toast.success(editing.type === 'sub' ? 'Subcategory updated' : 'Subcategory added');
+      toast.success(wasEditing ? 'Subcategory updated' : 'Subcategory added');
     } catch (error) {
       console.error(error);
       toast.error(error.response?.data?.message || 'Failed to save subcategory');
@@ -159,18 +162,20 @@ const Categories = () => {
   };
 
   const editCategory = (type, category) => {
-    setEditing({ type, id: category.itemTypeId || category.mainCategoryId || category.subCategoryId });
     if (type === 'item') {
+      setEditing({ type, id: category.itemTypeId });
       setItemTypeForm({ name: category.itemTypeName, remarks: category.remarks || '' });
       setShowItemTypeForm(true);
       setShowMainCategoryForm(false);
       setShowSubCategoryForm(false);
     } else if (type === 'main') {
+      setEditing({ type, id: category.mainCategoryId });
       setMainCategoryForm({ itemTypeId: category.itemTypeId, name: category.mainCategoryName, remarks: category.remarks || '' });
       setShowMainCategoryForm(true);
       setShowItemTypeForm(false);
       setShowSubCategoryForm(false);
     } else {
+      setEditing({ type, id: category.subCategoryId });
       setSubCategoryForm({ mainCategoryId: category.mainCategoryId, name: category.subCategoryName, remarks: category.remarks || '' });
       setShowSubCategoryForm(true);
       setShowItemTypeForm(false);
@@ -184,7 +189,7 @@ const Categories = () => {
     try {
       await api.delete(`/api/categories/${resource}/${id}`);
       toast.success('Category deleted');
-      fetchCategories();
+      await fetchCategories();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Unable to delete category');
     }

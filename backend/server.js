@@ -828,6 +828,7 @@ app.put("/api/categories/item-types/:id", verifyToken, verifyEditor, (req, res) 
   const sql = `UPDATE item_types SET itemTypeName=?, remarks=?, updatedBy=?, updatedDate=NOW() WHERE itemTypeId=?`;
   db.query(sql, [name, remarks, req.userId, id], (err, result) => {
     if (err) return res.status(500).json({ success: false, error: err });
+    if (!result.affectedRows) return res.status(404).json({ success: false, message: "Item type not found." });
     res.json({ success: true, message: "Item type updated!" });
   });
 });
@@ -903,6 +904,7 @@ app.put("/api/categories/main-categories/:id", verifyToken, verifyEditor, (req, 
   const sql = `UPDATE main_categories SET itemTypeId=?, mainCategoryName=?, remarks=?, updatedBy=?, updatedDate=NOW() WHERE mainCategoryId=?`;
   db.query(sql, [itemTypeId, name, remarks, req.userId, id], (err, result) => {
     if (err) return res.status(500).json({ success: false, error: err });
+    if (!result.affectedRows) return res.status(404).json({ success: false, message: "Main category not found." });
     res.json({ success: true, message: "Main category updated!" });
   });
 });
@@ -975,6 +977,7 @@ app.put("/api/categories/sub-categories/:id", verifyToken, verifyEditor, (req, r
   const sql = `UPDATE sub_categories SET mainCategoryId=?, subCategoryName=?, remarks=?, updatedBy=?, updatedDate=NOW() WHERE subCategoryId=?`;
   db.query(sql, [mainCategoryId, name, remarks, req.userId, id], (err, result) => {
     if (err) return res.status(500).json({ success: false, error: err });
+    if (!result.affectedRows) return res.status(404).json({ success: false, message: "Subcategory not found." });
     res.json({ success: true, message: "Sub category updated!" });
   });
 });
