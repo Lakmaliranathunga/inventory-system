@@ -68,7 +68,7 @@
   gap: clamp(28px, 5vw, 76px);
   padding: 48px clamp(130px, 16vw, 280px) 48px clamp(24px, 5vw, 84px);
   background:
-    linear-gradient(90deg, rgba(3, 16, 30, 0.64) 0%, rgba(7, 28, 49, 0.42) 42%, rgba(6, 20, 38, 0.22) 100%),
+    linear-gradient(90deg, rgba(12, 47, 78, 0.44) 0%, rgba(16, 64, 102, 0.3) 44%, rgba(11, 43, 73, 0.18) 100%),
     url("../assets/images/login-port-inventory-bg.png") center / cover no-repeat;
   position: relative;
   align-items: center;
@@ -99,11 +99,11 @@
 }
 
 /* LOGIN CARD */ .login-left-pane {
-  background: linear-gradient(180deg, rgba(5, 24, 43, 0.86), rgba(7, 29, 50, 0.72));
+  background: linear-gradient(180deg, rgba(14, 45, 73, 0.78), rgba(16, 55, 87, 0.66));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(159, 205, 236, 0.22);
-  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(176, 221, 250, 0.3);
+  box-shadow: 0 24px 72px rgba(4, 18, 32, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   border-radius: 18px;
   display: flex;
   justify-content: center;
@@ -181,7 +181,7 @@
 }
 
 .login-input-group label {
-  color: #e2e8f0;
+  color: #e8f3fb;
   font-size: 14px;
   margin-bottom: 8px;
 }

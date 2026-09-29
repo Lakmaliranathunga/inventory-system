@@ -65,7 +65,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   gap: clamp(28px, 5vw, 76px);
   justify-content: flex-end;
   background:
-    linear-gradient(90deg, rgba(3, 16, 30, 0.64) 0%, rgba(7, 28, 49, 0.42) 42%, rgba(6, 20, 38, 0.22) 100%),
+    linear-gradient(90deg, rgba(12, 47, 78, 0.44) 0%, rgba(16, 64, 102, 0.3) 44%, rgba(11, 43, 73, 0.18) 100%),
     url("../assets/images/login-port-inventory-bg.png") center / cover no-repeat;
 }
 
@@ -73,10 +73,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   max-width: 470px;
   margin: 0;
   padding: 32px 42px 38px;
-  border-color: rgba(159, 205, 236, 0.22);
+  border-color: rgba(176, 221, 250, 0.3);
   border-radius: 18px;
-  background: linear-gradient(180deg, rgba(5, 24, 43, 0.86), rgba(7, 29, 50, 0.72));
-  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(14, 45, 73, 0.78), rgba(16, 55, 87, 0.66));
+  box-shadow: 0 24px 72px rgba(4, 18, 32, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .login-card-logo {
@@ -93,7 +93,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   justify-content: center;
   gap: 6px;
   margin-bottom: 8px;
-  color: #7ac5ee;
+  color: #9bdcff;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -109,7 +109,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .login-intro {
   max-width: 340px;
   margin: 0 auto 28px;
-  color: #aebfd0;
+  color: #d0deeb;
   font-size: 0.85rem;
   line-height: 1.55;
   text-align: center;
@@ -120,7 +120,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .login-input-group label {
-  color: #d4e0eb;
+  color: #e8f3fb;
   font-size: 0.8rem;
   font-weight: 600;
 }
@@ -128,7 +128,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .login-input-group input {
   min-height: 50px;
   padding: 13px 15px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(216, 238, 252, 0.32);
   border-radius: 10px;
 }
 
