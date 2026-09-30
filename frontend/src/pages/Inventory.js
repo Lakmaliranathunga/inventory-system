@@ -24,6 +24,8 @@ const Inventory = () => {
     itemCode: '',
     itemName: '',
     serialNumber: '',
+    brandName: '',
+    modelName: '',
     itemTypeId: '',
     mainCategoryId: '',
     subCategoryId: '',
@@ -72,9 +74,27 @@ const Inventory = () => {
     fetchData();
   }, []);
 
+  const selectedItemType = itemTypes.find(t => String(t.itemTypeId) === String(formData.itemTypeId));
+  const isAssetHardware = String(selectedItemType?.itemTypeName || '').toLowerCase().replace(/[^a-z0-9]/g, '') === 'assethardware';
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     let newFormData = { ...formData, [name]: value };
+
+    if (name === 'itemTypeId') {
+      newFormData.mainCategoryId = '';
+      newFormData.subCategoryId = '';
+      const selectedType = itemTypes.find(t => String(t.itemTypeId) === String(value));
+      const assetHardwareSelected = String(selectedType?.itemTypeName || '').toLowerCase().replace(/[^a-z0-9]/g, '') === 'assethardware';
+      if (!assetHardwareSelected) {
+        newFormData.brandName = '';
+        newFormData.modelName = '';
+      }
+    }
+
+    if (name === 'mainCategoryId') {
+      newFormData.subCategoryId = '';
+    }
 
     // Reset sectionId if divisionId changes
     if (name === 'divisionId') {
@@ -95,6 +115,7 @@ const Inventory = () => {
     setIsEdit(false);
     setFormData({
       itemId: '', itemCode: '', itemName: '', serialNumber: '', itemTypeId: '',
+      brandName: '', modelName: '',
       mainCategoryId: '', subCategoryId: '', divisionId: '', sectionId: '',
       quantity: '1', itemCondition: 'New', purchaseDate: '', warrantyExpireDate: '', remarks: '', invoiceId: ''
     });
@@ -108,6 +129,8 @@ const Inventory = () => {
       itemCode: item.itemCode || '',
       itemName: item.itemName || '',
       serialNumber: item.serialNumber || '',
+      brandName: item.brandName || '',
+      modelName: item.modelName || '',
       itemTypeId: item.itemTypeId || '',
       mainCategoryId: item.mainCategoryId || '',
       subCategoryId: item.subCategoryId || '',
@@ -150,6 +173,14 @@ const Inventory = () => {
     }
     if (!formData.quantity) {
       toast.warning('Please enter Quantity.');
+      return;
+    }
+    if (isAssetHardware && !formData.brandName.trim()) {
+      toast.warning('Please enter Brand Name.');
+      return;
+    }
+    if (isAssetHardware && !formData.modelName.trim()) {
+      toast.warning('Please enter Model.');
       return;
     }
     if (!formData.invoiceId) {
@@ -265,6 +296,12 @@ const Inventory = () => {
                           {item.serialNumber && (
                             <div style={{ marginTop: '4px', fontSize: '12px', color: '#6c757d' }}>
                               <i className="bi bi-upc-scan" style={{marginRight:'3px'}}></i> SN: {item.serialNumber}
+                            </div>
+                          )}
+                          {(item.brandName || item.modelName) && (
+                            <div style={{ marginTop: '4px', fontSize: '12px', color: '#6c757d' }}>
+                              {item.brandName && <div>Brand Name - {item.brandName}</div>}
+                              {item.modelName && <div>Model - {item.modelName}</div>}
                             </div>
                           )}
                         </td>
@@ -394,6 +431,34 @@ const Inventory = () => {
                         placeholder="Enter Asset / Serial No."
                       />
                     </div>
+                    {isAssetHardware && (
+                      <>
+                        <div className="inventory-form-group col-span-4">
+                          <label className="inventory-form-label">Brand Name</label>
+                          <input
+                            type="text"
+                            className="inventory-form-input"
+                            name="brandName"
+                            value={formData.brandName}
+                            onChange={handleInputChange}
+                            placeholder="Enter brand name"
+                            required={isAssetHardware}
+                          />
+                        </div>
+                        <div className="inventory-form-group col-span-4">
+                          <label className="inventory-form-label">Model</label>
+                          <input
+                            type="text"
+                            className="inventory-form-input"
+                            name="modelName"
+                            value={formData.modelName}
+                            onChange={handleInputChange}
+                            placeholder="Enter model"
+                            required={isAssetHardware}
+                          />
+                        </div>
+                      </>
+                    )}
                     <div className="inventory-form-group col-span-8">
                       <label className="inventory-form-label">Remarks</label>
                       <textarea className="inventory-form-textarea" name="remarks" rows="1" style={{ height: '42px', resize: 'vertical' }} value={formData.remarks} onChange={handleInputChange}></textarea>

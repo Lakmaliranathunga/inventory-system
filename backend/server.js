@@ -245,6 +245,18 @@ db.query("ALTER TABLE users ADD COLUMN uEmail VARCHAR(255) NULL AFTER contactNo"
   }
 });
 
+db.query("ALTER TABLE inventory_items ADD COLUMN brandName VARCHAR(255) NULL AFTER serialNumber", (err) => {
+  if (err && err.code !== 'ER_DUP_FIELDNAME') {
+    console.error('Unable to ensure inventory_items.brandName column:', err.message || err);
+  }
+});
+
+db.query("ALTER TABLE inventory_items ADD COLUMN modelName VARCHAR(255) NULL AFTER brandName", (err) => {
+  if (err && err.code !== 'ER_DUP_FIELDNAME') {
+    console.error('Unable to ensure inventory_items.modelName column:', err.message || err);
+  }
+});
+
 
 
 // TEST API
@@ -1081,7 +1093,7 @@ app.post("/api/inventory", verifyToken, verifyEditor, async (req, res) => {
   const {
     itemTypeId, mainCategoryId,
     subCategoryId, divisionId, sectionId, quantity, itemCondition,
-    purchaseDate, warrantyExpireDate, remarks, serialNumber, invoiceId
+    purchaseDate, warrantyExpireDate, remarks, serialNumber, brandName, modelName, invoiceId
   } = req.body;
 
   const qtyNum = Number.parseInt(quantity, 10);
@@ -1135,33 +1147,36 @@ app.post("/api/inventory", verifyToken, verifyEditor, async (req, res) => {
 
     const divName = division.description || '';
     const divCode = getDivShortForm(divName, 'DIV');
-    const itemTypeCode = getShortForm(itemType.itemTypeName || '', 'GEN');
+    const itemTypeName = itemType.itemTypeName || '';
+    const itemTypeCode = getShortForm(itemTypeName, 'GEN');
     const mainCatCode = getShortForm(mainCategory.mainCategoryName || '', 'GEN');
     const subCategoryName = subCategory.subCategoryName || 'Unknown';
     const subCatCode = getShortForm(subCategoryName, 'GEN');
     const itemName = subCategoryName;
-    const [sequenceRows] = await connection.execute(
-      "SELECT COUNT(*) AS count FROM inventory_items WHERE subCategoryId=? AND YEAR(createdDate)=? FOR UPDATE",
-      [subCategoryId, year]
-    );
-    const sequenceStart = Number(sequenceRows[0].count);
+    const isAssetHardware = itemTypeName.toLowerCase().replace(/[^a-z0-9]/g, '') === 'assethardware';
+    const brandValue = isAssetHardware ? String(brandName || '').trim() : '';
+    const modelValue = isAssetHardware ? String(modelName || '').trim() : '';
+    if (isAssetHardware && (!brandValue || !modelValue)) {
+      await connection.rollback();
+      return res.status(400).json({ success: false, message: "Brand Name and Model are required for Asset-hardware items." });
+    }
     const itemCodePrefix = `${divCode}/${itemTypeCode}/${mainCatCode}/${subCatCode}/${year}`;
     const generatedItemCodes = [];
 
     for (let i = 1; i <= qtyNum; i++) {
-        const sequenceNumber = sequenceStart + i;
+        const sequenceNumber = i;
         const generatedItemCode = `${itemCodePrefix}/${sequenceNumber}/${qtyNum}`;
         generatedItemCodes.push(generatedItemCode);
 
         const sql = `
           INSERT INTO inventory_items (
-            itemCode, itemName, serialNumber, itemTypeId, mainCategoryId, 
+            itemCode, itemName, serialNumber, brandName, modelName, itemTypeId, mainCategoryId, 
             subCategoryId, divisionId, sectionId, quantity, itemCondition, 
             purchaseDate, warrantyExpireDate, remarks, invoiceId, createdBy
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const values = [
-          generatedItemCode, itemName, serialValue || null, itemTypeId, mainCategoryId,
+          generatedItemCode, itemName, serialValue || null, brandValue || null, modelValue || null, itemTypeId, mainCategoryId,
           subCategoryId, divisionId, sectionId, 1, 'Good',
           purchaseDate || null, warrantyExpireDate || null, remarks || null, invoiceId || null, req.userId
         ];
@@ -1195,7 +1210,7 @@ app.put("/api/inventory/:id", verifyToken, verifyEditor, async (req, res) => {
   const {
     itemTypeId, mainCategoryId,
     subCategoryId, divisionId, sectionId,
-    purchaseDate, warrantyExpireDate, remarks, serialNumber, invoiceId
+    purchaseDate, warrantyExpireDate, remarks, serialNumber, brandName, modelName, invoiceId
   } = req.body;
 
   if (![itemTypeId, mainCategoryId, subCategoryId, divisionId, sectionId, invoiceId].every(Boolean) ||
@@ -1206,17 +1221,26 @@ app.put("/api/inventory/:id", verifyToken, verifyEditor, async (req, res) => {
     const subCatRes = await new Promise((resolve, reject) => {
       db.query("SELECT subCategoryName FROM sub_categories WHERE subCategoryId=?", [subCategoryId || 0], (err, r) => err ? reject(err) : resolve(r));
     });
+    const typeRes = await new Promise((resolve, reject) => {
+      db.query("SELECT itemTypeName FROM item_types WHERE itemTypeId=?", [itemTypeId || 0], (err, r) => err ? reject(err) : resolve(r));
+    });
     const itemName = subCatRes[0]?.subCategoryName || 'Unknown';
+    const isAssetHardware = String(typeRes[0]?.itemTypeName || '').toLowerCase().replace(/[^a-z0-9]/g, '') === 'assethardware';
+    const brandValue = isAssetHardware ? String(brandName || '').trim() : '';
+    const modelValue = isAssetHardware ? String(modelName || '').trim() : '';
+    if (isAssetHardware && (!brandValue || !modelValue)) {
+      return res.status(400).json({ success: false, message: "Brand Name and Model are required for Asset-hardware items." });
+    }
 
     const sql = `
       UPDATE inventory_items SET 
-        itemName=?, serialNumber=?, itemTypeId=?, mainCategoryId=?, 
+        itemName=?, serialNumber=?, brandName=?, modelName=?, itemTypeId=?, mainCategoryId=?, 
         subCategoryId=?, divisionId=?, sectionId=?,
         purchaseDate=?, warrantyExpireDate=?, remarks=?, invoiceId=?, updatedBy=?, updatedDate=NOW()
       WHERE itemId=?
     `;
     const values = [
-      itemName, String(serialNumber || '').trim() || null, itemTypeId, mainCategoryId,
+      itemName, String(serialNumber || '').trim() || null, brandValue || null, modelValue || null, itemTypeId, mainCategoryId,
       subCategoryId, divisionId, sectionId,
       purchaseDate || null, warrantyExpireDate || null, remarks || null, invoiceId || null, req.userId, id
     ];
