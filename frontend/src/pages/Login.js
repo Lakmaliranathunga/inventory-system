@@ -117,19 +117,23 @@ function Login() {
 
                 <div className="login-input-group">
                   <label htmlFor="username">Username</label>
-                  <input
-                    id="username"
-                    type="text"
-                    placeholder="Enter your username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    autoComplete="username"
-                  />
+                  <div className="login-input-wrapper">
+                    <i className="bi bi-person-fill" aria-hidden="true"></i>
+                    <input
+                      id="username"
+                      type="text"
+                      placeholder="Enter your username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      autoComplete="username"
+                    />
+                  </div>
                 </div>
 
                 <div className="login-input-group">
                   <label htmlFor="password">Password</label>
-                  <div className="password-input-wrapper">
+                  <div className="login-input-wrapper password-input-wrapper">
+                    <i className="bi bi-lock-fill" aria-hidden="true"></i>
                     <input
                       id="password"
                       type={showPassword ? "text" : "password"}
