@@ -16,6 +16,7 @@ function Register() {
     sectionId: "",
     divisionId: "",
     contactNo: "",
+    uEmail: "",
   });
   const [divisions, setDivisions] = useState([]);
   const [sections, setSections] = useState([]);
@@ -106,6 +107,7 @@ function Register() {
         sectionId: "",
         divisionId: "",
         contactNo: "",
+        uEmail: "",
       });
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed. Please try again.");
@@ -176,6 +178,18 @@ function Register() {
                       type="text"
                       placeholder="Enter contact no"
                       value={formData.contactNo}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <div className="login-input-group">
+                    <label htmlFor="uEmail">Email Address</label>
+                    <input
+                      id="uEmail"
+                      name="uEmail"
+                      type="email"
+                      placeholder="User email for OTP and account details"
+                      value={formData.uEmail}
                       onChange={handleChange}
                     />
                   </div>
@@ -329,6 +343,7 @@ function Register() {
                 </fieldset>
 
                 <div className="login-input-group register-submit-btn">
+                  <Link to="/" className="register-cancel-btn">Cancel</Link>
                   <button type="submit" className="login-submit-btn" disabled={loading}>
                     {loading ? "Registering..." : "Create Account"}
                   </button>
