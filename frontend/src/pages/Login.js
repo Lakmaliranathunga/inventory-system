@@ -66,10 +66,33 @@ function Login() {
         </div>
         <div className="header-title-container">
           <h2>Inventory Management System</h2>
+          <span>Secure operations workspace</span>
         </div>
       </header>
 
       <div className="login-main-content">
+        <section className="login-hero-panel" aria-label="Sri Lanka Ports Authority inventory portal">
+          <div className="hero-content">
+            <span className="hero-kicker">Sri Lanka Ports Authority</span>
+            <h1>Smart inventory control for port operations</h1>
+            <p>Track stock, suppliers, invoices, and operational reports from one secure staff workspace.</p>
+            <div className="hero-metrics" aria-label="Inventory portal highlights">
+              <div>
+                <strong>24/7</strong>
+                <span>Operational access</span>
+              </div>
+              <div>
+                <strong>Live</strong>
+                <span>Stock visibility</span>
+              </div>
+              <div>
+                <strong>Secure</strong>
+                <span>Staff sign in</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <div className="login-left-pane">
           <div className="login-form-wrapper">
             <div className="login-card-logo-container">
@@ -89,41 +112,45 @@ function Login() {
             )}
 
             <form onSubmit={handleLogin} className="login-form">
-              <div className="login-input-group">
-                <label htmlFor="username">Username</label>
-                <input
-                  id="username"
-                  type="text"
-                  placeholder="Enter your username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  autoComplete="username"
-                />
-              </div>
+              <fieldset className="login-fieldset">
+                <legend>Staff Credentials</legend>
 
-              <div className="login-input-group">
-                <label htmlFor="password">Password</label>
-                <div className="password-input-wrapper">
+                <div className="login-input-group">
+                  <label htmlFor="username">Username</label>
                   <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="current-password"
+                    id="username"
+                    type="text"
+                    placeholder="Enter your username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    autoComplete="username"
                   />
-                  <button
-                    type="button"
-                    className="password-toggle-btn"
-                    onClick={() => setShowPassword(!showPassword)}
-                    title={showPassword ? "Hide password" : "Show password"}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    tabIndex="-1"
-                  >
-                    <i className={`bi ${showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"}`}></i>
-                  </button>
                 </div>
-              </div>
+
+                <div className="login-input-group">
+                  <label htmlFor="password">Password</label>
+                  <div className="password-input-wrapper">
+                    <input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete="current-password"
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowPassword(!showPassword)}
+                      title={showPassword ? "Hide password" : "Show password"}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      tabIndex="-1"
+                    >
+                      <i className={`bi ${showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"}`}></i>
+                    </button>
+                  </div>
+                </div>
+              </fieldset>
 
               <button type="submit" className="login-submit-btn" disabled={loading}>
                 {loading ? "Signing in..." : "Sign In"}
