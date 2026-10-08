@@ -319,8 +319,15 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   gap: 8px;
   min-height: 44px;
   padding-inline: 14px;
-  border-color: rgba(216, 238, 252, 0.28);
-  background: rgba(216, 238, 252, 0.08);
+  border-color: rgba(254, 202, 202, 0.58);
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  box-shadow: 0 10px 22px rgba(127, 29, 29, 0.24);
+}
+
+.sidebar-logout-btn:hover {
+  border-color: rgba(254, 202, 202, 0.9);
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow: 0 14px 26px rgba(127, 29, 29, 0.34);
 }
 
 .sidebar-close-btn, .header-menu-btn, .sidebar-backdrop {
