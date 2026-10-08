@@ -3,10 +3,45 @@ import api from '../api/client';
 import { toast } from 'react-toastify';
 import './Inventory.css';
 
+const INVENTORY_VIEWS = {
+  office: {
+    label: 'Office Inventory',
+    icon: 'bi-building',
+    description: 'Furniture, office equipment, and general administration assets'
+  },
+  it: {
+    label: 'IT Inventory',
+    icon: 'bi-pc-display-horizontal',
+    description: 'Computers, peripherals, network devices, UPS, and digital equipment'
+  }
+};
+
+const IT_KEYWORDS = [
+  'asset hardware', 'hardware', 'software', 'soft ware', 'computer', 'laptop', 'desktop',
+  'monitor', 'screen', 'printer', 'scanner', 'keyboard', 'mouse', 'ups',
+  'network', 'router', 'switch', 'server', 'camera', 'cctv', 'projector',
+  'interactive', 'digital', 'information systems'
+];
+
+const normalizeText = (value) => String(value || '').toLowerCase().replace(/[-_/]+/g, ' ');
+
+const isItInventoryRecord = (record) => {
+  const haystack = normalizeText([
+    record.itemTypeName,
+    record.mainCategoryName,
+    record.subCategoryName,
+    record.itemName,
+    record.itemCode
+  ].join(' '));
+
+  return IT_KEYWORDS.some(keyword => haystack.includes(keyword));
+};
+
 const Inventory = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeInventory, setActiveInventory] = useState('office');
   
   // Dropdown options
   const [itemTypes, setItemTypes] = useState([]);
@@ -74,8 +109,17 @@ const Inventory = () => {
     fetchData();
   }, []);
 
+  const selectedView = INVENTORY_VIEWS[activeInventory];
   const selectedItemType = itemTypes.find(t => String(t.itemTypeId) === String(formData.itemTypeId));
   const isAssetHardware = String(selectedItemType?.itemTypeName || '').toLowerCase().replace(/[^a-z0-9]/g, '') === 'assethardware';
+  const isItCategory = (category) => isItInventoryRecord(category);
+  const visibleItemTypes = itemTypes.filter(type => activeInventory === 'it' ? isItCategory(type) : !isItCategory(type));
+  const visibleMainCategories = mainCategories.filter(category => activeInventory === 'it' ? isItCategory(category) : !isItCategory(category));
+  const scopedItems = items.filter(item => activeInventory === 'it' ? isItInventoryRecord(item) : !isItInventoryRecord(item));
+  const counts = items.reduce((acc, item) => {
+    acc[isItInventoryRecord(item) ? 'it' : 'office'] += 1;
+    return acc;
+  }, { office: 0, it: 0 });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -111,14 +155,21 @@ const Inventory = () => {
     setFormData(newFormData);
   };
 
-  const openAddModal = () => {
-    setIsEdit(false);
-    setFormData({
-      itemId: '', itemCode: '', itemName: '', serialNumber: '', itemTypeId: '',
+  const getInitialFormData = (scope = activeInventory) => {
+    const scopedTypes = itemTypes.filter(type => scope === 'it' ? isItCategory(type) : !isItCategory(type));
+    const preferredType = scopedTypes[0];
+
+    return {
+      itemId: '', itemCode: '', itemName: '', serialNumber: '', itemTypeId: preferredType?.itemTypeId || '',
       brandName: '', modelName: '',
       mainCategoryId: '', subCategoryId: '', divisionId: '', sectionId: '',
       quantity: '1', itemCondition: 'New', purchaseDate: '', warrantyExpireDate: '', remarks: '', invoiceId: ''
-    });
+    };
+  };
+
+  const openAddModal = () => {
+    setIsEdit(false);
+    setFormData(getInitialFormData());
     setShowModal(true);
   };
 
@@ -238,105 +289,134 @@ const Inventory = () => {
     }
   };
 
-  const filteredItems = items.filter(item => 
+  const filteredItems = scopedItems.filter(item => 
     (item.itemName && item.itemName.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (item.itemCode && item.itemCode.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
-    <div className="inventory-page">
-      <div className="inventory-header">
-        <h1 className="inventory-title">Inventory Management</h1>
-        <button className="inventory-add-btn" onClick={openAddModal}>
-          <i className="bi bi-plus-circle"></i> Add Inventory Item
-        </button>
-      </div>
+    <div className={`inventory-page inventory-page--${activeInventory}`}>
+      <div className={`inventory-workspace inventory-workspace--${activeInventory}`}>
+        <div className={`inventory-scope-panel inventory-scope-panel--${activeInventory}`}>
+          <div className="inventory-header">
+            <div>
+              <h1 className="inventory-title">Inventory Management</h1>
+              <p className="inventory-subtitle">{selectedView.description}</p>
+            </div>
+            <button className="inventory-add-btn" onClick={openAddModal}>
+              <i className="bi bi-plus-circle"></i> Add {selectedView.label} Item
+            </button>
+          </div>
 
-      <div className="inventory-card">
-        <div className="inventory-card-header">
-          <h6 className="inventory-card-title">Inventory Items</h6>
-          <div className="inventory-search-group">
-            <input 
-              type="text" 
-              className="inventory-search-input" 
-              placeholder="Search by name or Item No..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <span className="inventory-search-icon"><i className="bi bi-search"></i></span>
+          <div className={`inventory-switcher inventory-switcher--${activeInventory}`} role="tablist" aria-label="Inventory sections">
+            {Object.entries(INVENTORY_VIEWS).map(([key, view]) => (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={activeInventory === key}
+                className={`inventory-switcher-btn ${activeInventory === key ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveInventory(key);
+                  setSearchTerm('');
+                }}
+              >
+                <span className="inventory-switcher-icon"><i className={`bi ${view.icon}`}></i></span>
+                <span>
+                  <strong>{view.label}</strong>
+                  <small>{counts[key]} items</small>
+                </span>
+              </button>
+            ))}
           </div>
         </div>
-        <div className="inventory-card-body">
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: '40px' }}>
-              <div>Loading...</div>
+
+        <div className={`inventory-card inventory-card--${activeInventory}`}>
+          <div className="inventory-card-header">
+            <h6 className="inventory-card-title">{selectedView.label} Items</h6>
+            <div className="inventory-search-group">
+              <input 
+                type="text" 
+                className="inventory-search-input" 
+                placeholder="Search by name or Item No..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <span className="inventory-search-icon"><i className="bi bi-search"></i></span>
             </div>
-          ) : (
-            <div className="inventory-table-wrapper">
-              <table className="inventory-table">
-                <thead className="inventory-table-head">
-                  <tr>
-                    <th>Item No.</th>
-                    <th>Name</th>
-                    <th>Category</th>
-                    <th>Division/Section</th>
-                    <th>Supplier</th>
-                    <th style={{ textAlign: 'center' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredItems.length === 0 ? (
-                    <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>No inventory items found</td></tr>
-                  ) : (
-                    filteredItems.map(item => (
-                      <tr key={item.itemId}>
-                        <td><span className="inventory-badge inventory-badge--green">{item.itemCode}</span></td>
-                        <td>
-                          <strong>{item.itemName}</strong>
-                          {item.serialNumber && (
-                            <div style={{ marginTop: '4px', fontSize: '12px', color: '#6c757d' }}>
-                              <i className="bi bi-upc-scan" style={{marginRight:'3px'}}></i> SN: {item.serialNumber}
+          </div>
+          <div className="inventory-card-body">
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                <div>Loading...</div>
+              </div>
+            ) : (
+              <div className="inventory-table-wrapper">
+                <table className="inventory-table">
+                  <thead className="inventory-table-head">
+                    <tr>
+                      <th>Item No.</th>
+                      <th>Name</th>
+                      <th>Category</th>
+                      <th>Division/Section</th>
+                      <th>Supplier</th>
+                      <th style={{ textAlign: 'center' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredItems.length === 0 ? (
+                      <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>No {selectedView.label.toLowerCase()} items found</td></tr>
+                    ) : (
+                      filteredItems.map(item => (
+                        <tr key={item.itemId}>
+                          <td><span className="inventory-badge inventory-badge--green">{item.itemCode}</span></td>
+                          <td>
+                            <strong>{item.itemName}</strong>
+                            {item.serialNumber && (
+                              <div style={{ marginTop: '4px', fontSize: '12px', color: '#6c757d' }}>
+                                <i className="bi bi-upc-scan" style={{marginRight:'3px'}}></i> SN: {item.serialNumber}
+                              </div>
+                            )}
+                            {(item.brandName || item.modelName) && (
+                              <div style={{ marginTop: '4px', fontSize: '12px', color: '#6c757d' }}>
+                                {item.brandName && <div>Brand Name - {item.brandName}</div>}
+                                {item.modelName && <div>Model - {item.modelName}</div>}
+                              </div>
+                            )}
+                          </td>
+                          <td>
+                             <small>Type: {item.itemTypeName || '-'}</small><br/>
+                             <small>Main: {item.mainCategoryName || '-'}</small>
+                          </td>
+                          <td>
+                            {item.divisionName || '-'}<br/>
+                            <small style={{ color: '#6c757d' }}>{item.sectionName || '-'}</small>
+                          </td>
+                          <td>
+                            {item.supplierName ? (
+                              <span style={{ color: '#1e293b', fontWeight: '500' }}>{item.supplierName}</span>
+                            ) : (
+                              <span style={{ color: '#94a3b8' }}>-</span>
+                            )}
+                          </td>
+                          <td>
+                            <div className="inventory-action-group">
+                              <button onClick={() => openEditModal(item)} className="inventory-action-btn inventory-action-btn--edit">
+                                <i className="bi bi-pencil"></i>
+                              </button>
+                              <button onClick={() => handleDelete(item.itemId)} className="inventory-action-btn inventory-action-btn--delete">
+                                <i className="bi bi-trash"></i>
+                              </button>
                             </div>
-                          )}
-                          {(item.brandName || item.modelName) && (
-                            <div style={{ marginTop: '4px', fontSize: '12px', color: '#6c757d' }}>
-                              {item.brandName && <div>Brand Name - {item.brandName}</div>}
-                              {item.modelName && <div>Model - {item.modelName}</div>}
-                            </div>
-                          )}
-                        </td>
-                        <td>
-                           <small>Type: {item.itemTypeName || '-'}</small><br/>
-                           <small>Main: {item.mainCategoryName || '-'}</small>
-                        </td>
-                        <td>
-                          {item.divisionName || '-'}<br/>
-                          <small style={{ color: '#6c757d' }}>{item.sectionName || '-'}</small>
-                        </td>
-                        <td>
-                          {item.supplierName ? (
-                            <span style={{ color: '#1e293b', fontWeight: '500' }}>{item.supplierName}</span>
-                          ) : (
-                            <span style={{ color: '#94a3b8' }}>-</span>
-                          )}
-                        </td>
-                        <td>
-                          <div className="inventory-action-group">
-                            <button onClick={() => openEditModal(item)} className="inventory-action-btn inventory-action-btn--edit">
-                              <i className="bi bi-pencil"></i>
-                            </button>
-                            <button onClick={() => handleDelete(item.itemId)} className="inventory-action-btn inventory-action-btn--delete">
-                              <i className="bi bi-trash"></i>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -345,7 +425,7 @@ const Inventory = () => {
           <div className="inventory-modal-backdrop">
             <div className="inventory-modal-dialog">
               <div className="inventory-modal-header">
-                <h5 className="inventory-modal-title">{isEdit ? 'Edit Inventory Item' : 'Add Inventory Item'}</h5>
+                <h5 className="inventory-modal-title">{isEdit ? 'Edit Inventory Item' : `Add ${selectedView.label} Item`}</h5>
                 <button type="button" className="inventory-modal-close" onClick={closeModal}>✕</button>
               </div>
               <form onSubmit={handleSubmit}>
@@ -372,14 +452,14 @@ const Inventory = () => {
                       <label className="inventory-form-label">Item Type</label>
                       <select className="inventory-form-select" name="itemTypeId" value={formData.itemTypeId} onChange={handleInputChange} required>
                         <option value="">Select Type</option>
-                        {itemTypes.map(t => <option key={t.itemTypeId} value={t.itemTypeId}>{t.itemTypeName}</option>)}
+                        {(isEdit ? itemTypes : visibleItemTypes).map(t => <option key={t.itemTypeId} value={t.itemTypeId}>{t.itemTypeName}</option>)}
                       </select>
                     </div>
                     <div className="inventory-form-group col-span-4">
                       <label className="inventory-form-label">Main Category</label>
                       <select className="inventory-form-select" name="mainCategoryId" value={formData.mainCategoryId} onChange={handleInputChange} required>
                         <option value="">Select Main Category</option>
-                        {mainCategories.filter(m => !formData.itemTypeId || String(m.itemTypeId) === String(formData.itemTypeId)).map(m => (
+                        {(isEdit ? mainCategories : visibleMainCategories).filter(m => !formData.itemTypeId || String(m.itemTypeId) === String(formData.itemTypeId)).map(m => (
                           <option key={m.mainCategoryId} value={m.mainCategoryId}>{m.mainCategoryName}</option>
                         ))}
                       </select>

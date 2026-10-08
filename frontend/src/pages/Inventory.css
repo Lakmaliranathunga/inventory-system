@@ -1,13 +1,67 @@
 /* Inventory.css */ .inventory-page {
   padding: 24px;
   width: 100%;
+  min-height: 100%;
+  transition: background 0.18s ease;
+}
+
+.inventory-page--office {
+  background: linear-gradient(180deg, rgba(237, 246, 255, 0.8) 0%, rgba(237, 246, 255, 0.52) 360px, transparent 620px);
+}
+
+.inventory-page--it {
+  background: linear-gradient(180deg, rgba(232, 250, 247, 0.82) 0%, rgba(232, 250, 247, 0.54) 360px, transparent 620px);
+}
+
+.inventory-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 14px;
+  border: 1px solid #dbe7f3;
+  border-radius: 18px;
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.inventory-workspace--office {
+  border-color: #9ecbf2;
+  background: linear-gradient(180deg, #dcefff 0%, #dcefff 100%);
+  box-shadow: 0 14px 34px rgba(33, 131, 207, 0.12);
+}
+
+.inventory-workspace--it {
+  border-color: #84ded1;
+  background: linear-gradient(180deg, #d6f5ef 0%, #d6f5ef 100%);
+  box-shadow: 0 14px 34px rgba(15, 118, 110, 0.12);
 }
 
 .inventory-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+}
+
+.inventory-scope-panel {
+  margin-bottom: 0;
+  padding: 18px;
+  border: 1px solid #dbe7f3;
+  border-radius: 18px;
+  background: #f4f8fc;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.inventory-scope-panel--office {
+  border-color: #9ecbf2;
+  background: linear-gradient(135deg, #d8edff 0%, #eef7ff 62%, #ffffff 100%);
+  box-shadow: 0 14px 34px rgba(33, 131, 207, 0.1);
+}
+
+.inventory-scope-panel--it {
+  border-color: #84ded1;
+  background: linear-gradient(135deg, #d3f3ed 0%, #edfffb 62%, #ffffff 100%);
+  box-shadow: 0 14px 34px rgba(15, 118, 110, 0.1);
 }
 
 .inventory-title {
@@ -15,6 +69,12 @@
   font-weight: 600;
   margin: 0;
   color: #1e293b;
+}
+
+.inventory-subtitle {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 0.9rem;
 }
 
 .inventory-add-btn {
@@ -36,12 +96,167 @@
   background-color: #0b5ed7;
 }
 
+.inventory-switcher {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 0;
+}
+
+.inventory-switcher--office {
+  background: transparent;
+}
+
+.inventory-switcher--it {
+  background: transparent;
+}
+
+.inventory-switcher-btn {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 88px;
+  padding: 18px 20px;
+  border: 1px solid #d7e3ef;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #334155;
+  text-align: left;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease, background 0.18s ease;
+}
+
+.inventory-switcher-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 5px;
+  background: #0f66b7;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.inventory-switcher-btn:nth-child(2)::before {
+  background: #0f766e;
+}
+
+.inventory-switcher-btn:hover {
+  border-color: #94bce5;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.1);
+  transform: translateY(-1px);
+}
+
+.inventory-switcher-btn.active {
+  border-color: #2183cf;
+  background: linear-gradient(135deg, #f7fbff 0%, #e9f4ff 100%);
+  box-shadow: inset 0 0 0 1px rgba(33, 131, 207, 0.18), 0 16px 34px rgba(33, 131, 207, 0.13);
+}
+
+.inventory-switcher-btn.active::before {
+  opacity: 1;
+}
+
+.inventory-switcher-btn.active::after {
+  content: '\F26A';
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  color: #198754;
+  font-family: 'bootstrap-icons';
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.inventory-switcher-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e8f2fc, #d8ebff);
+  color: #0f66b7;
+  font-size: 1.35rem;
+  box-shadow: inset 0 0 0 1px rgba(15, 102, 183, 0.08);
+}
+
+.inventory-switcher-btn:nth-child(2) .inventory-switcher-icon {
+  background: linear-gradient(135deg, #e6f7f4, #d2f0ec);
+  color: #0f766e;
+}
+
+.inventory-switcher-btn.active .inventory-switcher-icon {
+  color: #ffffff;
+  background: linear-gradient(135deg, #248bd6, #0f66b7);
+  box-shadow: 0 10px 20px rgba(15, 102, 183, 0.2);
+}
+
+.inventory-switcher-btn:nth-child(2).active .inventory-switcher-icon {
+  background: linear-gradient(135deg, #10a796, #0f766e);
+  box-shadow: 0 10px 20px rgba(15, 118, 110, 0.2);
+}
+
+.inventory-switcher-btn strong,
+.inventory-switcher-btn small {
+  display: block;
+}
+
+.inventory-switcher-btn strong {
+  color: #172b43;
+  font-size: 1.04rem;
+  font-weight: 800;
+}
+
+.inventory-switcher-btn small {
+  margin-top: 5px;
+  color: #64748b;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
 .inventory-card {
   background: #fff;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
+  border: 1px solid #dbe7f3;
+  overflow: hidden;
+  position: relative;
+}
+
+.inventory-card::before {
+  content: none;
+  position: absolute;
+  left: -1px;
+  right: -1px;
+  top: -24px;
+  height: 24px;
+  pointer-events: none;
+}
+
+.inventory-card--office {
+  border-color: #9ecbf2;
+  background: linear-gradient(180deg, #e4f2ff 0%, #ffffff 130px);
+  box-shadow: 0 -22px 0 rgba(220, 239, 255, 0.9), 0 12px 28px rgba(33, 131, 207, 0.1);
+}
+
+.inventory-card--office::before {
+  background: linear-gradient(180deg, rgba(220, 239, 255, 0.9), rgba(220, 239, 255, 0.72));
+}
+
+.inventory-card--it {
+  border-color: #84ded1;
+  background: linear-gradient(180deg, #ddf8f3 0%, #ffffff 130px);
+  box-shadow: 0 -22px 0 rgba(214, 245, 239, 0.92), 0 12px 28px rgba(15, 118, 110, 0.1);
+}
+
+.inventory-card--it::before {
+  background: linear-gradient(180deg, rgba(214, 245, 239, 0.92), rgba(214, 245, 239, 0.74));
 }
 
 .inventory-card-header {
@@ -52,6 +267,16 @@
   background-color: #fff;
   border-bottom: 1px solid #e2e8f0;
   border-radius: 10px 10px 0 0;
+}
+
+.inventory-card--office .inventory-card-header {
+  background: rgba(226, 241, 255, 0.94);
+  border-bottom-color: #9ecbf2;
+}
+
+.inventory-card--it .inventory-card-header {
+  background: rgba(220, 248, 243, 0.95);
+  border-bottom-color: #84ded1;
 }
 
 .inventory-card-title {
@@ -96,14 +321,24 @@
   padding: 20px;
 }
 
+.inventory-card--office .inventory-card-body {
+  background: linear-gradient(180deg, rgba(228, 242, 255, 0.98), rgba(255, 255, 255, 0.74));
+}
+
+.inventory-card--it .inventory-card-body {
+  background: linear-gradient(180deg, rgba(221, 248, 243, 0.98), rgba(255, 255, 255, 0.74));
+}
+
 .inventory-table-wrapper {
   overflow-x: auto;
+  border-radius: 8px;
 }
 
 .inventory-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.9rem;
+  background: transparent;
 }
 
 .inventory-table th, .inventory-table td {
@@ -123,6 +358,22 @@
   font-weight: 600;
   font-size: 0.8rem;
   text-transform: uppercase;
+}
+
+.inventory-card--office .inventory-table-head tr {
+  background-color: #d7ebff;
+}
+
+.inventory-card--it .inventory-table-head tr {
+  background-color: #cfefe8;
+}
+
+.inventory-card--office .inventory-table tbody tr {
+  background-color: rgba(255, 255, 255, 0.82);
+}
+
+.inventory-card--it .inventory-table tbody tr {
+  background-color: rgba(255, 255, 255, 0.8);
 }
 
 .inventory-badge {
@@ -289,6 +540,16 @@
 }
 
 @media (max-width: 768px) {
+  .inventory-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .inventory-switcher {
+    grid-template-columns: 1fr;
+  }
+
   .inventory-form-grid > div {
     grid-column: span 12;
   }
