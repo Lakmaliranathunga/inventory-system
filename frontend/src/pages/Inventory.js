@@ -116,6 +116,27 @@ const Inventory = () => {
   const visibleItemTypes = itemTypes.filter(type => activeInventory === 'it' ? isItCategory(type) : !isItCategory(type));
   const visibleMainCategories = mainCategories.filter(category => activeInventory === 'it' ? isItCategory(category) : !isItCategory(category));
   const scopedItems = items.filter(item => activeInventory === 'it' ? isItInventoryRecord(item) : !isItInventoryRecord(item));
+  const getInvoiceItemName = (lineItem) => {
+    if (lineItem.itemName) return lineItem.itemName;
+    const matchedSubCategory = subCategories.find((item) => String(item.subCategoryId) === String(lineItem.subCategoryId));
+    return matchedSubCategory?.subCategoryName || 'Unknown Item';
+  };
+
+  const renderSelectedInvoiceItems = (invoice) => {
+    if (!invoice.items || !invoice.items.length) return 'N/A';
+
+    return (
+      <div className="selected-invoice-items-list">
+        {invoice.items.map((lineItem, index) => (
+          <div className="selected-invoice-items-line" key={lineItem.invoiceItemId || `${lineItem.subCategoryId}-${index}`}>
+            <span className="selected-invoice-items-name">{getInvoiceItemName(lineItem)}</span>
+            <span className="selected-invoice-items-qty">Qty: {lineItem.quantity || 0}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const counts = items.reduce((acc, item) => {
     acc[isItInventoryRecord(item) ? 'it' : 'office'] += 1;
     return acc;
@@ -638,6 +659,10 @@ const Inventory = () => {
                                     <div className="supplier-detail-item compact-item">
                                       <span className="supplier-detail-label"><i className="bi bi-telephone"></i> Contact</span>
                                       <span className="supplier-detail-val">{selectedInv.contactNo || 'N/A'}</span>
+                                    </div>
+                                    <div className="supplier-detail-item compact-item" style={{ gridColumn: '1 / -1' }}>
+                                      <span className="supplier-detail-label"><i className="bi bi-box-seam"></i> Invoice Items</span>
+                                      <span className="supplier-detail-val">{renderSelectedInvoiceItems(selectedInv)}</span>
                                     </div>
                                     <div className="supplier-detail-item compact-item" style={{ gridColumn: '1 / -1' }}>
                                       <span className="supplier-detail-label"><i className="bi bi-geo-alt"></i> Address</span>

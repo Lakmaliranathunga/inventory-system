@@ -818,6 +818,35 @@ to {
   font-size: 1.15rem;
 }
 
+.selected-invoice-items-list {
+  display: grid;
+  gap: 8px;
+}
+
+.selected-invoice-items-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  line-height: 1.3;
+}
+
+.selected-invoice-items-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.selected-invoice-items-qty {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef6ff;
+  color: #0d61c9;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
 /* Compact layout overrides */ .supplier-info-card.compact-card {
   margin-top: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
