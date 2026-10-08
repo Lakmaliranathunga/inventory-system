@@ -171,6 +171,26 @@ const Invoices = () => {
   });
 
   const totalLineQuantity = formData.items.reduce((sum, item) => sum + (Number.parseInt(item.quantity, 10) || 0), 0);
+  const getInvoiceItemName = (lineItem) => {
+    if (lineItem.itemName) return lineItem.itemName;
+    const matchedItem = items.find((item) => String(item.subCategoryId) === String(lineItem.subCategoryId));
+    return matchedItem?.subCategoryName || 'Unknown item';
+  };
+
+  const renderInvoiceItems = (invoice) => {
+    if (!invoice.items || !invoice.items.length) return '-';
+
+    return (
+      <div className="invoices-items-list">
+        {invoice.items.map((lineItem, index) => (
+          <div className="invoices-items-line" key={lineItem.invoiceItemId || `${lineItem.subCategoryId}-${index}`}>
+            <span className="invoices-items-name">{getInvoiceItemName(lineItem)}</span>
+            <span className="invoices-items-qty">Qty: {lineItem.quantity || 0}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="invoices-page">
@@ -228,7 +248,7 @@ const Invoices = () => {
                         <td style={{ fontWeight: 'bold' }}>{invoice.supplierName || 'Unknown Supplier'}</td>
                         <td>{invoice.invoiceDate ? invoice.invoiceDate.split('T')[0] : '-'}</td>
                         <td>{invoice.poDate ? invoice.poDate.split('T')[0] : '-'}</td>
-                        <td>{invoice.items && invoice.items.length ? `${invoice.items.length} item(s)` : '-'}</td>
+                        <td>{renderInvoiceItems(invoice)}</td>
                         <td>
                           <span className="invoices-amount-badge">Rs. {invoice.totalAmount}</span>
                         </td>
