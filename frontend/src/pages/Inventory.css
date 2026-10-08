@@ -24,13 +24,13 @@
 }
 
 .inventory-workspace--office {
-  border-color: #9ecbf2;
+  border-color: transparent;
   background: linear-gradient(180deg, #dcefff 0%, #dcefff 100%);
   box-shadow: 0 14px 34px rgba(33, 131, 207, 0.12);
 }
 
 .inventory-workspace--it {
-  border-color: #84ded1;
+  border-color: transparent;
   background: linear-gradient(180deg, #d6f5ef 0%, #d6f5ef 100%);
   box-shadow: 0 14px 34px rgba(15, 118, 110, 0.12);
 }
@@ -240,7 +240,7 @@
 }
 
 .inventory-card--office {
-  border-color: #9ecbf2;
+  border-color: transparent;
   background: linear-gradient(180deg, #e4f2ff 0%, #ffffff 130px);
   box-shadow: 0 -22px 0 rgba(220, 239, 255, 0.9), 0 12px 28px rgba(33, 131, 207, 0.1);
 }
@@ -250,7 +250,7 @@
 }
 
 .inventory-card--it {
-  border-color: #84ded1;
+  border-color: transparent;
   background: linear-gradient(180deg, #ddf8f3 0%, #ffffff 130px);
   box-shadow: 0 -22px 0 rgba(214, 245, 239, 0.92), 0 12px 28px rgba(15, 118, 110, 0.1);
 }
