@@ -6,6 +6,7 @@ import './Invoices.css';
 const Invoices = () => {
   const [invoices, setInvoices] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -13,19 +14,21 @@ const Invoices = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [formData, setFormData] = useState({
-    invoiceId: '', invoiceNumber: '', supplierId: '', poNo: '', poDate: '', invoiceDate: '', totalAmount: '', remarks: '', invoiceImage: ''
+    invoiceId: '', invoiceNumber: '', supplierId: '', poNo: '', poDate: '', invoiceDate: '', totalAmount: '', remarks: '', invoiceImage: '', items: [{ subCategoryId: '', quantity: '1' }]
   });
   const [imageFile, setImageFile] = useState(null);
 
   const fetchData = async () => {
     try {
-      const [invRes, supRes] = await Promise.all([
+      const [invRes, supRes, itemRes] = await Promise.all([
         api.get('/api/invoices'),
-        api.get('/api/suppliers')
+        api.get('/api/suppliers'),
+        api.get('/api/categories/sub-categories')
       ]);
 
       if (invRes.data.success) setInvoices(invRes.data.invoices);
       if (supRes.data.success) setSuppliers(supRes.data.suppliers);
+      if (itemRes.data.success) setItems(itemRes.data.data);
 
     } catch (error) {
       console.error(error);
@@ -43,10 +46,35 @@ const Invoices = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleItemChange = (index, field, value) => {
+    setFormData((current) => ({
+      ...current,
+      items: current.items.map((item, itemIndex) => (
+        itemIndex === index ? { ...item, [field]: value } : item
+      ))
+    }));
+  };
+
+  const addItemRow = () => {
+    setFormData((current) => ({
+      ...current,
+      items: [...current.items, { subCategoryId: '', quantity: '1' }]
+    }));
+  };
+
+  const removeItemRow = (index) => {
+    setFormData((current) => ({
+      ...current,
+      items: current.items.length === 1
+        ? [{ subCategoryId: '', quantity: '1' }]
+        : current.items.filter((_, itemIndex) => itemIndex !== index)
+    }));
+  };
+
   const openAddModal = () => {
     setIsEdit(false);
     setImageFile(null);
-    setFormData({ invoiceId: '', invoiceNumber: '', supplierId: '', poNo: '', poDate: '', invoiceDate: '', totalAmount: '', remarks: '', invoiceImage: '' });
+    setFormData({ invoiceId: '', invoiceNumber: '', supplierId: '', poNo: '', poDate: '', invoiceDate: '', totalAmount: '', remarks: '', invoiceImage: '', items: [{ subCategoryId: '', quantity: '1' }] });
     setShowModal(true);
   };
 
@@ -62,7 +90,13 @@ const Invoices = () => {
       invoiceDate: invoice.invoiceDate ? invoice.invoiceDate.split('T')[0] : '',
       totalAmount: invoice.totalAmount || '',
       remarks: invoice.remarks || '',
-      invoiceImage: invoice.invoiceImage || ''
+      invoiceImage: invoice.invoiceImage || '',
+      items: invoice.items && invoice.items.length
+        ? invoice.items.map((item) => ({
+            subCategoryId: String(item.subCategoryId || ''),
+            quantity: String(item.quantity || '1')
+          }))
+        : [{ subCategoryId: '', quantity: '1' }]
     });
     setShowModal(true);
   };
@@ -74,7 +108,11 @@ const Invoices = () => {
     try {
       const submitData = new FormData();
       for (const key in formData) {
-        submitData.append(key, formData[key] || '');
+        if (key === 'items') {
+          submitData.append('items', JSON.stringify(formData.items));
+        } else {
+          submitData.append(key, formData[key] || '');
+        }
       }
       if (imageFile) {
         submitData.append('invoiceImage', imageFile);
@@ -132,6 +170,8 @@ const Invoices = () => {
     );
   });
 
+  const totalLineQuantity = formData.items.reduce((sum, item) => sum + (Number.parseInt(item.quantity, 10) || 0), 0);
+
   return (
     <div className="invoices-page">
       <div className="invoices-header">
@@ -170,6 +210,7 @@ const Invoices = () => {
                     <th>Supplier</th>
                     <th>Invoice Date</th>
                     <th>PO Date</th>
+                    <th>Items</th>
                     <th>Total Amount</th>
                     <th>Attachment</th>
                     <th>Remarks</th>
@@ -178,7 +219,7 @@ const Invoices = () => {
                 </thead>
                 <tbody>
                   {filteredInvoices.length === 0 ? (
-                    <tr><td colSpan="6" className="invoices-empty-state">No invoices found</td></tr>
+                    <tr><td colSpan="10" className="invoices-empty-state">No invoices found</td></tr>
                   ) : (
                     filteredInvoices.map(invoice => (
                       <tr key={invoice.invoiceId}>
@@ -187,6 +228,7 @@ const Invoices = () => {
                         <td style={{ fontWeight: 'bold' }}>{invoice.supplierName || 'Unknown Supplier'}</td>
                         <td>{invoice.invoiceDate ? invoice.invoiceDate.split('T')[0] : '-'}</td>
                         <td>{invoice.poDate ? invoice.poDate.split('T')[0] : '-'}</td>
+                        <td>{invoice.items && invoice.items.length ? `${invoice.items.length} item(s)` : '-'}</td>
                         <td>
                           <span className="invoices-amount-badge">Rs. {invoice.totalAmount}</span>
                         </td>
@@ -260,6 +302,47 @@ const Invoices = () => {
                         <span className="invoices-input-group-text">Rs.</span>
                         <input type="text" className="invoices-form-input" name="totalAmount" placeholder="0.00" value={formData.totalAmount} onChange={handleInputChange} required />
                       </div>
+                    </div>
+                    <div className="invoices-form-group col-span-12">
+                      <div className="invoices-line-header">
+                        <label className="invoices-form-label">Invoice Items</label>
+                        <button type="button" className="invoices-line-add" onClick={addItemRow}>
+                          <i className="bi bi-plus-circle"></i> Add Item
+                        </button>
+                      </div>
+                      <div className="invoices-line-items">
+                        {formData.items.map((lineItem, index) => (
+                          <div className="invoices-line-row" key={`${index}-${lineItem.subCategoryId}`}>
+                            <select
+                              className="invoices-form-select"
+                              value={lineItem.subCategoryId}
+                              onChange={(e) => handleItemChange(index, 'subCategoryId', e.target.value)}
+                              required
+                            >
+                              <option value="">Select Item</option>
+                              {items.map((item) => (
+                                <option key={item.subCategoryId} value={item.subCategoryId}>
+                                  {item.subCategoryName}
+                                </option>
+                              ))}
+                            </select>
+                            <input
+                              type="number"
+                              className="invoices-form-input"
+                              min="1"
+                              max="500"
+                              value={lineItem.quantity}
+                              onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                              placeholder="Qty"
+                              required
+                            />
+                            <button type="button" className="invoices-line-remove" onClick={() => removeItemRow(index)} title="Remove item">
+                              <i className="bi bi-trash"></i>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="invoices-line-summary">Total quantity: {totalLineQuantity}</div>
                     </div>
                     <div className="invoices-form-group col-span-12">
                       <label className="invoices-form-label">Upload Invoice Image/Document</label>

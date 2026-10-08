@@ -71,6 +71,26 @@ const upload = multer({
   },
 });
 
+db.query(`
+  CREATE TABLE IF NOT EXISTS invoice_items (
+    invoiceItemId INT AUTO_INCREMENT PRIMARY KEY,
+    invoiceId INT NOT NULL,
+    subCategoryId INT NOT NULL,
+    quantity INT NOT NULL,
+    createdDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedDate TIMESTAMP NULL DEFAULT NULL,
+    deletedDate TIMESTAMP NULL DEFAULT NULL,
+    createdBy VARCHAR(100) NULL,
+    updatedBy VARCHAR(100) NULL,
+    deletedBy VARCHAR(100) NULL,
+    flag INT DEFAULT 1,
+    INDEX idx_invoice_items_invoice (invoiceId),
+    INDEX idx_invoice_items_sub_category (subCategoryId)
+  )
+`, (err) => {
+  if (err) console.error('Unable to ensure invoice_items table:', err.message);
+});
+
 const isValidEmail = (email) => /^\S+@\S+\.\S+$/.test(String(email || ''));
 
 const canSendMail = () => Boolean(
@@ -1268,15 +1288,38 @@ app.delete("/api/inventory/:id", verifyToken, verifyEditor, (req, res) => {
 // =========================
 app.get("/api/invoices", verifyToken, (req, res) => {
   const sql = `
-    SELECT i.*, s.supplierName, s.address, s.contactNo, s.contactPerson, s.email
+    SELECT i.*, s.supplierName, s.address, s.contactNo, s.contactPerson, s.email,
+           COALESCE(
+             JSON_ARRAYAGG(
+               CASE
+                 WHEN ii.invoiceItemId IS NULL THEN NULL
+                 ELSE JSON_OBJECT(
+                   'invoiceItemId', ii.invoiceItemId,
+                   'subCategoryId', ii.subCategoryId,
+                   'itemName', sc.subCategoryName,
+                   'quantity', ii.quantity
+                 )
+               END
+             ),
+             JSON_ARRAY()
+           ) AS items
     FROM invoices i
     LEFT JOIN suppliers s ON i.supplierId = s.supplierId
+    LEFT JOIN invoice_items ii ON i.invoiceId = ii.invoiceId AND ii.flag = 1
+    LEFT JOIN sub_categories sc ON ii.subCategoryId = sc.subCategoryId
     WHERE i.flag=1 
+    GROUP BY i.invoiceId
     ORDER BY i.createdDate DESC
   `;
   db.query(sql, (err, result) => {
     if (err) return res.status(500).json({ success: false, error: err });
-    res.json({ success: true, invoices: result });
+    const invoices = result.map((invoice) => ({
+      ...invoice,
+      items: Array.isArray(invoice.items)
+        ? invoice.items.filter(Boolean)
+        : JSON.parse(invoice.items || '[]').filter(Boolean)
+    }));
+    res.json({ success: true, invoices });
   });
 });
 
@@ -1300,31 +1343,70 @@ const validateInvoice = ({ invoiceNumber, supplierId, invoiceDate, totalAmount }
   return null;
 };
 
-app.post("/api/invoices", verifyToken, verifyEditor, upload.single('invoiceImage'), (req, res) => {
+const parseInvoiceItems = (rawItems) => {
+  if (!rawItems) return [];
+  const parsed = typeof rawItems === 'string' ? JSON.parse(rawItems) : rawItems;
+  if (!Array.isArray(parsed)) throw new Error('Invoice items must be an array.');
+  return parsed.map((item) => ({
+    subCategoryId: Number.parseInt(item.subCategoryId, 10),
+    quantity: Number.parseInt(item.quantity, 10)
+  })).filter((item) => item.subCategoryId || item.quantity);
+};
+
+const validateInvoiceItems = (items) => {
+  for (const item of items) {
+    if (!Number.isInteger(item.subCategoryId) || item.subCategoryId <= 0) return 'Please select an item for every invoice line.';
+    if (!Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 500) return 'Quantity must be between 1 and 500 for every invoice line.';
+  }
+  return null;
+};
+
+app.post("/api/invoices", verifyToken, verifyEditor, upload.single('invoiceImage'), async (req, res) => {
   const { invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks } = req.body;
   const invoiceImage = req.file ? req.file.filename : null;
   const cleanPoDate = poDate && poDate.trim() !== "" ? poDate : null;
   const cleanInvoiceDate = invoiceDate && invoiceDate.trim() !== "" ? invoiceDate : null;
   const cleanPoNo = poNo && poNo.trim() !== "" ? poNo : null;
   const cleanRemarks = remarks && remarks.trim() !== "" ? remarks : null;
-  const validationError = validateInvoice(req.body);
+  let items = [];
+  try {
+    items = parseInvoiceItems(req.body.items);
+  } catch (err) {
+    removeUpload(invoiceImage);
+    return res.status(400).json({ success: false, message: "Invalid invoice items." });
+  }
+  const validationError = validateInvoice(req.body) || validateInvoiceItems(items);
   if (validationError) {
     removeUpload(invoiceImage);
     return res.status(400).json({ success: false, message: validationError });
   }
 
-  const sql = `INSERT INTO invoices (invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks, invoiceImage, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-  db.query(sql, [invoiceNumber, supplierId, cleanPoNo, cleanPoDate, cleanInvoiceDate, totalAmount, cleanRemarks, invoiceImage, req.userId], (err, result) => {
-    if (err) {
-      removeUpload(invoiceImage);
-      console.error("Invoice Add Error:", err);
-      return res.status(500).json({ success: false, message: "Unable to add invoice." });
+  const connection = await db.promise().getConnection();
+  try {
+    await connection.beginTransaction();
+    const [result] = await connection.execute(
+      `INSERT INTO invoices (invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks, invoiceImage, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [invoiceNumber, supplierId, cleanPoNo, cleanPoDate, cleanInvoiceDate, totalAmount, cleanRemarks, invoiceImage, req.userId]
+    );
+    for (const item of items) {
+      await connection.execute(
+        `INSERT INTO invoice_items (invoiceId, subCategoryId, quantity, createdBy) VALUES (?, ?, ?, ?)`,
+        [result.insertId, item.subCategoryId, item.quantity, req.userId]
+      );
     }
+    await connection.commit();
     res.json({ success: true, message: "Invoice added successfully!" });
-  });
+  } catch (err) {
+    await connection.rollback();
+    removeUpload(invoiceImage);
+    console.error("Invoice Add Error:", err);
+    res.status(500).json({ success: false, message: "Unable to add invoice." });
+  } finally {
+    connection.release();
+  }
 });
 
-app.put("/api/invoices/:id", verifyToken, verifyEditor, upload.single('invoiceImage'), (req, res) => {
+app.put("/api/invoices/:id", verifyToken, verifyEditor, upload.single('invoiceImage'), async (req, res) => {
   const { id } = req.params;
   const { invoiceNumber, supplierId, poNo, poDate, invoiceDate, totalAmount, remarks } = req.body;
   const invoiceImage = req.file ? req.file.filename : null;
@@ -1332,39 +1414,57 @@ app.put("/api/invoices/:id", verifyToken, verifyEditor, upload.single('invoiceIm
   const cleanInvoiceDate = invoiceDate && invoiceDate.trim() !== "" ? invoiceDate : null;
   const cleanPoNo = poNo && poNo.trim() !== "" ? poNo : null;
   const cleanRemarks = remarks && remarks.trim() !== "" ? remarks : null;
-  const validationError = validateInvoice(req.body);
+  let items = [];
+  try {
+    items = parseInvoiceItems(req.body.items);
+  } catch (err) {
+    removeUpload(invoiceImage);
+    return res.status(400).json({ success: false, message: "Invalid invoice items." });
+  }
+  const validationError = validateInvoice(req.body) || validateInvoiceItems(items);
   if (validationError) {
     removeUpload(invoiceImage);
     return res.status(400).json({ success: false, message: validationError });
   }
-  
-  let sql = `UPDATE invoices SET invoiceNumber=?, supplierId=?, poNo=?, poDate=?, invoiceDate=?, totalAmount=?, remarks=?, updatedBy=?, updatedDate=NOW() WHERE invoiceId=?`;
-  let params = [invoiceNumber, supplierId, cleanPoNo, cleanPoDate, cleanInvoiceDate, totalAmount, cleanRemarks, req.userId, id];
 
-  if (invoiceImage) {
-    sql = `UPDATE invoices SET invoiceNumber=?, supplierId=?, poNo=?, poDate=?, invoiceDate=?, totalAmount=?, remarks=?, invoiceImage=?, updatedBy=?, updatedDate=NOW() WHERE invoiceId=?`;
-    params = [invoiceNumber, supplierId, cleanPoNo, cleanPoDate, cleanInvoiceDate, totalAmount, cleanRemarks, invoiceImage, req.userId, id];
-  }
-
-  db.query('SELECT invoiceImage FROM invoices WHERE invoiceId=? AND flag=1', [id], (lookupErr, rows) => {
-    if (lookupErr) {
-      removeUpload(invoiceImage);
-      return res.status(500).json({ success: false, message: "Unable to load invoice." });
-    }
-    if (!rows.length) {
+  const connection = await db.promise().getConnection();
+  try {
+    await connection.beginTransaction();
+    const [[existing]] = await connection.execute('SELECT invoiceImage FROM invoices WHERE invoiceId=? AND flag=1', [id]);
+    if (!existing) {
+      await connection.rollback();
       removeUpload(invoiceImage);
       return res.status(404).json({ success: false, message: "Invoice not found." });
     }
-    db.query(sql, params, (err) => {
-      if (err) {
-        removeUpload(invoiceImage);
-        console.error("Invoice Update Error:", err.message);
-        return res.status(500).json({ success: false, message: "Unable to update invoice." });
-      }
-      if (invoiceImage && rows[0].invoiceImage !== invoiceImage) removeUpload(rows[0].invoiceImage);
-      res.json({ success: true, message: "Invoice updated successfully!" });
-    });
-  });
+    if (invoiceImage) {
+      await connection.execute(
+        `UPDATE invoices SET invoiceNumber=?, supplierId=?, poNo=?, poDate=?, invoiceDate=?, totalAmount=?, remarks=?, invoiceImage=?, updatedBy=?, updatedDate=NOW() WHERE invoiceId=?`,
+        [invoiceNumber, supplierId, cleanPoNo, cleanPoDate, cleanInvoiceDate, totalAmount, cleanRemarks, invoiceImage, req.userId, id]
+      );
+    } else {
+      await connection.execute(
+        `UPDATE invoices SET invoiceNumber=?, supplierId=?, poNo=?, poDate=?, invoiceDate=?, totalAmount=?, remarks=?, updatedBy=?, updatedDate=NOW() WHERE invoiceId=?`,
+        [invoiceNumber, supplierId, cleanPoNo, cleanPoDate, cleanInvoiceDate, totalAmount, cleanRemarks, req.userId, id]
+      );
+    }
+    await connection.execute(`UPDATE invoice_items SET flag=0, deletedBy=?, deletedDate=NOW() WHERE invoiceId=?`, [req.userId, id]);
+    for (const item of items) {
+      await connection.execute(
+        `INSERT INTO invoice_items (invoiceId, subCategoryId, quantity, createdBy) VALUES (?, ?, ?, ?)`,
+        [id, item.subCategoryId, item.quantity, req.userId]
+      );
+    }
+    await connection.commit();
+    if (invoiceImage && existing.invoiceImage !== invoiceImage) removeUpload(existing.invoiceImage);
+    res.json({ success: true, message: "Invoice updated successfully!" });
+  } catch (err) {
+    await connection.rollback();
+    removeUpload(invoiceImage);
+    console.error("Invoice Update Error:", err.message);
+    res.status(500).json({ success: false, message: "Unable to update invoice." });
+  } finally {
+    connection.release();
+  }
 });
 
 app.delete("/api/invoices/:id", verifyToken, verifyEditor, (req, res) => {
