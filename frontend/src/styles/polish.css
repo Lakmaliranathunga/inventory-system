@@ -166,10 +166,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .login-page-footer {
-  padding: 12px 20px;
+  padding: 18px 20px;
   background: #06101c;
   color: #8193a5;
-  font-size: 0.7rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 
 /* Application shell */ .layout-wrapper {
