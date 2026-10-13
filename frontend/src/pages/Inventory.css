@@ -1048,6 +1048,14 @@ to {
   cursor: not-allowed;
 }
 
+/* Show focus through the existing border without stacking an outline and glow. */
+.layout-content .inventory-modal-dialog .inventory-form-select:focus {
+  border-color: #2f80ed;
+  outline: none;
+  box-shadow: none;
+  transform: none;
+}
+
 .inventory-modal-footer {
   gap: 14px;
   padding: 18px 24px 24px;

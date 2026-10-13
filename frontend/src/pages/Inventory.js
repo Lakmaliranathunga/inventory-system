@@ -176,12 +176,9 @@ const Inventory = () => {
     setFormData(newFormData);
   };
 
-  const getInitialFormData = (scope = activeInventory) => {
-    const scopedTypes = itemTypes.filter(type => scope === 'it' ? isItCategory(type) : !isItCategory(type));
-    const preferredType = scopedTypes[0];
-
+  const getInitialFormData = () => {
     return {
-      itemId: '', itemCode: '', itemName: '', serialNumber: '', itemTypeId: preferredType?.itemTypeId || '',
+      itemId: '', itemCode: '', itemName: '', serialNumber: '', itemTypeId: '',
       brandName: '', modelName: '',
       mainCategoryId: '', subCategoryId: '', divisionId: '', sectionId: '',
       quantity: '1', itemCondition: 'New', purchaseDate: '', warrantyExpireDate: '', remarks: '', invoiceId: ''
